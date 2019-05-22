@@ -32,3 +32,35 @@ def create_set():
       # plt.show()
 
 #create_set()
+
+
+def adaptive_contrast_enhancement(image,grid_size):
+    """
+    This function uses adaptive histogram equalization in order
+    to enhance fronts of the cells. Returns the modified image.
+    Parameters
+    -----------------------
+    image : image in matrix format
+    grid_size : tuple with the size of the grid
+    References
+    ---------------------
+    [1] https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_histograms/py_histogram_equalization/py_histogram_equalization.html
+    """
+    clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=grid_size)
+    cl1 = clahe.apply(image)
+    return cl1
+
+
+#contrast enhancement on the images
+modimg = []
+grid_size = (100,100)
+
+def create_modified_images():
+    for i in range(n_images):
+        im = adaptive_contrast_enhancement(image[i],grid_size)
+        modimg.append(im)
+        #plt.imsave("m_"+str(i)+".png",im,cmap="gray")
+
+#create_modified_images()
+# maybe is not important to save them. try not to use saved images
+# maybe is better to save them because adaptive_contrast_enhancement(image, grid_size) takes too much time.
