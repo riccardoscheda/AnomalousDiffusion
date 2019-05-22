@@ -7,7 +7,7 @@ from nd2reader import ND2Reader
 import pandas as pd
 
 #creating output directories
-outfolder= "images/"
+outfolder = "images/"
 if not os.path.exists(outfolder):
     os.makedirs(outfolder)
 
@@ -62,5 +62,34 @@ def create_modified_images():
         #plt.imsave("m_"+str(i)+".png",im,cmap="gray")
 
 #create_modified_images()
+
 # maybe is not important to save them. try not to use saved images
 # maybe is better to save them because adaptive_contrast_enhancement(image, grid_size) takes too much time.
+
+
+def LBP(image):
+    """
+    Computes the local binary pattern of an image
+    Returns the normalized histogram of the local binary pattern image.
+    Parameters
+    --------------------------------
+    image : image in matrix format
+    References
+    -------------------------------
+    [1] http://hanzratech.in/2015/05/30/local-binary-patterns.html
+    """
+    radius = 1
+    # Number of points to be considered as neighbours
+    no_points = 8 * radius
+    # Uniform LBP is used
+    lbp = local_binary_pattern(image,no_points,radius,method="uniform")
+    #converts lbp with integer values (maybe is not necessary)
+    #lbp = [[int(item) for item in items] for items in lbp]
+
+    #make the histogram of pixel intensities
+    hist = np.unique(lbp, return_counts=True)
+    hist = np.asarray(hist)
+
+    # Normalize the histogram
+    hist = hist[1,:]/sum(hist[1,:])
+    return hist
