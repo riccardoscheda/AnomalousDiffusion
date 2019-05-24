@@ -66,21 +66,19 @@ def LBP(image):
     References
     -------------------------------
     [1] http://hanzratech.in/2015/05/30/local-binary-patterns.html
+    [2] https://www.pyimagesearch.com/2015/12/07/local-binary-patterns-with-python-opencv/
     """
+
     radius = 1
     # Number of points to be considered as neighbours
     no_points = 8 * radius
     # Uniform LBP is used
     lbp = local_binary_pattern(image,no_points,radius,method="uniform")
-    #converts lbp with integer values (maybe is not necessary)
-    #lbp = [[int(item) for item in items] for items in lbp]
-
     #make the histogram of pixel intensities
-    hist = np.unique(lbp, return_counts=True)
-    hist = np.asarray(hist)
-
+    (hist, _) = np.histogram(lbp.ravel(),bins=np.arange(0, no_points + 3),range=(0, no_points + 2))
+    hist = hist.astype("float")
     # Normalize the histogram
-    hist = hist[1,:]/sum(hist[1,:])
+    hist /= (hist.sum() + 1e-7)
     return hist
 
 
@@ -88,24 +86,16 @@ def Principal_components_analysis(image , window_sizeX = 12, window_sizeY = 16):
     """
     Computes the principal components analysis (PCA) of an image:
     - The image is divided in subimages
-    - is computed the locally binary pattern histogram for each subimage
+    - the locally binary pattern histogram is computed for each subimage
     - all of the histograms are moved in a Dataframe
     - PCA is computed on that Dataframe where the samples are the subimages and the histogram bins are
     the features
-    -K-means???????????????????
     Parameters:
     ----------------------------------
-
-    References:
-    ---------------------------------
     image : image in matrix format
     window_sizeX : the size of the width of the subimages
     window_sizeY : the size of the height of the subimages
     """
-    window_sizeX = 12
-    window_sizeY = 16
-    test_image =  cv2.imread("modified_images/m_1.png")
-    image = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
     rows = int(len(image)/window_sizeX)
     cols = int(len(image.T)/window_sizeY)
     labels = np.empty((rows,cols))
@@ -119,10 +109,8 @@ def Principal_components_analysis(image , window_sizeX = 12, window_sizeY = 16):
             testdf[cont] = series
             cont = cont + 1
 
-
-    testdf = testdf.fillna(0)
     pca = PCA(2)
     principal_components = pca.fit_transform(testdf.T)
     principalDF = pd.DataFrame(principal_components, columns = ["x","y"])
 
-    return testdf
+    return principalDF
