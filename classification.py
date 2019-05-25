@@ -6,6 +6,8 @@ import numpy as np
 from nd2reader import ND2Reader
 import pandas as pd
 from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
+
 
 def create_set(n_images = 60):
     #creating output directories
@@ -33,6 +35,7 @@ def adaptive_contrast_enhancement(image,grid_size):
     -----------------------
     image : image in matrix format
     grid_size : tuple with the size of the grid
+
     References
     ---------------------
     [1] https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_histograms/py_histogram_equalization/py_histogram_equalization.html
@@ -60,9 +63,11 @@ def LBP(image):
     """
     Computes the local binary pattern of an image
     Returns the normalized histogram of the local binary pattern image.
+
     Parameters
     --------------------------------
     image : image in matrix format
+
     References
     -------------------------------
     [1] http://hanzratech.in/2015/05/30/local-binary-patterns.html
@@ -90,6 +95,7 @@ def Principal_components_analysis(image , window_sizeX = 12, window_sizeY = 16):
     - all of the histograms are moved in a Dataframe
     - PCA is computed on that Dataframe where the samples are the subimages and the histogram bins are
     the features
+
     Parameters:
     ----------------------------------
     image : image in matrix format
@@ -109,8 +115,30 @@ def Principal_components_analysis(image , window_sizeX = 12, window_sizeY = 16):
             testdf[cont] = series
             cont = cont + 1
 
-    pca = PCA(2)
+    pca = PCA(5)
     principal_components = pca.fit_transform(testdf.T)
-    principalDF = pd.DataFrame(principal_components, columns = ["x","y"])
+    principalDF = pd.DataFrame(principal_components, columns = ["x","y","z","u","w"])
 
     return principalDF
+
+def classification(data,rows = 100, cols = 100):
+    """
+    Computes the classification of the subimages of the total image through the K-means algorithm.
+    Returns the binary image, where a label corresponds to the cells and one
+    label corresponds to the background.
+
+    Parameters
+    -----------------------------
+    data : pandas dataframe
+
+    References
+    ----------------------
+    [1] https://jakevdp.github.io/PythonDataScienceHandbook/05.11-k-means.html
+    """
+
+    kmeans = KMeans(2)
+    kmeans.fit(data)
+    labels = kmeans.predict(data)
+    labels = labels.reshape(rows,cols)
+
+    return labels

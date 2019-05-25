@@ -49,3 +49,10 @@ def test_Principal_components_analysis():
     """
     assert isinstance(cl.Principal_components_analysis(im_gray), pd.DataFrame) == True
     assert any(np.where(np.isnan(cl.Principal_components_analysis(im_gray)))) == False
+
+def test_classification():
+    """
+    Tests:
+    if the output is a binary numpy array
+    """
+    assert isinstance(cl.classification(cl.Principal_components_analysis(im_gray)),np.ndarray) == True
