@@ -5,7 +5,7 @@ import cv2
 import pandas as pd
 import classification as cl
 
-
+from collections import Counter
 
 test_image =  cv2.imread("images/1.png")
 im_gray = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
@@ -53,6 +53,9 @@ def test_Principal_components_analysis():
 def test_classification():
     """
     Tests:
-    if the output is a binary numpy array
+    if the output is numpy array
+    if the output image is binary (there are only 0s and 1s)
     """
-    assert isinstance(cl.classification(cl.Principal_components_analysis(im_gray)),np.ndarray) == True
+    binary = cl.classification(cl.Principal_components_analysis(im_gray))
+    assert isinstance(binary,np.ndarray) == True
+    assert len(np.where(binary == 0 )[1]) + len(np.where(binary == 1)[1]) == len(binary)*len(binary.T)

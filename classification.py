@@ -121,7 +121,7 @@ def Principal_components_analysis(image , window_sizeX = 12, window_sizeY = 16):
 
     return principalDF
 
-def classification(data,rows = 100, cols = 100):
+def classification(data, rows = 100, cols = 100):
     """
     Computes the classification of the subimages of the total image through the K-means algorithm.
     Returns the binary image, where a label corresponds to the cells and one
@@ -130,6 +130,8 @@ def classification(data,rows = 100, cols = 100):
     Parameters
     -----------------------------
     data : pandas dataframe
+    rows : height of the output image
+    cols : width of the output image
 
     References
     ----------------------
