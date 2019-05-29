@@ -7,7 +7,7 @@ from nd2reader import ND2Reader
 import pandas as pd
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
-
+import itertools
 
 def create_set(n_images = 60):
     #creating output directories
@@ -108,12 +108,11 @@ def Principal_components_analysis(image , window_sizeX = 12, window_sizeY = 16):
     testdf = pd.DataFrame()
     cont = 0
 
-    for i in range(rows):
-        for j in range(cols):
-            subimage = image[i*window_sizeX:(i+1)*window_sizeX,j*window_sizeY:(j+1)*window_sizeY]
-            series = pd.Series(LBP(subimage))
-            testdf[cont] = series
-            cont = cont + 1
+    for element in itertools.product(range(rows),range(cols)):
+        subimage = image[element[0]*window_sizeX:(element[0]+1)*window_sizeX,element[1]*window_sizeY:(element[1]+1)*window_sizeY]
+        series = pd.Series(LBP(subimage))
+        testdf[cont] = series
+        cont = cont + 1
 
     pca = PCA(5)
     principal_components = pca.fit_transform(testdf.T)
@@ -121,7 +120,7 @@ def Principal_components_analysis(image , window_sizeX = 12, window_sizeY = 16):
 
     return principalDF
 
-def classification(data, rows = 100, cols = 100):
+def classification(data, window_sizeX = 12, window_sizeY = 16):
     """
     Computes the classification of the subimages of the total image through the K-means algorithm.
     Returns the binary image, where a label corresponds to the cells and one
@@ -130,17 +129,23 @@ def classification(data, rows = 100, cols = 100):
     Parameters
     -----------------------------
     data : pandas dataframe
-    rows : height of the output image
-    cols : width of the output image
-
+    window_sizeX : the size of the width of the subimages
+    window_sizeY : the size of the height of the subimages
+    
     References
     ----------------------
     [1] https://jakevdp.github.io/PythonDataScienceHandbook/05.11-k-means.html
     """
-
+    rows = int(1200/window_sizeX)
+    cols = int(1600/window_sizeY)
     kmeans = KMeans(2)
     kmeans.fit(data)
     labels = kmeans.predict(data)
     labels = labels.reshape(rows,cols)
 
-    return labels
+    labell2 = np.empty((1200,1600))
+    for i in range (1200):
+        for j in range (1600):
+            labell2[i][j] = labels[int(i/window_sizeX)][int(j/window_sizeY)]
+
+    return labell2

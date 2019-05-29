@@ -3,9 +3,9 @@ import numpy as np
 import matplotlib as plt
 import cv2
 import pandas as pd
-import classification as cl
 
-from collections import Counter
+import classification as cl
+import fronts as fr
 
 test_image =  cv2.imread("images/1.png")
 im_gray = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
@@ -58,4 +58,20 @@ def test_classification():
     """
     binary = cl.classification(cl.Principal_components_analysis(im_gray))
     assert isinstance(binary,np.ndarray) == True
+    assert len(np.where(binary == 0 )[1]) + len(np.where(binary == 1)[1]) == len(binary)*len(binary.T)
+
+###############################################################################
+#TESTS FOR fronts.py
+
+
+def test_fronts():
+    """
+    Tests:
+    if the output is a pandas DataFrame
+    if the output of make_kernel is a numpy matrix of 0s and 1s
+    """
+    struct = [0,0,0,1,0,0,0]
+    binary = fr.make_kernel(struct, 1)
+    assert isinstance(fr.fronts(im_gray,"test.txt"), pd.DataFrame) == True
+    assert isinstance(binary, np.matrix) == True
     assert len(np.where(binary == 0 )[1]) + len(np.where(binary == 1)[1]) == len(binary)*len(binary.T)
