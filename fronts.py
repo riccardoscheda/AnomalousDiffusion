@@ -13,6 +13,7 @@ def fronts(path,output_name):
     """
     Takes the longest border inside an image and saves in a text file
     the (x,y) coordinates.
+    Return also the dataframe of the coordinates
     The input image is modifief by morphological transformation in order to have a smoother border
 
     --------
@@ -27,19 +28,20 @@ def fronts(path,output_name):
     """
 
 
-    imgray = path
-    ret, thresh = cv2.threshold(imgray, 100, 255, 0)
-    struct = [0,0,0,1,0,0,0]
-    kernel = make_kernel(struct,10)
+    ret, thresh = cv2.threshold(path, 100, 255, 0)
+    struct = [0,0,0,1,1,1,0,0,0]
+    kernel = make_kernel(struct,20)
     kernel = np.array(kernel,np.uint8)
-    erode = cv2.erode(thresh,kernel,iterations = 1)
+
+    erode = cv2.erode(path,kernel,iterations = 1)
+
     contours, hierarchy = cv2.findContours(erode, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     lencontours = np.array([len(x) for x in contours])
     sel = [x in np.sort(lencontours)[-1:] for x in lencontours]
     maxcontours = np.array(contours)
     maxcontours = maxcontours[sel]
-    cv2.drawContours(imgray, maxcontours, -1, (0,255,0), 3)
-    maxcontours = it.chain.from_iterable(maxcontours)
+    #cv2.drawContours(path, maxcontours, -1, (0,255,0), 3)
+    maxcontours = list(it.chain.from_iterable(maxcontours))
     maxcontours = list(it.chain.from_iterable(maxcontours))
     maxcontours = np.array(maxcontours)
     coordinates = pd.DataFrame(maxcontours)

@@ -10,6 +10,10 @@ import fronts as fr
 test_image =  cv2.imread("images/1.png")
 im_gray = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
 
+#######################################################
+##TESTS FOR classification.py
+
+
 
 def test_create_set():
     """

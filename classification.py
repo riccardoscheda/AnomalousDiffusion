@@ -131,7 +131,7 @@ def classification(data, window_sizeX = 12, window_sizeY = 16):
     data : pandas dataframe
     window_sizeX : the size of the width of the subimages
     window_sizeY : the size of the height of the subimages
-    
+
     References
     ----------------------
     [1] https://jakevdp.github.io/PythonDataScienceHandbook/05.11-k-means.html
@@ -142,10 +142,14 @@ def classification(data, window_sizeX = 12, window_sizeY = 16):
     kmeans.fit(data)
     labels = kmeans.predict(data)
     labels = labels.reshape(rows,cols)
+    #sometimes Kmeans predict inverted labels, so i make all the images with the same ordered labels
+    if (labels[0][0] == 1):
+        labels = abs(1-labels)
 
     labell2 = np.empty((1200,1600))
     for i in range (1200):
         for j in range (1600):
             labell2[i][j] = labels[int(i/window_sizeX)][int(j/window_sizeY)]
 
-    return labell2
+
+    return np.array(labell2,np.uint8)
