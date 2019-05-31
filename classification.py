@@ -102,22 +102,28 @@ def Principal_components_analysis(image , window_sizeX = 12, window_sizeY = 16):
     window_sizeX : the size of the width of the subimages
     window_sizeY : the size of the height of the subimages
     """
+    #divides the image in many subimages, and for these the LBP histogram is computed
     rows = int(len(image)/window_sizeX)
     cols = int(len(image.T)/window_sizeY)
     labels = np.empty((rows,cols))
     testdf = pd.DataFrame()
     cont = 0
-
+    #The LBP histogram for each subimage is appended in a dataframe
     for element in itertools.product(range(rows),range(cols)):
         subimage = image[element[0]*window_sizeX:(element[0]+1)*window_sizeX,element[1]*window_sizeY:(element[1]+1)*window_sizeY]
         series = pd.Series(LBP(subimage))
         testdf[cont] = series
         cont = cont + 1
 
+    #The PCA is computed for the dataframe given by the LBP histograms, where the subimages are
+    #the samples and the bin of the histograms ( which are 10 ) are the features
+    #I choose to take 5 components because all of the first 5 variances are between 10% and 20%
+
     pca = PCA(5)
     principal_components = pca.fit_transform(testdf.T)
     principalDF = pd.DataFrame(principal_components, columns = ["x","y","z","u","w"])
 
+    #return the dataframe of the first 5 principal components
     return principalDF
 
 def classification(data, window_sizeX = 12, window_sizeY = 16):
@@ -138,6 +144,8 @@ def classification(data, window_sizeX = 12, window_sizeY = 16):
     """
     rows = int(1200/window_sizeX)
     cols = int(1600/window_sizeY)
+
+    #using the K-means algorithm to classify the 2 clusters given by the principal components
     kmeans = KMeans(2)
     kmeans.fit(data)
     labels = kmeans.predict(data)
@@ -146,10 +154,11 @@ def classification(data, window_sizeX = 12, window_sizeY = 16):
     if (labels[0][0] == 1):
         labels = abs(1-labels)
 
+    #since the result of K-means is a smaller binary image (100*100 pixels) i resize them as the original images
     labell2 = np.empty((1200,1600))
     for i in range (1200):
         for j in range (1600):
             labell2[i][j] = labels[int(i/window_sizeX)][int(j/window_sizeY)]
 
-
+    #returns the labelled image in uint8
     return np.array(labell2,np.uint8)
