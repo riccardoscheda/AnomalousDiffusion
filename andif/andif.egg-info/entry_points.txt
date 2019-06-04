@@ -1,0 +1,3 @@
+[console_scripts]
+andif = andif.__main__:AnomalousDiffusion
+
