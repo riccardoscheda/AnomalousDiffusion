@@ -9,7 +9,7 @@ from collections import Counter
 from functools import partial
 
 
-def fronts(path,output_name):
+def fronts(path):
     """
     Takes the longest border inside an image and saves in a text file
     the (x,y) coordinates.
@@ -48,7 +48,7 @@ def fronts(path,output_name):
     maxcontours = np.array(contours)
     maxcontours = maxcontours[sel]
 
-    plt.imsave("fr0.png",cv2.drawContours(imgray, maxcontours, -1, (0,255,0), 3))
+    #plt.imsave("fr0.png",cv2.drawContours(imgray, maxcontours, -1, (0,255,0), 3))
 
     #making maxcontours an array so it can ben putted in a dataframe
     maxcontours = list(it.chain.from_iterable(maxcontours))
@@ -57,7 +57,7 @@ def fronts(path,output_name):
     coordinates = pd.DataFrame(maxcontours)
 
     #saving the coordinates
-    np.savetxt(output_name, coordinates.values, fmt='%d')
+    #np.savetxt(output_name, coordinates.values, fmt='%d')
 
     return coordinates
 

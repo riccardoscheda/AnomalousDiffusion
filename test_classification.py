@@ -74,7 +74,7 @@ def test_fronts():
     Tests:
     if the output is a pandas DataFrame
     """
-    assert isinstance(fr.fronts(filepath + "images/1.png","test.txt"), pd.DataFrame) == True
+    assert isinstance(fr.fronts(filepath + "images/1.png"), pd.DataFrame) == True
 
 
 

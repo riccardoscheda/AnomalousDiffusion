@@ -23,9 +23,11 @@ import fronts as fr
 #     labelled_image = cl.classification(pca)
 #     plt.imsave("labelled_images/labelled_image_"+str(i)+".png",labelled_image)
 
-coord = fr.fronts("labelled_images/labelled_image_0.png","prova.txt")
+coord, reduced = fr.fronts("Data/labelled_images/labelled_m_0.png")
 plt.plot(coord[0],coord[1])
-
+reduced = coord[coord[1] > 60]
+reduced = reduced[reduced[1]<1180]
+plt.scatter(coord[0],coord[1])
 #
 # struct = [0,1,1,1,1,1,1,1,0]
 # kernel = fr.make_kernel(struct,40)
