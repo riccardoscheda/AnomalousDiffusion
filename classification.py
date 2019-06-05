@@ -126,7 +126,7 @@ def Principal_components_analysis(image , window_sizeX = 12, window_sizeY = 16):
     #return the dataframe of the first 5 principal components
     return principalDF
 
-def classification(data, window_sizeX = 12, window_sizeY = 16):
+def classification(image, data, window_sizeX = 12, window_sizeY = 16):
     """
     Computes the classification of the subimages of the total image through the K-means algorithm.
     Returns the binary image, where a label corresponds to the cells and one
@@ -134,6 +134,7 @@ def classification(data, window_sizeX = 12, window_sizeY = 16):
 
     Parameters
     -----------------------------
+    image : image in matrix format
     data : pandas dataframe
     window_sizeX : the size of the width of the subimages
     window_sizeY : the size of the height of the subimages
@@ -142,8 +143,8 @@ def classification(data, window_sizeX = 12, window_sizeY = 16):
     ----------------------
     [1] https://jakevdp.github.io/PythonDataScienceHandbook/05.11-k-means.html
     """
-    rows = int(1200/window_sizeX)
-    cols = int(1600/window_sizeY)
+    rows = int(len(image)/window_sizeX)
+    cols = int(len(image.T)/window_sizeY)
 
     #using the K-means algorithm to classify the 2 clusters given by the principal components
     kmeans = KMeans(2)
@@ -155,9 +156,9 @@ def classification(data, window_sizeX = 12, window_sizeY = 16):
         labels = abs(1-labels)
 
     #since the result of K-means is a smaller binary image (100*100 pixels) i resize them as the original images
-    labell2 = np.empty((1200,1600))
-    for i in range (1200):
-        for j in range (1600):
+    labell2 = np.empty((len(image),len(image.T)))
+    for i in range (len(image)):
+        for j in range (len(image.T)):
             labell2[i][j] = labels[int(i/window_sizeX)][int(j/window_sizeY)]
 
     #returns the labelled image in uint8
