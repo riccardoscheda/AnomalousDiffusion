@@ -15,14 +15,14 @@ import os
 
 #####################################################
 import sys
-sys.path.insert(0, '/home/riccardo/git/AnomalousDiffusion/Script')
+sys.path.insert(0, '/home/riccardo/git/AnomalousDiffusion')
 import classification as cl
 import fronts as fr
 #import test_classification
 ######################################################
 
 path = "."
-outfolder = "../labelled_images"
+outfolder = "labelled_images"
 if not os.path.exists(outfolder):
     os.makedirs(outfolder)
 
@@ -56,7 +56,7 @@ class Label(cli.Application):
                         #print("Now i'm using K-means to classify the subimages")
                         labelled_image = cl.classification(pca)
                         #print("K-means finished")
-                        plt.imsave("../labelled_images/labelled_"+str(cont)+".png",labelled_image)
+                        plt.imsave("labelled_images/labelled_"+str(cont)+".png",labelled_image)
                         cont = cont + 1
                 print(colors.green|"Saved the labelled images in dir 'labelled_images/'")
             else:
@@ -72,9 +72,9 @@ class Label(cli.Application):
                 pca = cl.Principal_components_analysis(im_gray)
                 print("PCA finished")
                 print("Now i'm using K-means to classify the subimages")
-                labelled_image = cl.classification(pca)
+                labelled_image = cl.classification(im_gray, pca)
                 print("K-means finished")
-                plt.imsave("../labelled_images/labelled_"+value,labelled_image)
+                plt.imsave("labelled_images/labelled_"+value,labelled_image)
                 print(colors.green|"Saved the labelled image in dir 'labelled_images/'")
 
 @AnomalousDiffusion.subcommand("fronts")
