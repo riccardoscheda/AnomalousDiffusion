@@ -22,9 +22,6 @@ import fronts as fr
 ######################################################
 
 path = "."
-outfolder = "labelled_images"
-if not os.path.exists(outfolder):
-    os.makedirs(outfolder)
 
 class AnomalousDiffusion(cli.Application):
     """Application for Cell migration
@@ -42,6 +39,9 @@ class Label(cli.Application):
     "Saves the labelled image using pca and K-means algorithms"
     all = cli.Flag(["all", "every image"], help = "If given, I will label all the images in the current directory")
     def main(self, value : str = ""):
+        if not os.path.exists("labelled_images"):
+            os.makedirs("labelled_images")
+
         if(value == ""):
             if (self.all):
                 cont = 0
@@ -54,7 +54,7 @@ class Label(cli.Application):
                         pca = cl.Principal_components_analysis(im_gray)
                         #print("PCA finished")
                         #print("Now i'm using K-means to classify the subimages")
-                        labelled_image = cl.classification(pca)
+                        labelled_image = cl.classification(im_gray, pca)
                         #print("K-means finished")
                         plt.imsave("labelled_images/labelled_"+str(cont)+".png",labelled_image)
                         cont = cont + 1
@@ -78,10 +78,32 @@ class Label(cli.Application):
                 print(colors.green|"Saved the labelled image in dir 'labelled_images/'")
 
 @AnomalousDiffusion.subcommand("fronts")
-class Frontsl(cli.Application):
+class Fronts(cli.Application):
     "Tracks the borders of the cells and saves the coordinates"
-    def main(self):
-        print("not yet implemented")
+    all = cli.Flag(["all", "every image"], help = "If given, I will save the fronts of all the images in the current directory")
+    def main(self, value : str = ""):
+        if not os.path.exists("fronts"):
+            os.makedirs("fronts")
+
+        if(value == ""):
+            if (self.all):
+                cont = 0
+                for value in list(os.listdir(".")):
+                    if str(value).endswith(".png"):
+                        fr.fronts(value,"fronts" + value + ".txt")
+                        cont = cont + 1
+                print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
+            else:
+                print(colors.red|"image not given")
+        else:
+            if(value not in list(os.listdir(path))):
+                print(colors.red|"this image does not exists")
+            else:
+                print("image taken")
+                fr.fronts(value,"fronts/fronts" + value + ".txt")
+                print(colors.green|"Saved the fronts of the image in dir 'fronts/'")
+
+
 
 
 if __name__ == "__main__":
