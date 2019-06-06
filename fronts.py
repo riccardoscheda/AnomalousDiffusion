@@ -19,8 +19,7 @@ def fronts(path):
     --------
     Parameters
     path : the path of the image in the directory
-    output_name : the name of the output file
-
+    ------------
     References
     [1] https://docs.opencv.org/3.1.0/d4/d73/tutorial_py_contours_begin.html
     [2] https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_morphological_ops/py_morphological_ops.html
@@ -50,14 +49,12 @@ def fronts(path):
 
     #plt.imsave("fr0.png",cv2.drawContours(imgray, maxcontours, -1, (0,255,0), 3))
 
-    #making maxcontours an array so it can ben putted in a dataframe
+    #making maxcontours as array so it can ben putted in a dataframe
     maxcontours = list(it.chain.from_iterable(maxcontours))
     maxcontours = list(it.chain.from_iterable(maxcontours))
     maxcontours = np.array(maxcontours)
     coordinates = pd.DataFrame(maxcontours)
 
-    #saving the coordinates
-    #np.savetxt(output_name, coordinates.values, fmt='%d')
 
     return coordinates
 
@@ -70,3 +67,31 @@ def make_kernel(struct,length):
     for i in range(length):
         kernel.append(struct)
     return np.matrix(kernel)
+
+def divide(coord):
+    """
+    Divides the found border in two different borders: the left one and the
+    right one.
+    Parameters
+    ------------
+    coord : pandas Dataframe which contains the coordinates of the border
+
+    Returns two pandas dataframes one for the left border and one for the right
+    border.
+    """
+    #takes the left upper corner and keep what there is before
+    leftup = np.min(np.where(coord[1]== np.max(coord[1])))
+    leftdown = np.min(np.where(coord[1]== np.min(coord[1])))
+    sx = coord.iloc[leftdown:leftup, :]
+    #takes the right upper corner and takes what there is after
+    rightup = np.max(np.where(coord[1]== np.max(coord[1])))
+    #takes not the last value but the second last because some times there are
+    #problems with the lowest border
+    a = np.where(coord[1]== np.min(coord[1]))[0]
+    if len(a)>1:
+        rightdown = a[1]
+    else:
+        rightdown = a[0]
+    dx = coord.iloc[rightup:rightdown,:]
+
+    return sx, dx

@@ -87,3 +87,14 @@ def test_make_kernel():
     binary = fr.make_kernel(struct, 1)
     assert isinstance(binary, np.matrix) == True
     assert len(np.where(binary == 0 )[1]) + len(np.where(binary == 1)[1]) == len(binary)*len(binary.T)
+
+def test_divide():
+    """
+    Tests:
+    if return two pandas Dataframes
+    if the two output dataframes are different
+    """
+    sx , dx = fr.divide(fr.fronts(filepath + "images/1.png"))
+    assert isinstance(sx, pd.DataFrame) == True
+    assert isinstance(dx, pd.DataFrame) == True
+    assert sx.equals(dx) == False
