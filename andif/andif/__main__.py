@@ -90,7 +90,8 @@ class Fronts(cli.Application):
                 cont = 0
                 for value in list(os.listdir(".")):
                     if str(value).endswith(".png"):
-                        fr.fronts(value,"fronts" + value + ".txt")
+                        coord, im = fr.fronts(value)
+                        np.savetxt("fronts/fronts_"+ value + ".txt", coord,fmt = '%d', delimiter=' ')
                         cont = cont + 1
                 print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
             else:
@@ -100,9 +101,42 @@ class Fronts(cli.Application):
                 print(colors.red|"this image does not exists")
             else:
                 print("image taken")
-                fr.fronts(value,"fronts/fronts" + value + ".txt")
+                coord, im = fr.fronts(value)
+                np.savetxt("fronts/fronts_"+ value +".txt", coord,fmt = '%d', delimiter=' ')
                 print(colors.green|"Saved the fronts of the image in dir 'fronts/'")
 
+@AnomalousDiffusion.subcommand("divide")
+class Divide(cli.Application):
+    "Divides the front in two piecies, one left and one right"
+    all = cli.Flag(["all", "every text file"], help = "If given, I will save the dx and sx fronts of all the images in the current directory")
+    def main(self, value : str = ""):
+        if not os.path.exists("fronts"):
+            os.makedirs("fronts")
+
+        if(value == ""):
+            if (self.all):
+                cont = 0
+                for value in list(os.listdir(".")):
+                    if str(value).endswith(".txt"):
+                        df =pd.DataFrame(pd.read_csv(value , delimiter=' '))
+                        sx, dx = fr.divide(df)
+                        np.savetxt("fronts/sx"+ value , sx,fmt = '%d', delimiter=' ')
+                        np.savetxt("fronts/dx"+ value , dx,fmt = '%d', delimiter=' ')
+                        cont = cont + 1
+                print(colors.green|"Divided the fronts of the images in dir 'fronts/'")
+            else:
+                print(colors.red|"file not given")
+        else:
+            if(value not in list(os.listdir(path))):
+                print(colors.red|"this file does not exists")
+            else:
+                print("image taken")
+                df = pd.DataFrame(pd.read_csv(value , delimiter=' '))
+                df.columns = [0,1]
+                sx, dx = fr.divide(df)
+                np.savetxt("fronts/sx"+ value , sx,fmt = '%d', delimiter=' ')
+                np.savetxt("fronts/dx"+ value , dx,fmt = '%d', delimiter=' ')
+                print(colors.green|"Divided the fronts  and saved in dir 'fronts/'")
 
 
 

@@ -23,11 +23,34 @@ import fronts as fr
 #     labelled_image = cl.classification(pca)
 #     plt.imsave("labelled_images/labelled_image_"+str(i)+".png",labelled_image)
 
-coord, reduced = fr.fronts("Data/labelled_images/labelled_m_0.png")
-plt.plot(coord[0],coord[1])
-reduced = coord[coord[1] > 60]
-reduced = reduced[reduced[1]<1180]
-plt.scatter(coord[0],coord[1])
+
+dx, _= fr.fronts("Data/labelled_images/labelled_m_30.png")
+#plt.plot(coord[0],coord[1])
+dx
+sx , dx = fr.divide(dx)
+len(dx)!=len(sx)
+len(dx)
+len(sx)
+
+dx = dx[:106]
+len(dx)
+
+df = pd.DataFrame(pd.read_csv( "Data/labelled_images/fronts/fronts_labelled_m_0.png.txt", delimiter=' '))
+df.columns=["0","1"]
+df
+#reduced = coord[coord[1] > 60]
+#reduced = reduced[reduced[1]<1180]
+
+#flipped = pd.DataFrame(np.flip(np.array(coord)))
+#
+# plt.ylim((0,1200))
+# plt.xlim((0,1600))
+# plt.plot(sx[0],sx[1])
+# plt.plot(sx[0],sx[1])
+# #plt.plot(coord[0],coord[1])
+# plt.show()
+
+
 #
 # struct = [0,1,1,1,1,1,1,1,0]
 # kernel = fr.make_kernel(struct,40)
@@ -35,3 +58,4 @@ plt.scatter(coord[0],coord[1])
 # kernel = np.array(kernel,np.uint8)
 # opening = cv2.morphologyEx(labelled_image,cv2.MORPH_OPEN,kernel)
 # plt.imshow(opening)
+3
