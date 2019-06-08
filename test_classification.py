@@ -26,7 +26,7 @@ def test_create_modified_images():
     """
     Tests if the number of images in the set is correct
     """
-    assert len(os.listdir(filepath + "modified_images/")) == 60
+    assert len(os.listdir("Results/modified_images/")) == 56
 
 def test_adaptive_contrast_enhancement():
     """
@@ -74,7 +74,8 @@ def test_fronts():
     Tests:
     if the output is a pandas DataFrame
     """
-    assert isinstance(fr.fronts(filepath + "images/1.png"), pd.DataFrame) == True
+    fronts, _ = fr.fronts(filepath + "images/1.png")
+    assert isinstance(fronts, pd.DataFrame) == True
 
 
 
@@ -94,7 +95,11 @@ def test_divide():
     if return two pandas Dataframes
     if the two output dataframes are different
     """
-    sx , dx = fr.divide(fr.fronts(filepath + "images/1.png"))
+    coord , _ = fr.fronts(filepath + "images/1.png")
+    sx , dx = fr.divide(coord)
+    assert len(sx) != 0
     assert isinstance(sx, pd.DataFrame) == True
     assert isinstance(dx, pd.DataFrame) == True
     assert sx.equals(dx) == False
+    assert all(sx == 0) == False
+    assert all(dx == 0) == False

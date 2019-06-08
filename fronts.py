@@ -47,16 +47,16 @@ def fronts(path):
     maxcontours = np.array(contours)
     maxcontours = maxcontours[sel]
 
-    #plt.imsave("fr0.png",cv2.drawContours(imgray, maxcontours, -1, (0,255,0), 3))
+    image_with_fronts = cv2.drawContours(imgray, maxcontours, -1, (0,255,0), 3)
 
     #making maxcontours as array so it can ben putted in a dataframe
     maxcontours = list(it.chain.from_iterable(maxcontours))
     maxcontours = list(it.chain.from_iterable(maxcontours))
     maxcontours = np.array(maxcontours)
     coordinates = pd.DataFrame(maxcontours)
+    coordinates.columns = ["x", "y"]
 
-
-    return coordinates
+    return coordinates, image_with_fronts
 
 def make_kernel(struct,length):
     """
@@ -76,18 +76,19 @@ def divide(coord):
     ------------
     coord : pandas Dataframe which contains the coordinates of the border
 
-    Returns two pandas dataframes one for the left border and one for the right
+    Returns (first sx and second dx) two pandas dataframes one for the left border and one for the right
     border.
     """
+    coord.columns = ["x", "y"]
     #takes the left upper corner and keep what there is before
-    leftup = np.min(np.where(coord[1]== np.max(coord[1])))
-    leftdown = np.min(np.where(coord[1]== np.min(coord[1])))
-    sx = coord.iloc[leftdown:leftup, :]
+    leftup = np.min(np.where(coord["y"] == np.max(coord["y"])))
+    leftdown = np.min(np.where(coord["y"] == np.min(coord["y"])))
+    sx = coord.iloc[leftup:leftdown, :]
     #takes the right upper corner and takes what there is after
-    rightup = np.max(np.where(coord[1]== np.max(coord[1])))
+    rightup = np.max(np.where(coord["y"] == np.max(coord["y"])))
     #takes not the last value but the second last because some times there are
     #problems with the lowest border
-    a = np.where(coord[1]== np.min(coord[1]))[0]
+    a = np.where(coord["y"]== np.min(coord["y"]))[0]
     if len(a)>1:
         rightdown = a[1]
     else:

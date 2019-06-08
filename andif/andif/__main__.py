@@ -56,7 +56,7 @@ class Label(cli.Application):
                         #print("Now i'm using K-means to classify the subimages")
                         labelled_image = cl.classification(im_gray, pca)
                         #print("K-means finished")
-                        plt.imsave("labelled_images/labelled_"+str(cont)+".png",labelled_image)
+                        plt.imsave("labelled_images/labelled_"+value,labelled_image)
                         cont = cont + 1
                 print(colors.green|"Saved the labelled images in dir 'labelled_images/'")
             else:
@@ -119,9 +119,10 @@ class Divide(cli.Application):
                 for value in list(os.listdir(".")):
                     if str(value).endswith(".txt"):
                         df =pd.DataFrame(pd.read_csv(value , delimiter=' '))
+                        df.columns = ["x","y"]
                         sx, dx = fr.divide(df)
-                        np.savetxt("fronts/sx"+ value , sx,fmt = '%d', delimiter=' ')
-                        np.savetxt("fronts/dx"+ value , dx,fmt = '%d', delimiter=' ')
+                        np.savetxt("fronts/dx"+ value , dx.values, fmt='%d')
+                        np.savetxt("fronts/sx"+ value , sx.values, fmt='%d')
                         cont = cont + 1
                 print(colors.green|"Divided the fronts of the images in dir 'fronts/'")
             else:
@@ -132,10 +133,10 @@ class Divide(cli.Application):
             else:
                 print("image taken")
                 df = pd.DataFrame(pd.read_csv(value , delimiter=' '))
-                df.columns = [0,1]
+                df.columns = ["x","y"]
                 sx, dx = fr.divide(df)
-                np.savetxt("fronts/sx"+ value , sx,fmt = '%d', delimiter=' ')
-                np.savetxt("fronts/dx"+ value , dx,fmt = '%d', delimiter=' ')
+                np.savetxt("fronts/dx"+ value , dx.values, fmt='%d')
+                np.savetxt("fronts/sx"+ value , sx.values, fmt='%d')
                 print(colors.green|"Divided the fronts  and saved in dir 'fronts/'")
 
 
