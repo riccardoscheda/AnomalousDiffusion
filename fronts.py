@@ -82,8 +82,7 @@ def divide(coord):
     coord.columns = ["x", "y"]
     #takes the left upper corner and keep what there is before
     leftup = np.min(np.where(coord["y"] == np.max(coord["y"])))
-    leftdown = np.min(np.where(coord["y"] == np.min(coord["y"])))
-    sx = coord.iloc[leftup:leftdown, :]
+    sx = coord.iloc[:leftup, :]
     #takes the right upper corner and takes what there is after
     rightup = np.max(np.where(coord["y"] == np.max(coord["y"])))
     #takes not the last value but the second last because some times there are

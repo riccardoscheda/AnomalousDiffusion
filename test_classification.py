@@ -95,11 +95,12 @@ def test_divide():
     if return two pandas Dataframes
     if the two output dataframes are different
     """
-    coord , _ = fr.fronts(filepath + "images/1.png")
+    coord , _ = fr.fronts("Results/modified_images/m_2.png")
     sx , dx = fr.divide(coord)
     assert len(sx) != 0
+    assert len(dx) != 0
     assert isinstance(sx, pd.DataFrame) == True
     assert isinstance(dx, pd.DataFrame) == True
+    assert all(sx["x"] == 0) == False
+    assert all(dx["x"] == 0) == False
     assert sx.equals(dx) == False
-    assert all(sx == 0) == False
-    assert all(dx == 0) == False
