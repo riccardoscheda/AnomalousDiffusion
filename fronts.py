@@ -14,9 +14,10 @@ def fronts(path):
     Takes the longest border inside an image and saves in a text file
     the (x,y) coordinates.
     Return also the dataframe of the coordinates
-    The input image is modifief by morphological transformation in order to have a smoother border
+    The input image is modified by morphological transformation in order to have a smoother border
 
     --------
+
     Parameters
     path : the path of the image in the directory
     ------------
@@ -82,7 +83,7 @@ def divide(coord):
     coord.columns = ["x", "y"]
     #takes the left upper corner and keep what there is before
     leftup = np.min(np.where(coord["y"] == np.max(coord["y"])))
-    sx = coord.iloc[:leftup, :]
+    sx = coord.iloc[:leftup + 1, :]
     #takes the right upper corner and takes what there is after
     rightup = np.max(np.where(coord["y"] == np.max(coord["y"])))
     #takes not the last value but the second last because some times there are
@@ -92,6 +93,6 @@ def divide(coord):
         rightdown = a[1]
     else:
         rightdown = a[0]
-    dx = coord.iloc[rightup:rightdown,:]
+    dx = coord.iloc[rightup - 1 :rightdown + 1 ,:]
 
     return sx, dx
