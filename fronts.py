@@ -93,6 +93,29 @@ def divide(coord):
         rightdown = a[1]
     else:
         rightdown = a[0]
-    dx = coord.iloc[rightup - 1 :rightdown + 1 ,:]
+    dx = coord.iloc[rightup  :rightdown ,:]
 
     return sx, dx
+
+from shapely.affinity import rotate,scale
+from shapely.geometry import Polygon
+
+def area(fname):
+    """
+    Computes the area of the polygon formed by the two borders of the cells
+
+    -----------------------------
+    Parameters:
+    fname : the path of a txt file
+    -----------------------------
+    References:
+    [1] https://shapely.readthedocs.io/en/latest/manual.html#geometric-objects
+    """
+
+    pol = pd.DataFrame(pd.read_csv(fname,delimiter =' '))
+    pol = np.array(pol)
+    pol = Polygon(pol)
+    rotated = rotate(pol,180)
+    reflected =  scale(rotated, xfact = -1)
+
+    return reflected,  reflected.area

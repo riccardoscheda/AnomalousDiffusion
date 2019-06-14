@@ -104,3 +104,17 @@ def test_divide():
     assert all(sx["x"] == 0) == False
     assert all(dx["x"] == 0) == False
     assert sx.equals(dx) == False
+
+
+from shapely.affinity import rotate,scale
+from shapely.geometry import Polygon
+
+def test_area():
+    """
+    Tests:
+    if returns a type Polygon and a number
+    """
+    path = "Results/labelled_images/fronts/fronts_labelled_m_0.png.txt"
+    pol , area = fr.area(path)
+    assert isinstance(pol, Polygon) == True
+    assert isinstance(area, float)
