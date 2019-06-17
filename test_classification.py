@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib as plt
 import cv2
 import pandas as pd
+from hypothesis import given
+
 
 import classification as cl
 import fronts as fr
@@ -106,9 +108,11 @@ def test_divide():
     assert all(dx["x"] == 0) == False
     assert sx.equals(dx) == False
 
-
+##############################################################################
+## TESTS FOR analysis.py
 from shapely.affinity import rotate,scale
 from shapely.geometry import Polygon
+
 
 def test_area():
     """
@@ -119,3 +123,21 @@ def test_area():
     pol , area = an.area(path)
     assert isinstance(pol, Polygon) == True
     assert isinstance(area, float)
+
+import math
+
+def test_error():
+    """
+    Tests:
+    if returns a positive number
+    """
+    front = "Results/labelled_images1216/fronts/fronts_labelled_m_15.png.txt"
+    dx = "Data/data_fronts/Sham_8-2-18_Field 5_14_dx.txt"
+    sx = "Data/data_fronts/Sham_8-2-18_Field 5_14_sx.txt"
+    error = an.error(front,sx,dx)
+    #it shall be commutative ?
+    a = an.error(front,dx,sx)
+    b = an.error(front, sx, dx)
+    assert math.isclose(a, b, rel_tol=1e7) == True
+    assert isinstance(error, float) == True
+    assert error > 0
