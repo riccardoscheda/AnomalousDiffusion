@@ -6,7 +6,7 @@ import pandas as pd
 
 import classification as cl
 import fronts as fr
-
+import analysis as an
 filepath = "Data/"
 test_image =  cv2.imread( filepath + "images/1.png")
 im_gray = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
@@ -95,7 +95,8 @@ def test_divide():
     if return two pandas Dataframes
     if the two output dataframes are different
     """
-    coord , _ = fr.fronts("Results/modified_images/m_2.png")
+    coord = pd.DataFrame(pd.read_csv("Results/labelled_images1216/fronts/fronts_labelled_m_1.png.txt" , delimiter=' '))
+    coord.columns = ["x","y"]
     sx , dx = fr.divide(coord)
     assert len(sx) != 0
     assert len(dx) != 0
@@ -114,7 +115,7 @@ def test_area():
     Tests:
     if returns a type Polygon and a number
     """
-    path = "Results/labelled_images/fronts/fronts_labelled_m_0.png.txt"
-    pol , area = fr.area(path)
+    path = "Results/labelled_images1216/fronts/fronts_labelled_m_0.png.txt"
+    pol , area = an.area(path)
     assert isinstance(pol, Polygon) == True
     assert isinstance(area, float)

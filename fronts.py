@@ -34,8 +34,8 @@ def fronts(path):
     ret, thresh = cv2.threshold(imgray, 100, 255, 0)
 
     #create the kernel for the morphological transformations
-    struct = [0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0]
-    kernel = make_kernel(struct,30)
+    struct = [0,0,0,1,1,1,1,1,1,1,0,0,0]
+    kernel = make_kernel(struct,10)
     kernel = np.array(kernel,np.uint8)
 
     #using erosion to enhance the fronts
@@ -96,26 +96,3 @@ def divide(coord):
     dx = coord.iloc[rightup  :rightdown ,:]
 
     return sx, dx
-
-from shapely.affinity import rotate,scale
-from shapely.geometry import Polygon
-
-def area(fname):
-    """
-    Computes the area of the polygon formed by the two borders of the cells
-
-    -----------------------------
-    Parameters:
-    fname : the path of a txt file
-    -----------------------------
-    References:
-    [1] https://shapely.readthedocs.io/en/latest/manual.html#geometric-objects
-    """
-
-    pol = pd.DataFrame(pd.read_csv(fname,delimiter =' '))
-    pol = np.array(pol)
-    pol = Polygon(pol)
-    rotated = rotate(pol,180)
-    reflected =  scale(rotated, xfact = -1)
-
-    return reflected,  reflected.area
