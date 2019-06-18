@@ -1,3 +1,4 @@
+#%%
 import cv2
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -7,55 +8,211 @@ import os
 
 import classification as cl
 import fronts as fr
+import analysis as an
 
-# outfolder = "fronts/"
-# if not os.path.exists(outfolder):
-#     os.makedirs(outfolder)
+from scipy.signal import savgol_filter
+from scipy.interpolate import UnivariateSpline
+
+
+from sklearn.cluster import KMeans
+from sklearn.mixture import GaussianMixture
+# #%%
+# sx = pd.DataFrame(pd.read_csv(("Results/labelled_images/fronts/fronts_labelled_m_0.png.txt"),delimiter =' '))
+# sx.columns = ["x", "y"]
+# #%%
+# plt.xlim(0,1200)
+# plt.ylim(0,1600)
+# plt.plot(sx["y"],sx["x"])
 #
-# if not os.path.exists("labelled_images/"):
-#     os.makedirs("labelled_images/")
+# #%%
 #
 #
-# for i in range(1):
-#     test_image =  cv2.imread("modified_images/m_"+str(i)+".png")
-#     im_gray = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
-#     pca = cl.Principal_components_analysis(im_gray)
-#     labelled_image = cl.classification(pca)
-#     plt.imsave("labelled_images/labelled_image_"+str(i)+".png",labelled_image)
-
-
-dx, _= fr.fronts("Data/labelled_images/labelled_m_30.png")
-#plt.plot(coord[0],coord[1])
-dx
-sx , dx = fr.divide(dx)
-len(dx)!=len(sx)
-len(dx)
-len(sx)
-
-dx = dx[:106]
-len(dx)
-
-df = pd.DataFrame(pd.read_csv( "Data/labelled_images/fronts/fronts_labelled_m_0.png.txt", delimiter=' '))
-df.columns=["0","1"]
-df
-#reduced = coord[coord[1] > 60]
-#reduced = reduced[reduced[1]<1180]
-
-#flipped = pd.DataFrame(np.flip(np.array(coord)))
+# #%%
+# sx = pd.DataFrame(pd.read_csv(("Results/labelled_images/fronts/divided_fronts/sxfronts_labelled_m_0.png.txt"),delimiter =' '))
 #
-# plt.ylim((0,1200))
-# plt.xlim((0,1600))
-# plt.plot(sx[0],sx[1])
-# plt.plot(sx[0],sx[1])
-# #plt.plot(coord[0],coord[1])
+#
+# plt.xlim(0,1200)
+# plt.ylim(0,1600)
+# plt.plot(sx["y"],sx["x"])
+# len(sx)
+# #%%
+# y = savgol_filter(sx["x"], 5, 3)
+# plt.plot(y)
+# #%%
+#
+#
+
+#%%
+
+# for im in os.listdir(image_folder):
+#     im2 = im
+#     im = im.replace("_",".")
+#     os.rename(image_folder+im2,image_folder+im)
+
+# import cv2
+# import os
+# import re
+# image_folder = "Results/labelled_images1216/"
+# images = [img for img in os.listdir(image_folder) if img.endswith(".png")]
+# images
+#
+#
+#
+# images = sorted(images, key = lambda x: int(x.split('.')[2]))
+# for im in images:
+#     frame = cv2.imread(os.path.join(image_folder, im))
+#     height, width, layers = frame.shape
+# video = cv2.VideoWriter("video1216.avi", 0, 1, (width,height))
+#
+#
+# for image in images:
+#     video.write(cv2.imread(os.path.join(image_folder, image)))
+# video.release()
+# #%%
+
+#
+# _ , im = fr.fronts("Results/labelled_images/labelled_m_8.png")
+#
+# plt.imsave("fr8.png",im)
+# #%%
+#
+#
+#
+# def atoi(text):
+#     if text.isdigit():
+#         return int(text)
+
+#%%
+#
+# train_image =  cv2.imread("Data/images/31.png")
+# im_gray = cv2.cvtColor(train_image, cv2.COLOR_BGR2GRAY)
+# pca_train = cl.Principal_components_analysis(im_gray,10,10)
+#
+# labels = GaussianMixture(2).fit_predict(pca_train)
+# fig = plt.figure()
+# # ax = fig.add_subplot(111, projection='3d')
+# # ax.scatter(pca_train["x"],pca_train["y"],pca_train["z"],c=labels)
+#
+# labels = labels.reshape(120,160)
+# plt.imshow(labels)
 # plt.show()
-
-
+# #plt.imsave("3cluster.png",labels)
 #
-# struct = [0,1,1,1,1,1,1,1,0]
-# kernel = fr.make_kernel(struct,40)
-# kernel = cv2.getStructuringElement(cv2.MORPH_CROSS,(15,15))
-# kernel = np.array(kernel,np.uint8)
-# opening = cv2.morphologyEx(labelled_image,cv2.MORPH_OPEN,kernel)
-# plt.imshow(opening)
-3
+
+#%%
+path = "Results/labelled_images1010/fronts1/"
+areas = []
+for value in list(os.listdir(path)):
+    if str(value).endswith("png.txt"):
+        pol, area = an.area(path + value)
+        areas.append(area)
+
+areas_hand = []
+path = "Data/data_fronts/"
+i = 1
+df_sx = pd.DataFrame()
+df_dx = pd.DataFrame()
+
+for i in range(int(len(os.listdir(path))/2-1)):
+    path = "Data/data_fronts/"
+    value = "Sham_8-2-18_Field 5_"+str(i+1)+"_sx.txt"
+    value1 = "Sham_8-2-18_Field 5_"+str(i+1)+"_dx.txt"
+    areas_hand.append(an.area_btw_fronts(path + value,path + value1))
+
+areas = np.array(areas)
+areas = sorted(areas,reverse=True)
+areas = areas/areas[0]
+areas = areas[:40]
+areas_hand = np.array(areas_hand)
+areas_hand = sorted(areas_hand,reverse=True)
+areas_hand = areas_hand/areas_hand[0]
+areas_hand = areas_hand[:40]
+
+plt.plot(areas)
+plt.plot(areas_hand)
+error = an.error(areas,areas_hand)
+
+plt.plot(error)
+plt.show()
+
+
+#%%
+path = "Data/data_fronts/"
+for file in os.listdir(path):
+        polsx = pd.DataFrame(pd.read_csv(path + file,sep ='\t'))
+        polsx.columns = ["y","x"]
+        # poldx = pd.DataFrame(pd.read_csv(df_dx,sep ='\t'))
+        # poldx.columns = ["y","x"]
+        polsx["y"] = polsx["y"]*1600/844
+        polsx["x"] = polsx["x"]*1200/630
+polsx = pd.DataFrame(pd.read_csv(path + "Sham_8-2-18_Field 5_27_sx.txt",sep ='\t'))
+polsx.columns = ["y","x"]
+# poldx = pd.DataFrame(pd.read_csv(df_dx,sep ='\t'))
+# poldx.columns = ["y","x"]
+polsx["y"] = polsx["y"]*1600/844
+polsx["x"] = polsx["x"]*1200/630
+        #plt.plot(polsx["x"],polsx["y"])
+plt.ylim(0,1600)
+plt.xlim(0,1200)
+        # plt.plot(poldx["y"]["x"])
+
+pol = pd.DataFrame(pd.read_csv("Results/labelled_images1010/fronts/fronts_labelled.m.26.png.txt",sep =' '))
+pol.columns = ["y","x"]
+plt.plot(pol["x"],pol["y"])
+plt.plot(polsx["x"],polsx["y"])
+plt.show()
+#%%
+path = "Data/data_fronts/"
+from shapely.affinity import rotate,scale
+from shapely.geometry import Polygon
+from shapely.geometry import Polygon
+pol0 = pd.DataFrame(pd.read_csv("Results/labelled_images1010/fronts/fronts_labelled.m.0.png.txt",sep =' '))
+pol0 = np.array(pol0)
+pol0 = Polygon(pol0)
+pol0.area
+pol0
+polsx = pd.DataFrame(pd.read_csv(path + "Sham_8-2-18_Field 5_1_sx.txt",sep ='\t'))
+polsx.columns = ["y","x"]
+poldx = pd.DataFrame(pd.read_csv(path + "Sham_8-2-18_Field 5_1_dx.txt",sep ='\t'))
+poldx.columns = ["y","x"]
+poldx["y"][0]
+polsx = polsx.append(poldx)
+polsx = np.array(polsx)
+pol1 = Polygon(polsx)
+pol1
+pol1.area
+
+#%%
+
+from shapely.affinity import rotate,scale
+from shapely.geometry import Polygon
+from shapely.geometry import Polygon
+
+areas = []
+areas_hand = []
+for i in range(42):
+    pol = pd.DataFrame(pd.read_csv("Results/labelled_images1010/fronts/fronts_labelled.m."+str(i)+".png.txt",sep =' '))
+    pol = np.array(pol)
+    pol = Polygon(pol)
+    areas.append(pol.area/pol0.area)
+
+    polsx = pd.DataFrame(pd.read_csv(path + "Sham_8-2-18_Field 5_"+str(i+1)+"_sx.txt",sep ='\t'))
+    polsx.columns = ["y","x"]
+    poldx = pd.DataFrame(pd.read_csv(path + "Sham_8-2-18_Field 5_"+str(i+1)+"_dx.txt",sep ='\t'))
+    poldx.columns = ["y","x"]
+    if poldx["x"][0]>100:
+        poldx = poldx.reindex(index=poldx.index[::-1])
+    if polsx["x"][0]<100:
+        polsx = polsx.reindex(index=polsx.index[::-1])
+    polsx = polsx.append(poldx)
+    polsx = np.array(polsx)
+
+    pol2 = Polygon(polsx)
+    areas_hand.append(pol2.area/pol1.area)
+plt.figure(dpi=160)
+plt.plot(areas,label="areas")
+plt.plot(areas_hand, label= "hand drawn areas")
+plt.legend()
+plt.savefig("areas.png")
+# error = an.error(np.array(areas),np.array(areas_hand))
+# plt.plot(error)
