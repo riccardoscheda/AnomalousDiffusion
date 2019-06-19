@@ -162,57 +162,17 @@ plt.plot(pol["x"],pol["y"])
 plt.plot(polsx["x"],polsx["y"])
 plt.show()
 #%%
-path = "Data/data_fronts/"
-from shapely.affinity import rotate,scale
-from shapely.geometry import Polygon
-from shapely.geometry import Polygon
-pol0 = pd.DataFrame(pd.read_csv("Results/labelled_images1010/fronts/fronts_labelled.m.0.png.txt",sep =' '))
-pol0 = np.array(pol0)
-pol0 = Polygon(pol0)
-pol0.area
-pol0
-polsx = pd.DataFrame(pd.read_csv(path + "Sham_8-2-18_Field 5_1_sx.txt",sep ='\t'))
-polsx.columns = ["y","x"]
-poldx = pd.DataFrame(pd.read_csv(path + "Sham_8-2-18_Field 5_1_dx.txt",sep ='\t'))
-poldx.columns = ["y","x"]
-poldx["y"][0]
-polsx = polsx.append(poldx)
-polsx = np.array(polsx)
-pol1 = Polygon(polsx)
-pol1
-pol1.area
 
-#%%
-
-from shapely.affinity import rotate,scale
-from shapely.geometry import Polygon
-from shapely.geometry import Polygon
-
-areas = []
-areas_hand = []
-for i in range(42):
-    pol = pd.DataFrame(pd.read_csv("Results/labelled_images1010/fronts/fronts_labelled.m."+str(i)+".png.txt",sep =' '))
-    pol = np.array(pol)
-    pol = Polygon(pol)
-    areas.append(pol.area/pol0.area)
-
-    polsx = pd.DataFrame(pd.read_csv(path + "Sham_8-2-18_Field 5_"+str(i+1)+"_sx.txt",sep ='\t'))
-    polsx.columns = ["y","x"]
-    poldx = pd.DataFrame(pd.read_csv(path + "Sham_8-2-18_Field 5_"+str(i+1)+"_dx.txt",sep ='\t'))
-    poldx.columns = ["y","x"]
-    if poldx["x"][0]>100:
-        poldx = poldx.reindex(index=poldx.index[::-1])
-    if polsx["x"][0]<100:
-        polsx = polsx.reindex(index=polsx.index[::-1])
-    polsx = polsx.append(poldx)
-    polsx = np.array(polsx)
-
-    pol2 = Polygon(polsx)
-    areas_hand.append(pol2.area/pol1.area)
 plt.figure(dpi=160)
+plt.xlabel("frames")
 plt.plot(areas,label="areas")
 plt.plot(areas_hand, label= "hand drawn areas")
 plt.legend()
 plt.savefig("areas.png")
-# error = an.error(np.array(areas),np.array(areas_hand))
-# plt.plot(error)
+
+error = an.error(np.array(areas),np.array(areas_hand))
+plt.figure(dpi=160)
+plt.xlabel("frames")
+plt.ylabel("error")
+plt.plot(error)
+plt.savefig("error_btw_areas.png")

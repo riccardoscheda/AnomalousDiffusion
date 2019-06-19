@@ -124,20 +124,31 @@ def test_area():
     assert isinstance(pol, Polygon) == True
     assert isinstance(area, float)
 
+
+def test_comparison():
+    """
+    Tests:
+    if returns two np.ndarrays
+    if returns arrays with positive numbers
+    """
+    areas, areas_hand = an.comparison()
+    assert all(areas >=0 ) == True
+    assert all(areas_hand >=0 ) == True
+
 import math
 
 def test_error():
     """
     Tests:
-    if returns a positive number
+    if returns an array of  positive numbers
+    if it's commutative
     """
-    front = "Results/labelled_images1216/fronts/fronts_labelled_m_15.png.txt"
-    dx = "Data/data_fronts/Sham_8-2-18_Field 5_14_dx.txt"
-    sx = "Data/data_fronts/Sham_8-2-18_Field 5_14_sx.txt"
-    error = an.error(front,sx,dx)
+
+
     #it shall be commutative ?
-    a = an.error(front,dx,sx)
-    b = an.error(front, sx, dx)
-    assert math.isclose(a, b, rel_tol=1e7) == True
-    assert isinstance(error, float) == True
-    assert error > 0
+    a , b = an.comparison()
+    error1 = an.error(a, b)
+    error2 = an.error(b, a)
+    assert math.isclose(error1, error2, rel_tol=1e-5) == True
+    assert isinstance(error1, np.ndarray) == True
+    assert all(error1 > 0) == True
