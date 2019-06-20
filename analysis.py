@@ -94,14 +94,44 @@ def error(area, area_hand):
     return np.array(error)
 
 
-from scipy.interpolate import interp1d
-
-def MSD(path):
+def grid(file, N = 100, l = 1200):
     """
-    Computes the Mean Square Displacement between the different frames of the fronts
-    --------------------------------
+    Makes an approximation of the fronts dividing the range in subintervals and for
+    each subinterval takes the max value in that interval.
+
+    --------------------------------------------
     Parameters:
-
-    ------------------
+    --------------------------------------------
+    file: path of a txt file with x and y coordinates of the fronts
+    N : number of subinterval to build the grid
+    l : the length of the total interval
     """
-    #interpolation
+    min_x = 0
+    max_x = l
+    delta = l/float(N)
+
+
+    grid = pd.DataFrame(pd.read_csv(file,delimiter = " "))
+    grid.columns = [0,1]
+    grid = grid.sort_values(by = 1)
+    grid_smooth=np.empty((2,N))
+
+    for i in np.arange(N):
+        bin_m = min_x +i*delta
+        bin_M = min_x +(i+1)*delta
+        if file.endswith("sx.txt"):
+            grid_smooth[1,i]=min_x +(i+1/2.)*delta
+            if len(grid[(grid[1]>bin_m) & (grid[1]<bin_M)][0]) != 0:
+                grid_smooth[0,i]=max(grid[(grid[1]>bin_m)&(grid[1]<bin_M)][0])
+            else:
+                grid_smooth[0,i] = grid_smooth[0,i-1]
+        else:
+            grid_smooth[1,i]=min_x +(i+1/2.)*delta
+            if len(grid[(grid[1]>bin_m)&(grid[1]<bin_M)][0]) != 0:
+                grid_smooth[0,i]=min(grid[(grid[1]>bin_m)&(grid[1]<bin_M)][0])
+            else:
+                grid_smooth[0,i] = grid_smooth[0,i-1]
+    df = pd.DataFrame()
+    df[0] = pd.Series(grid_smooth[0])
+    df[1] = pd.Series(grid_smooth[1])
+    return df

@@ -110,6 +110,8 @@ def test_divide():
 
 ##############################################################################
 ## TESTS FOR analysis.py
+
+
 from shapely.affinity import rotate,scale
 from shapely.geometry import Polygon
 
@@ -152,3 +154,11 @@ def test_error():
     assert all(error1 - error2 < 1e-5) == True
     assert isinstance(error1, np.ndarray) == True
     assert all(error1 > 0) == True
+
+def test_grid():
+    path = "Results/labelled_images1010/fronts/divided_fronts/fronts_labelled.m.2.png.txtsx.txt"
+    N = 100
+    l = 1200
+    grid = an.grid(path, N , l)
+    assert isinstance(grid, pd.DataFrame) == True
+    assert len(grid) == N
