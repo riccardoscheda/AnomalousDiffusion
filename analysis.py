@@ -125,12 +125,17 @@ def grid(file, N = 100, l = 1200):
                 grid_smooth[0,i]=max(grid[(grid[1]>bin_m)&(grid[1]<bin_M)][0])
             else:
                 grid_smooth[0,i] = grid_smooth[0,i-1]
+            if i == 0:
+                grid_smooth[0,i] = np.mean(grid[0])
         else:
             grid_smooth[1,i]=min_x +(i+1/2.)*delta
             if len(grid[(grid[1]>bin_m)&(grid[1]<bin_M)][0]) != 0:
                 grid_smooth[0,i]=min(grid[(grid[1]>bin_m)&(grid[1]<bin_M)][0])
             else:
                 grid_smooth[0,i] = grid_smooth[0,i-1]
+            if i == 0:
+                grid_smooth[0,i] = np.mean(grid[0])
+    
     df = pd.DataFrame()
     df[0] = pd.Series(grid_smooth[0])
     df[1] = pd.Series(grid_smooth[1])
