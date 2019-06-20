@@ -18,7 +18,7 @@ import sys
 sys.path.insert(0, '/home/riccardo/git/AnomalousDiffusion')
 import classification as cl
 import fronts as fr
-#import test_classification
+import analysis as an
 ######################################################
 
 path = "."
@@ -50,8 +50,8 @@ class Label(cli.Application):
                         test_image =  cv2.imread(value)
                         im_gray = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
                         print("analyzing image " +str(cont+1)+"/"+str(len(os.listdir("."))))
-                        pca = cl.Principal_components_analysis(im_gray)
-                        labelled_image = cl.classification(im_gray, pca)
+                        pca = cl.Principal_components_analysis(im_gray,window_sizeX=10,window_sizeY=10)
+                        labelled_image = cl.classification(im_gray, pca,window_sizeX=10,window_sizeY=10)
                         plt.imsave("labelled_images/labelled_"+value,labelled_image)
                         cont = cont + 1
                 print(colors.green|"Saved the binary images in dir 'labelled_images/'")
@@ -65,10 +65,10 @@ class Label(cli.Application):
                 im_gray = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
                 print("image taken")
                 print("i'm doing PCA on the LBP image")
-                pca = cl.Principal_components_analysis(im_gray)
+                pca = cl.Principal_components_analysis(im_gray,window_sizeX=10,window_sizeY=10)
                 print("PCA finished")
                 print("Now i'm using K-means to classify the subimages")
-                labelled_image = cl.classification(im_gray, pca)
+                labelled_image = cl.classification(im_gray, pca,window_sizeX=10,window_sizeY=10)
                 print("K-means finished")
                 plt.imsave("labelled_images/labelled_"+value,labelled_image)
                 print(colors.green|"Saved the labelled image in dir 'labelled_images/'")
@@ -77,6 +77,7 @@ class Label(cli.Application):
 class Fronts(cli.Application):
     "Tracks the longest borders in the images and saves the coordinates in a txt file"
     all = cli.Flag(["all", "every image"], help = "If given, I will save the fronts of all the images in the current directory")
+    s = cli.Flag(["s", "save"], help = "If given, I will save the image with the borders in the current directory")
     def main(self, value : str = ""):
         if not os.path.exists("fronts"):
             os.makedirs("fronts")
@@ -98,6 +99,8 @@ class Fronts(cli.Application):
             else:
                 print("image taken")
                 coord, im = fr.fronts(value)
+                if (self.s):
+                    plt.imsave("front_"+ value, im)
                 np.savetxt("fronts/fronts_"+ value +".txt", coord,fmt = '%d', delimiter=' ')
                 print(colors.green|"Saved the fronts of the image in dir 'fronts/'")
 
@@ -117,8 +120,8 @@ class Divide(cli.Application):
                         df = pd.DataFrame(pd.read_csv(value , delimiter=' '))
                         df.columns = ["x","y"]
                         sx, dx = fr.divide(df)
-                        np.savetxt("divided_fronts/dx"+ value , dx.values, fmt='%d')
-                        np.savetxt("divided_fronts/sx"+ value , sx.values, fmt='%d')
+                        np.savetxt("divided_fronts/"+ value+"dx.txt" , dx.values, fmt='%d')
+                        np.savetxt("divided_fronts/"+ value+"sx.txt" , sx.values, fmt='%d')
                         cont = cont + 1
                 print(colors.green|"Divided the fronts of the images in dir 'divided_fronts/'")
             else:
@@ -131,9 +134,49 @@ class Divide(cli.Application):
                 df = pd.DataFrame(pd.read_csv(value , delimiter=' '))
                 df.columns = ["x","y"]
                 sx, dx = fr.divide(df)
-                np.savetxt("divided_fronts/dx"+ value , dx.values, fmt='%d')
-                np.savetxt("divided_fronts/sx"+ value , sx.values, fmt='%d')
+                np.savetxt("divided_fronts/"+ value +"dx.txt" , dx.values, fmt='%d')
+                np.savetxt("divided_fronts/"+ value +"sx.txt", sx.values, fmt='%d')
                 print(colors.green|"Divided the fronts and saved in dir 'divided_fronts/'")
+
+@AnomalousDiffusion.subcommand("area")
+class Area(cli.Application):
+    "Computes the area of the polygon formed by the two borders of the cells"
+    all = cli.Flag(["all", "every text file"], help = "If given, I will save area of all the images in a txt file")
+    def main(self, value : str = ""):
+
+        if(value == ""):
+            if (self.all):
+                areas = []
+                for value in list(os.listdir(".")):
+                    if str(value).endswith("png.txt"):
+                        pol, area = an.area(value)
+                        areas.append(area)
+
+                with open('Areas.txt', 'w+') as f:
+                    for item in areas:
+                        f.write("%s\n" % item)
+                print(colors.green|"areas saved in file 'Areas.txt'")
+            else:
+                print(colors.red|"file not given")
+        else:
+            if(value not in list(os.listdir(path))):
+                print(colors.red|"this file does not exists")
+            else:
+                pol, area = fr.area(value)
+                print("The area of the polygon is "+ str(area))
+
+@AnomalousDiffusion.subcommand("error")
+class Error(cli.Application):
+    "Computes the error between two areas between the fronts"
+    def main(self, value : str = ""):
+
+        if(value == ""):
+                errors = []
+                i = 0
+                areas = pd.DataFrame(pd.read_csv("Areas.txt"))
+                areas_hand = pd.DataFrame(pd.read_csv("Areas_hand.txt"))
+                print(colors.green|"errors saved in file 'error.txt'")
+
 
 
 
