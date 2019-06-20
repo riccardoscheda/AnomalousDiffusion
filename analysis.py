@@ -77,9 +77,7 @@ def comparison():
         pol2 = Polygon(polsx)
         areas_hand.append(pol2.area/pol1.area)
 
-        #returns the lists as np arrays
-        return np.array(areas), np.array(areas_hand)
-
+    return np.array(areas) , np.array(areas_hand)
 
 def error(area, area_hand):
     """
@@ -95,11 +93,15 @@ def error(area, area_hand):
     error = np.sqrt((area - area_hand)**2)
     return np.array(error)
 
-# def MSD():
-#     """
-#     Computes the Mean Square Displacement between the different frames of the fronts
-#     --------------------------------
-#     Parameters:
-#
-#     ------------------
-#     """
+
+from scipy.interpolate import interp1d
+
+def MSD(path):
+    """
+    Computes the Mean Square Displacement between the different frames of the fronts
+    --------------------------------
+    Parameters:
+
+    ------------------
+    """
+    #interpolation

@@ -149,6 +149,6 @@ def test_error():
     a , b = an.comparison()
     error1 = an.error(a, b)
     error2 = an.error(b, a)
-    assert math.isclose(error1, error2, rel_tol=1e-5) == True
+    assert all(error1 - error2 < 1e-5) == True
     assert isinstance(error1, np.ndarray) == True
     assert all(error1 > 0) == True
