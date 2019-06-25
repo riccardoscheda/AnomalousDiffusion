@@ -162,3 +162,37 @@ def test_grid():
     grid = an.grid(path, N , l)
     assert isinstance(grid, pd.DataFrame) == True
     assert len(grid) == N
+
+def test_velocity():
+    """
+    Tests:
+    if the velocity is a DataFrame
+    if the length of the velocity dataframe is equal to the length of the
+    input DataFrames
+    """
+    path = "Results/labelled_images1010/fronts/divided_fronts/"
+    fname0 = "fronts_labelled.m.10.png.txt"
+    df0_sx = an.grid(path+fname0+"dx.txt")
+    fname1 = "fronts_labelled.m.11.png.txt"
+    df1_sx = an.grid(path+fname1+"dx.txt")
+    vel = an.velocity(df0_sx,df1_sx)
+    assert isinstance(vel, pd.Series) == True
+    assert len(vel) == len(df0_sx)
+    assert len(vel) == len(df1_sx)
+
+def test_VACF():
+    """
+    Tests:
+    if the vacf is a scalar
+    """
+    path = "Results/labelled_images1010/fronts/divided_fronts/"
+    fname0 = "fronts_labelled.m.10.png.txt"
+    df0_sx = an.grid(path+fname0+"dx.txt")
+    fname1 = "fronts_labelled.m.11.png.txt"
+    df1_sx = an.grid(path+fname1+"dx.txt")
+    fname2 = "fronts_labelled.m.12.png.txt"
+    df2_sx = an.grid(path+fname1+"dx.txt")
+    vel1 = an.velocity(df0_sx,df1_sx)
+    vel2 = an.velocity(df1_sx,df2_sx)
+    vacf = an.VACF(vel1,vel2)
+    assert isinstance(vacf, float) == True
