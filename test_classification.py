@@ -28,7 +28,7 @@ def test_create_modified_images():
     """
     Tests if the number of images in the set is correct
     """
-    assert len(os.listdir("Results/modified_images/")) == 56
+    assert len(os.listdir("Results/modified_images/")) == 59
 
 def test_adaptive_contrast_enhancement():
     """
@@ -90,6 +90,16 @@ def test_make_kernel():
     binary = fr.make_kernel(struct, 1)
     assert isinstance(binary, np.matrix) == True
     assert len(np.where(binary == 0 )[1]) + len(np.where(binary == 1)[1]) == len(binary)*len(binary.T)
+
+def test_fast_fronts():
+    """
+    Tests :
+    if the output is a list of two pandas dataframes
+    if it saves two txt file for each input image
+    """
+    df = fr.fast_fronts("Results/modified_images/m_1.png", outdir = "")
+    assert isinstance(df, list) == True
+    assert len(df) == 2
 
 def test_divide():
     """
@@ -196,3 +206,21 @@ def test_VACF():
     vel2 = an.velocity(df1_sx,df2_sx)
     vacf = an.VACF(vel1,vel2)
     assert isinstance(vacf, float) == True
+
+def test_MSD():
+    """
+    Tests:
+    if rhe output is a pandas DataFrame
+    if the output is positive
+    if the length of the output is equal to the length of the input
+    DataFrames
+    """
+    path = "Results/labelled_images1010/fronts/divided_fronts/"
+    fname0 = "fronts_labelled.m.10.png.txt"
+    df0_sx = an.grid(path+fname0+"dx.txt")
+    fname1 = "fronts_labelled.m.11.png.txt"
+    df1_sx = an.grid(path+fname1+"dx.txt")
+    msd = an.MSD(df0_sx,df1_sx)
+    assert isinstance(msd, pd.Series) == True
+    assert len(msd) == len(df0_sx)
+    assert len(msd) == len(df1_sx)

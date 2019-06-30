@@ -35,7 +35,7 @@ def fronts(path):
 
     #create the kernel for the morphological transformations
     struct = [0,0,0,1,1,1,1,1,1,1,0,0,0]
-    kernel = make_kernel(struct,10)
+    kernel = make_kernel(struct,100)
     kernel = np.array(kernel,np.uint8)
 
     #using erosion to enhance the fronts
@@ -68,6 +68,63 @@ def make_kernel(struct,length):
     for i in range(length):
         kernel.append(struct)
     return np.matrix(kernel)
+
+def fast_fronts(path, outdir = "fronts/"):
+    """
+    Takes the two longest borders inside an image and saves in a text file
+    the (x,y) coordinates.
+    The input image is modified by morphological transformation in order to have a smoother border
+    -----------
+
+    Parameters
+    ---------
+    path : the path of the image in the directory
+    outdir : the ouput directory where it saves the txt files
+
+    ------------
+    Returns a list with the two dataframes with the coordinates of the longest borders
+
+    References
+    [1] https://docs.opencv.org/3.1.0/d4/d73/tutorial_py_contours_begin.html
+    [2] https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_morphological_ops/py_morphological_ops.html
+
+    """
+    im = cv2.imread(path)
+    gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+    ret, thresh = cv2.threshold(gray,127,255,cv2.THRESH_BINARY)
+    struct = [0,0,0,1,1,1,1,1,1,1,0,0,0]
+    kernel = make_kernel(struct,10)
+    kernel = np.array(kernel,np.uint8)
+    dilate = cv2.dilate(thresh,kernel,iterations = 1)
+    contours, hierarchy = cv2.findContours(dilate, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    lencontours = np.array([len(x) for x in contours])
+    sel = [x in np.sort(lencontours)[-2:] for x in lencontours]
+    maxcontours = np.array(contours)
+    maxcontours = maxcontours[sel]
+    image_with_fronts = cv2.drawContours(thresh, maxcontours, -1, (255,255,255), 3)
+    j = 0
+    dfs = []
+    for j in range(2) :
+        #maxcontours[j] = list(it.chain.from_iterable(maxcontours[j]))
+        maxcontours[j] = list(it.chain.from_iterable(maxcontours[j]))
+        maxcontours[j] = np.array(maxcontours[j])
+        coordinates = pd.DataFrame(maxcontours[j])
+        coordinates.columns = ["x", "y"]
+        sel = np.where(coordinates["x"]>100)
+        df = coordinates.iloc[sel]
+        sel = np.where(df["x"]<1500)
+        df = df.iloc[sel]
+        dfs.append(df)
+
+        name = path.split(".")[0]
+        name = path.split("/")[-1]
+        if j == 0:
+            np.savetxt(outdir + name + "_dx.txt", df,fmt = '%d', delimiter=' ')
+        else :
+            np.savetxt(outdir + name + "_sx.txt", df,fmt = '%d', delimiter=' ')
+
+    return dfs
+
 
 def divide(coord):
     """

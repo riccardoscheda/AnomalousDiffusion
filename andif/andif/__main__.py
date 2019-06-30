@@ -104,6 +104,35 @@ class Fronts(cli.Application):
                 np.savetxt("fronts/fronts_"+ value +".txt", coord,fmt = '%d', delimiter=' ')
                 print(colors.green|"Saved the fronts of the image in dir 'fronts/'")
 
+@AnomalousDiffusion.subcommand("fast")
+class Fast(cli.Application):
+    "Tracks the longest borders in the images and saves the coordinates in a txt file"
+    all = cli.Flag(["all", "every image"], help = "If given, I will save the fronts of all the images in the current directory")
+    s = cli.Flag(["s", "save"], help = "If given, I will save the image with the borders in the current directory")
+    def main(self, value : str = ""):
+        if not os.path.exists("fronts"):
+            os.makedirs("fronts")
+
+        if(value == ""):
+            if (self.all):
+                for value in list(os.listdir(".")):
+                    if str(value).endswith(".png"):
+                        fr.fast_fronts(value)
+                print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
+            else:
+                print(colors.red|"image not given")
+        else:
+            if(value not in list(os.listdir(path))):
+                print(colors.red|"this image does not exists")
+            else:
+                print("image taken")
+                coord, im = fr.fronts(value)
+                if (self.s):
+                    plt.imsave("front_"+ value, im)
+                np.savetxt("fronts/fronts_"+ value +".txt", coord,fmt = '%d', delimiter=' ')
+                print(colors.green|"Saved the fronts of the image in dir 'fronts/'")
+
+
 @AnomalousDiffusion.subcommand("divide")
 class Divide(cli.Application):
     "Divides the front in two piecies, one left and one right and save them in two txt files"
