@@ -250,24 +250,45 @@ def velocity(df0, df1):
     velocity = df1[0] - df0[0]
     return velocity
 
-def VACF(df0,df1):
+import tidynamics
+
+
+def VACF(dir, fname , side = "_dx", delimiter = " "):
     """
-    Computes the Velocity Autocorrelation Function (VACF)
-    which is the mean scalar product between two velocities
+    Computes the Velocity Autocorrelation Fuction (VACF)
+    which is the correlation  between the velocities of the fronts
 
     --------------------------
     Parameters:
     --------------------------
-    df0 : pandas dataframe which contains the x and y coordinates of the front of the initial frame
-    df1 : pandas dataframe which contains the x and y coordinates of the front of the finale frame
+    dir : the directory which contains the txt files with the coordinates
+    fname : the prefix of the txt files
+    side : the side of the front which is left or right, this distinguish the txt files
+    delimiter : the space between the x and y coordinates in the txt file
 
     ----------------------------
-    Returns a dataframe with the VACF
+    Returns a numpy array with the MSD
     """
-    return sum(df0*df1)
+    pos = pd.DataFrame()
+    i = 0
+    for i in range(len(os.listdir(dir))//2-1):
+        if fname.startswith("S"):
+            df1 = grid(dir + fname + str(i+1) + side + ".txt", delimiter = delimiter)
+            df2 = grid(dir + fname + str(i+2) + side + ".txt", delimiter = delimiter)
+        else :
+            df1 = grid(dir + fname + str(i) + side + ".txt", delimiter = delimiter)
+            df2 = grid(dir + fname + str(i+1) + side + ".txt", delimiter = delimiter)
+        pos[i] = velocity(df1,df2)
+        i += 1
 
+    count = 0
+    mean = np.zeros(len(pos.T))
+    for i in range(len(mean)):
+        mean+= tidynamics.acf(pos.T[i])
+        count+=1
 
-import tidynamics
+    mean/=count
+    return mean
 
 def MSD(dir, fname , side = "_dx", delimiter = " "):
     """
@@ -283,8 +304,9 @@ def MSD(dir, fname , side = "_dx", delimiter = " "):
     delimiter : the space between the x and y coordinates in the txt file
 
     ----------------------------
-    Returns a numpy array with the MSD
+    Returns a numpy array with the VACF
     """
+
     pos = pd.DataFrame()
     i = 0
     for i in range(len(os.listdir(dir))//2):

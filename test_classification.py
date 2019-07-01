@@ -193,24 +193,17 @@ def test_velocity():
 def test_VACF():
     """
     Tests:
-    if the vacf is a scalar
+    if the output is a numpy array
     """
-    path = "Results/labelled_images1010/fronts/divided_fronts/"
-    fname0 = "fronts_labelled.m.10.png.txt"
-    df0_sx = an.grid(path+fname0+"dx.txt")
-    fname1 = "fronts_labelled.m.11.png.txt"
-    df1_sx = an.grid(path+fname1+"dx.txt")
-    fname2 = "fronts_labelled.m.12.png.txt"
-    df2_sx = an.grid(path+fname1+"dx.txt")
-    vel1 = an.velocity(df0_sx,df1_sx)
-    vel2 = an.velocity(df1_sx,df2_sx)
-    vacf = an.VACF(vel1,vel2)
-    assert isinstance(vacf, float) == True
+    path = "Data/data_fronts/"
+    fname = "Sham_8-2-18_Field 5_"
+    msd = an.VACF(path, fname, side = "_sx",delimiter = "\t")
+    assert isinstance(msd, np.ndarray) == True
 
 def test_MSD():
     """
     Tests:
-    if rhe output is a numpy array
+    if the output is a numpy array
     if the output array elements are positive
     """
     path = "Data/data_fronts/"
