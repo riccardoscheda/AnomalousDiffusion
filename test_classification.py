@@ -210,17 +210,12 @@ def test_VACF():
 def test_MSD():
     """
     Tests:
-    if rhe output is a pandas DataFrame
-    if the output is positive
-    if the length of the output is equal to the length of the input
-    DataFrames
+    if rhe output is a numpy array
+    if the output array elements are positive
     """
-    path = "Results/labelled_images1010/fronts/divided_fronts/"
-    fname0 = "fronts_labelled.m.10.png.txt"
-    df0_sx = an.grid(path+fname0+"dx.txt")
-    fname1 = "fronts_labelled.m.11.png.txt"
-    df1_sx = an.grid(path+fname1+"dx.txt")
-    msd = an.MSD(df0_sx,df1_sx)
-    assert isinstance(msd, pd.Series) == True
-    assert len(msd) == len(df0_sx)
-    assert len(msd) == len(df1_sx)
+    path = "Data/data_fronts/"
+    fname = "Sham_8-2-18_Field 5_"
+    msd = an.MSD(path, fname, side = "_sx",delimiter = "\t")
+    assert isinstance(msd, np.ndarray) == True
+    assert np.isclose(msd[0], 0, rtol = 10e-5) == True
+    assert all(msd[1:] > 0) == True

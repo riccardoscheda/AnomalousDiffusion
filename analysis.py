@@ -7,6 +7,7 @@ import cv2
 import pandas as pd
 
 
+
 def area(fname):
     """
     Computes the area of the polygon formed by the two borders of the cells
@@ -86,6 +87,77 @@ def comparison():
     #returns the two arrays with the normalized areas
     return np.array(areas) , np.array(areas_hand)
 
+def fast_comparison():
+    """
+    Makes the comparison between the areas found by the fronts and the hand drawn fronts
+    ------------------------------------------
+    """
+    path = "Data/data_fronts/"
+    path1 = "Results/modified_images/fast/"
+
+    #computes the areas for the first frame in order to normalize the other areas
+    pol0dx = grid(path1+"fronts_0_dx.txt")
+    pol0dx.columns = ["y","x"]
+    pol0sx = grid(path1+"fronts_0_sx.txt")
+    pol0sx.columns = ["y","x"]
+    if pol0dx["x"][0]>100:
+        pol0dx = pol0dx.reindex(index=pol0dx.index[::-1])
+    if pol0sx["x"][0]<100:
+        pol0sx = pol0sx.reindex(index=pol0sx.index[::-1])
+    pol0sx = pol0sx.append(pol0dx)
+    pol0sx = np.array(pol0sx)
+    pol0 = Polygon(pol0sx)
+
+    polsx = pd.DataFrame(pd.read_csv(path + "Sham_8-2-18_Field 5_1_sx.txt",sep ='\t'))
+    polsx.columns = ["y","x"]
+    poldx = pd.DataFrame(pd.read_csv(path + "Sham_8-2-18_Field 5_1_dx.txt",sep ='\t'))
+    poldx.columns = ["y","x"]
+    #makes an object polygon in order to compute the area
+    polsx = polsx.append(poldx)
+    polsx = np.array(polsx)
+    pol1 = Polygon(polsx)
+
+
+    areas = []
+    areas_hand = []
+    #computes the areas for all the frames
+    for i in range(42):
+        poldx = grid(path1+"fronts_"+str(i)+"_dx.txt")
+        poldx.columns = ["y","x"]
+        polsx = grid(path1+"fronts_"+str(i)+"_sx.txt")
+        polsx.columns = ["y","x"]
+        if poldx["x"][0]>100:
+            poldx = poldx.reindex(index=poldx.index[::-1])
+        if polsx["x"][0]<100:
+            polsx = polsx.reindex(index=polsx.index[::-1])
+        polsx = polsx.append(poldx)
+        polsx = np.array(polsx)
+
+        #makes an object polygon in order to compute the area
+
+        pol = Polygon(polsx)
+
+        #normalize the areas with respect to the area of the first frame
+        areas.append(pol.area/pol0.area)
+
+        polsx = pd.DataFrame(pd.read_csv(path + "Sham_8-2-18_Field 5_"+str(i+1)+"_sx.txt",sep ='\t'))
+        polsx.columns = ["y","x"]
+        poldx = pd.DataFrame(pd.read_csv(path + "Sham_8-2-18_Field 5_"+str(i+1)+"_dx.txt",sep ='\t'))
+        poldx.columns = ["y","x"]
+        if poldx["x"][0]>100:
+            poldx = poldx.reindex(index=poldx.index[::-1])
+        if polsx["x"][0]<100:
+            polsx = polsx.reindex(index=polsx.index[::-1])
+        polsx = polsx.append(poldx)
+        polsx = np.array(polsx)
+
+        pol2 = Polygon(polsx)
+        #normalize the areas with respect to the area of the first frame
+        areas_hand.append(pol2.area/pol1.area)
+    #returns the two arrays with the normalized areas
+    return np.array(areas) , np.array(areas_hand)
+
+
 def error(area, area_hand):
     """
     Computes the error between the areas (between the borders) with the fronts founded with
@@ -102,7 +174,7 @@ def error(area, area_hand):
     return np.array(error)
 
 
-def grid(file, N = 100, l = 1200):
+def grid(file, N = 100, l = 1200, delimiter = " "):
     """
     Makes an approximation of the fronts dividing the range in subintervals and for
     each subinterval takes the max value in that interval.
@@ -122,7 +194,7 @@ def grid(file, N = 100, l = 1200):
     delta = l/float(N)
 
     #reads the file with the coordinates of the fronts
-    grid = pd.DataFrame(pd.read_csv(file,delimiter = " "))
+    grid = pd.DataFrame(pd.read_csv(file,delimiter = delimiter ))
     grid.columns = [0,1]
     grid = grid.sort_values(by = 1)
     #makes a new aray where will be the smoothed fronts
@@ -192,4 +264,44 @@ def VACF(df0,df1):
     ----------------------------
     Returns a dataframe with the VACF
     """
-    return sum(df0*df1)/len(df0)
+    return sum(df0*df1)
+
+
+import tidynamics
+
+def MSD(dir, fname , side = "_dx", delimiter = " "):
+    """
+    Computes the Mean Square Displacement (MSD)
+    which is the mean squared difference between the y coordinates of the fronts
+
+    --------------------------
+    Parameters:
+    --------------------------
+    dir : the directory which contains the txt files with the coordinates
+    fname : the prefix of the txt files
+    side : the side of the front which is left or right, this distinguish the txt files
+    delimiter : the space between the x and y coordinates in the txt file
+
+    ----------------------------
+    Returns a numpy array with the MSD
+    """
+    pos = pd.DataFrame()
+    i = 0
+    for i in range(len(os.listdir(dir))//2):
+        if fname.startswith("S"):
+            df = grid(dir + fname + str(i+1) + side + ".txt", delimiter = delimiter)
+        else :
+            df = grid(dir + fname + str(i) + side + ".txt", delimiter = delimiter)
+        x = pd.Series(df[0])
+        #pos[i] = x/1600*844
+        pos[i] = x
+        i += 1
+
+    count = 0
+    mean = np.zeros(len(pos.T))
+    for i in range(len(mean)):
+        mean+= tidynamics.msd(pos.T[i])
+        count+=1
+
+    mean/=count
+    return mean
