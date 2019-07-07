@@ -87,18 +87,15 @@ def comparison():
     #returns the two arrays with the normalized areas
     return np.array(areas) , np.array(areas_hand)
 
-def fast_comparison():
+def fast_comparison(path = "Data/data_fronts/",path1 = "Results/modified_images/fronts/"):
     """
     Makes the comparison between the areas found by the fronts and the hand drawn fronts
     ------------------------------------------
     """
-    path = "Data/data_fronts/"
-    path1 = "Results/modified_images/fast/"
-
     #computes the areas for the first frame in order to normalize the other areas
-    pol0dx = grid(path1+"fronts_0_dx.txt")
+    pol0dx = grid(path1+"m_0.png_dx.txt")
     pol0dx.columns = ["y","x"]
-    pol0sx = grid(path1+"fronts_0_sx.txt")
+    pol0sx = grid(path1+"m_0.png_sx.txt")
     pol0sx.columns = ["y","x"]
     if pol0dx["x"][0]>100:
         pol0dx = pol0dx.reindex(index=pol0dx.index[::-1])
@@ -108,10 +105,18 @@ def fast_comparison():
     pol0sx = np.array(pol0sx)
     pol0 = Polygon(pol0sx)
 
-    polsx = pd.DataFrame(pd.read_csv(path + "Sham_8-2-18_Field 5_1_sx.txt",sep ='\t'))
+    polsx = grid(path + "Sham_8-2-18_Field 5_1_sx.txt",l = 633,delimiter ='\t')
     polsx.columns = ["y","x"]
-    poldx = pd.DataFrame(pd.read_csv(path + "Sham_8-2-18_Field 5_1_dx.txt",sep ='\t'))
+    polsx["y"] =polsx["y"]/844*1600
+    polsx["x"] =polsx["x"]/633*1200
+    poldx = grid(path + "Sham_8-2-18_Field 5_1_dx.txt",l = 633,delimiter ='\t')
     poldx.columns = ["y","x"]
+    poldx["y"] =poldx["y"]/844*1600
+    poldx["x"] =poldx["x"]/633*1200
+    if poldx["x"][0]>100:
+        poldx = poldx.reindex(index=poldx.index[::-1])
+    if polsx["x"][0]<100:
+        polsx = polsx.reindex(index=polsx.index[::-1])
     #makes an object polygon in order to compute the area
     polsx = polsx.append(poldx)
     polsx = np.array(polsx)
@@ -122,9 +127,9 @@ def fast_comparison():
     areas_hand = []
     #computes the areas for all the frames
     for i in range(42):
-        poldx = grid(path1+"fronts_"+str(i)+"_dx.txt")
+        poldx = grid(path1+"m_"+str(i)+".png_dx.txt")
         poldx.columns = ["y","x"]
-        polsx = grid(path1+"fronts_"+str(i)+"_sx.txt")
+        polsx = grid(path1+"m_"+str(i)+".png_sx.txt")
         polsx.columns = ["y","x"]
         if poldx["x"][0]>100:
             poldx = poldx.reindex(index=poldx.index[::-1])
@@ -140,10 +145,14 @@ def fast_comparison():
         #normalize the areas with respect to the area of the first frame
         areas.append(pol.area/pol0.area)
 
-        polsx = pd.DataFrame(pd.read_csv(path + "Sham_8-2-18_Field 5_"+str(i+1)+"_sx.txt",sep ='\t'))
+        polsx = grid(path + "Sham_8-2-18_Field 5_"+str(i+1)+"_sx.txt",l = 633,delimiter ='\t')
         polsx.columns = ["y","x"]
-        poldx = pd.DataFrame(pd.read_csv(path + "Sham_8-2-18_Field 5_"+str(i+1)+"_dx.txt",sep ='\t'))
+        polsx["y"] =polsx["y"]/844*1600
+        polsx["x"] =polsx["x"]/633*1200
+        poldx = grid(path + "Sham_8-2-18_Field 5_"+str(i+1)+"_dx.txt",l = 633,delimiter='\t')
         poldx.columns = ["y","x"]
+        poldx["y"] =poldx["y"]/844*1600
+        poldx["x"] =poldx["x"]/633*1200
         if poldx["x"][0]>100:
             poldx = poldx.reindex(index=poldx.index[::-1])
         if polsx["x"][0]<100:
@@ -172,6 +181,25 @@ def error(area, area_hand):
     #computes the error in L^2 between the two areas
     error = np.sqrt((area - area_hand)**2)
     return np.array(error)
+
+from scipy.interpolate import interp1d
+
+def necklace_points(file,sep = " ",N=100,method='quadratic'):
+    points = pd.read_csv(file, sep = sep)
+    points = points.values
+    if points.T[1][0]>points.T[1][-1]:
+        points=points[::-1]
+# Linear length along the line:
+    distance = np.cumsum( np.sqrt(np.sum( np.diff(points, axis=0)**2, axis=1 )) )
+    distance = np.insert(distance, 0, 0)/distance[-1]
+    # Interpolation for different methods:
+    alpha = np.linspace(0, 1, N)
+    interpolator =  interp1d(distance, points, kind=method, axis=0)
+    curve = interpolator(alpha)
+    dfx =  pd.Series(curve.T[0])
+    dfy = pd.Series(curve.T[1])
+
+    return dfx , dfy
 
 
 def grid(file, N = 100, l = 1200, delimiter = " "):
@@ -312,6 +340,7 @@ def MSD(dir, fname , side = "_dx", delimiter = " "):
     for i in range(len(os.listdir(dir))//2):
         if fname.startswith("S"):
             df = grid(dir + fname + str(i+1) + side + ".txt", delimiter = delimiter)
+
         else :
             df = grid(dir + fname + str(i) + side + ".txt", delimiter = delimiter)
         x = pd.Series(df[0])

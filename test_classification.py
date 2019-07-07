@@ -172,7 +172,20 @@ def test_grid():
     grid = an.grid(path, N , l)
     assert isinstance(grid, pd.DataFrame) == True
     assert len(grid) == N
+def test_necklace_points():
+    """
+    Tests if:
+    The output are two pandas Series
+    the length of the two series are equal
+    """
+    path = "Results/modified_images/fronts/"
+    fname = "m_33.png_sx.txt"
+    dfx,dfy = an.necklace_points(path + fname, sep = " " )
+    assert len(dfx) == len (dfy)
+    assert isinstance(dfx, pd.Series) == True
+    assert isinstance(dfy, pd.Series) == True
 
+    
 def test_velocity():
     """
     Tests:
