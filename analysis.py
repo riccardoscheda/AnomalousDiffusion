@@ -295,7 +295,7 @@ def VACF(dir, fname , side = "_dx", delimiter = " "):
     delimiter : the space between the x and y coordinates in the txt file
 
     ----------------------------
-    Returns a numpy array with the MSD
+    Returns a numpy array with the VACF
     """
     pos = pd.DataFrame()
     i = 0
@@ -312,13 +312,15 @@ def VACF(dir, fname , side = "_dx", delimiter = " "):
     count = 0
     mean = np.zeros(len(pos.T))
     for i in range(len(mean)):
-        mean+= tidynamics.acf(pos.T[i])
+        mean = mean +  tidynamics.acf(pos.T[i])
         count+=1
 
     mean/=count
     return mean
 
-def MSD(dir, fname , side = "_dx", delimiter = " "):
+import re
+
+def MSD_Sham(dir, side = "dx", delimiter = "\t"):
     """
     Computes the Mean Square Displacement (MSD)
     which is the mean squared difference between the y coordinates of the fronts
@@ -327,32 +329,63 @@ def MSD(dir, fname , side = "_dx", delimiter = " "):
     Parameters:
     --------------------------
     dir : the directory which contains the txt files with the coordinates
-    fname : the prefix of the txt files
     side : the side of the front which is left or right, this distinguish the txt files
     delimiter : the space between the x and y coordinates in the txt file
 
     ----------------------------
-    Returns a numpy array with the VACF
+    Returns a numpy array with the MSD
     """
 
-    pos = pd.DataFrame()
-    i = 0
-    for i in range(len(os.listdir(dir))//2):
-        if fname.startswith("S"):
-            df = grid(dir + fname + str(i+1) + side + ".txt", delimiter = delimiter)
-
-        else :
-            df = grid(dir + fname + str(i) + side + ".txt", delimiter = delimiter)
-        x = pd.Series(df[0])
-        #pos[i] = x/1600*844
-        pos[i] = x
-        i += 1
-
+    x = pd.DataFrame()
+    y = pd.DataFrame()
+    for fname in os.listdir(dir):
+        if side in fname:
+            k = fname.split('_')[-2]
+            k = int(k)
+            #df = grid(dir + fname + str(i+1) + side + ".txt", delimiter = delimiter)
+            dfx, dfy = necklace_points(dir + fname,N=80, sep = delimiter )
+            x[k] = dfx
+            y[k] = dfy
+    col = np.arange(1,len(x.T))
+    x = x[col]
     count = 0
-    mean = np.zeros(len(pos.T))
+    mean = np.zeros(len(x.T))
     for i in range(len(mean)):
-        mean+= tidynamics.msd(pos.T[i])
+        mean = mean + tidynamics.msd(x.T[i])
         count+=1
 
     mean/=count
-    return mean
+    return mean, x , y
+
+def MSD(dir, nframes,pre,suf, delimiter = " "):
+    """
+    Computes the Mean Square Displacement (MSD)
+    which is the mean squared difference between the y coordinates of the fronts
+
+    --------------------------
+    Parameters:
+    --------------------------
+    dir : the directory which contains the txt files with the coordinates
+    side : the side of the front which is left or right, this distinguish the txt files
+    delimiter : the space between the x and y coordinates in the txt file
+
+    ----------------------------
+    Returns a numpy array with the MSD
+    """
+
+    x = pd.DataFrame()
+    y = pd.DataFrame()
+    for i in range(nframes):
+            file = pre + str(i) + suf
+            #df = grid(dir + fname + str(i) + side + ".txt", delimiter = delimiter)
+            dfx, dfy = necklace_points(dir + file,N=200, sep = delimiter )
+            x[i] = dfx/1600*844
+            y[i] = dfy/1200*633
+    count = 0
+    mean = np.zeros(len(x.T))
+    for i in range(len(mean)):
+        mean = mean + tidynamics.msd(x.T[i])
+        count+=1
+
+    mean/=count
+    return mean, x , y

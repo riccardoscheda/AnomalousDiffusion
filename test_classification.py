@@ -185,7 +185,7 @@ def test_necklace_points():
     assert isinstance(dfx, pd.Series) == True
     assert isinstance(dfy, pd.Series) == True
 
-    
+
 def test_velocity():
     """
     Tests:
@@ -219,9 +219,25 @@ def test_MSD():
     if the output is a numpy array
     if the output array elements are positive
     """
-    path = "Data/data_fronts/"
-    fname = "Sham_8-2-18_Field 5_"
-    msd = an.MSD(path, fname, side = "_sx",delimiter = "\t")
+    path = "Results/modified_images/fronts/"
+    pre = "m_"
+    suf = ".png_sx.txt"
+    msd, pos, y = an.MSD(path,nframes = 42,pre = pre, suf = suf,delimiter = " ")
+
     assert isinstance(msd, np.ndarray) == True
     assert np.isclose(msd[0], 0, rtol = 10e-5) == True
-    assert all(msd[1:] > 0) == True
+    assert all(msd > 0) == True
+
+def test_MSD_Sham():
+    """
+    Tests:
+    if the output is a numpy array
+    if the output array elements are positive
+    """
+    path = "Data/data_fronts/"
+    msd, pos2, y2 = an.MSD_Sham(path,side = "sx",delimiter = "\t")
+
+
+    assert isinstance(msd, np.ndarray) == True
+    assert np.isclose(msd[0], 0, rtol = 10e-5) == True
+    assert all(msd > 0) == True

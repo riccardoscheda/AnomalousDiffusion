@@ -108,13 +108,30 @@ def fast_fronts(path, outdir = "fronts/"):
         #maxcontours[j] = list(it.chain.from_iterable(maxcontours[j]))
         maxcontours[j] = list(it.chain.from_iterable(maxcontours[j]))
         maxcontours[j] = np.array(maxcontours[j])
-        coordinates = pd.DataFrame(maxcontours[j])
-        coordinates.columns = ["x", "y"]
-        sel = np.where(coordinates["x"]>100)
-        df = coordinates.iloc[sel]
-        sel = np.where(df["x"]<1500)
-        df = df.iloc[sel]
-        dfs.append(df)
+        coord = pd.DataFrame(maxcontours[j])
+        coord.columns = ["x", "y"]
+        # sel = np.where(coordinates["y"]>50)
+        # df = coordinates.iloc[sel]
+        # sel = np.where(df["y"]<1150)
+        #
+        # df = df.iloc[sel]
+
+        if j == 1:
+            #takes the right upper corner and takes what there is after
+            rightup = np.max(np.where(coord["y"] == np.max(coord["y"])))
+            #takes not the last value but the second last because some times there are
+            #problems with the lowest border
+            a = np.where(coord["y"]== np.min(coord["y"]))[0]
+            if len(a)>1:
+                rightdown = a[1]
+            else:
+                rightdown = a[0]
+            df = coord.iloc[rightup  :rightdown ,:]
+            dfs.append(df)
+        else :
+            leftup = np.min(np.where(coord["y"] == np.max(coord["y"])))
+            df = coord.iloc[:leftup + 1, :]
+            dfs.append(df)
 
         name = path.split(".")[0]
         name = path.split("/")[-1]
