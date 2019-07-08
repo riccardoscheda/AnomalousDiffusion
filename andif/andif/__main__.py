@@ -34,6 +34,25 @@ class AnomalousDiffusion(cli.Application):
             print("No command given")
             return 1   # error exit code
 
+@AnomalousDiffusion.subcommand("read")
+class Read(cli.Application):
+    "Reads the nd2 file and create a new folder with the images in png format"
+    #all = cli.Flag(["all", "every image"], help = "If given, I will save the fronts of all the images in the current directory")
+    #s = cli.Flag(["s", "save"], help = "If given, I will save the image with the borders in the current directory")
+    def main( self,n_images : int  , value : str = ""):
+        cl.create_set(n_images, path = value)
+        print(colors.green|"Saved the images in dir 'images/")
+
+@AnomalousDiffusion.subcommand("modify")
+class Modify(cli.Application):
+    "Modify an image with histogram equalization and saves it in a new folder with the images in png format"
+    #all = cli.Flag(["all", "every image"], help = "If given, I will save the fronts of all the images in the current directory")
+    #s = cli.Flag(["s", "save"], help = "If given, I will save the image with the borders in the current directory")
+    def main( self,n_images : int = 1, value : str = ""):
+        cl.create_modified_images(path = value,n_images = n_images)
+        print(colors.green|"Saved the images in dir 'modified_images/")
+
+
 @AnomalousDiffusion.subcommand("label")
 class Label(cli.Application):
     "Saves the binary image using pca and K-means algorithms"
@@ -126,11 +145,8 @@ class Fast(cli.Application):
                 print(colors.red|"this image does not exists")
             else:
                 print("image taken")
-                coord, im = fr.fronts(value)
-                if (self.s):
-                    plt.imsave("front_"+ value, im)
-                np.savetxt("fronts/fronts_"+ value +".txt", coord,fmt = '%d', delimiter=' ')
-                print(colors.green|"Saved the fronts of the image in dir 'fronts/'")
+                fr.fast_fronts(value)
+                print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
 
 
 @AnomalousDiffusion.subcommand("divide")
