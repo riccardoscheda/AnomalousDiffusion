@@ -2,13 +2,14 @@ import cv2
 import pandas as pd
 import numpy as np
 import pylab as plt
+from scipy import stats
 
 
 import itertools as it
 from collections import Counter
 from functools import partial
 
-
+import classification as cl
 def fronts(path):
     """
     Takes the longest border inside an image and saves in a text file
@@ -30,6 +31,8 @@ def fronts(path):
     image =  cv2.imread(path)
     #make it gray
     imgray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    #apply adaptive histogram histogram_equalization
+    imgray = cl.adaptive_contrast_enhancement(imgray)
     #make it binary
     ret, thresh = cv2.threshold(imgray, 100, 255, 0)
 
@@ -69,7 +72,7 @@ def make_kernel(struct,length):
         kernel.append(struct)
     return np.matrix(kernel)
 
-def fast_fronts(path, outdir = "fronts/"):
+def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_struct = 10,iterations = 1):
     """
     Takes the two longest borders inside an image and saves in a text file
     the (x,y) coordinates.
@@ -91,12 +94,21 @@ def fast_fronts(path, outdir = "fronts/"):
     """
     im = cv2.imread(path)
     gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
-    ret, thresh = cv2.threshold(gray,127,255,cv2.THRESH_BINARY)
-    struct = [0,0,0,1,1,1,1,1,1,1,0,0,0]
-    kernel = make_kernel(struct,10)
+    struct = [0,0,0,1,1,1,1,0,0,0]
+    kernel = make_kernel(struct,length_struct)
     kernel = np.array(kernel,np.uint8)
-    dilate = cv2.dilate(thresh,kernel,iterations = 1)
-    contours, hierarchy = cv2.findContours(dilate, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    #apply adaptive histogram histogram_equalization
+    grid_size = (int(size),int(size))
+    gray = cl.adaptive_contrast_enhancement(gray, grid_size= grid_size)
+    median = np.median(gray)
+    ret, thresh = cv2.threshold(gray,threshold,255,cv2.THRESH_BINARY)
+    #now i try using closing to make the cells more uniform
+    cstruct = np.ones(length_struct)
+    ckernel = make_kernel(cstruct,length_struct)
+    ckernel = np.array(ckernel,np.uint8)
+    dilate = cv2.dilate(thresh,ckernel,iterations = iterations)
+    opening = cv2.morphologyEx(dilate, cv2.MORPH_OPEN, ckernel)
+    contours, hierarchy = cv2.findContours(opening, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     lencontours = np.array([len(x) for x in contours])
     sel = [x in np.sort(lencontours)[-2:] for x in lencontours]
     maxcontours = np.array(contours)
@@ -135,12 +147,13 @@ def fast_fronts(path, outdir = "fronts/"):
 
         name = path.split(".")[0]
         name = path.split("/")[-1]
+#        if len(df)>0 :  break
         if j == 0:
             np.savetxt(outdir + name + "_dx.txt", df,fmt = '%d', delimiter=' ')
         else :
             np.savetxt(outdir + name + "_sx.txt", df,fmt = '%d', delimiter=' ')
 
-    return dfs
+    return dfs , image_with_fronts
 
 
 def divide(coord):

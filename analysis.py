@@ -366,11 +366,13 @@ def MSD(dir, nframes,pre,suf, delimiter = " "):
     Parameters:
     --------------------------
     dir : the directory which contains the txt files with the coordinates
-    side : the side of the front which is left or right, this distinguish the txt files
+    nframes: the number of the frames to take into account
+    pre: the prefix of the file name before the index
+    pre: the suffix of the file name after the index
     delimiter : the space between the x and y coordinates in the txt file
 
     ----------------------------
-    Returns a numpy array with the MSD
+    Returns a numpy array with the MSD, and the x and y interpolated coordinates
     """
 
     x = pd.DataFrame()
@@ -378,14 +380,19 @@ def MSD(dir, nframes,pre,suf, delimiter = " "):
     for i in range(nframes):
             file = pre + str(i) + suf
             #df = grid(dir + fname + str(i) + side + ".txt", delimiter = delimiter)
-            dfx, dfy = necklace_points(dir + file,N=200, sep = delimiter )
+            dfx, dfy = necklace_points(dir + file,N=100, sep = delimiter )
+            #scaling to mum
             x[i] = dfx/1600*844
             y[i] = dfy/1200*633
     count = 0
-    mean = np.zeros(len(x.T))
-    for i in range(len(mean)):
-        mean = mean + tidynamics.msd(x.T[i])
+
+    #mean = np.zeros(len(x.T))
+    mean = []
+    for i in range(len(x.T)):
+        #mean = mean + tidynamics.msd(x.T[i])
+        mean.append(tidynamics.msd(x.T[i]))
         count+=1
 
-    mean/=count
+    #mean/=count
+    mean = pd.DataFrame(mean)
     return mean, x , y
