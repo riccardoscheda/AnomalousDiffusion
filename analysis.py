@@ -275,7 +275,7 @@ def velocity(df0, df1):
     ----------------------------
     Returns a dataframe with the velocity
     """
-    velocity = df1[0] - df0[0]
+    velocity = df1 - df0
     return velocity
 
 import tidynamics
@@ -368,7 +368,7 @@ def MSD(dir, nframes,pre,suf, delimiter = " "):
     dir : the directory which contains the txt files with the coordinates
     nframes: the number of the frames to take into account
     pre: the prefix of the file name before the index
-    pre: the suffix of the file name after the index
+    suf: the suffix of the file name after the index
     delimiter : the space between the x and y coordinates in the txt file
 
     ----------------------------
@@ -377,15 +377,25 @@ def MSD(dir, nframes,pre,suf, delimiter = " "):
 
     x = pd.DataFrame()
     y = pd.DataFrame()
+
     for i in range(nframes):
+
             file = pre + str(i) + suf
             #df = grid(dir + fname + str(i) + side + ".txt", delimiter = delimiter)
             dfx, dfy = necklace_points(dir + file,N=100, sep = delimiter )
+
             #scaling to mum
             x[i] = dfx/1600*844
             y[i] = dfy/1200*633
-    count = 0
+            if i> 0 :
+                try:
+                    dif = velocity(x[i-1],x[i])
+                    if np.any(dif>70):
+                        del x[i-1]
+                        del y[i-1]
+                except: pass
 
+    count = 0
     #mean = np.zeros(len(x.T))
     mean = []
     for i in range(len(x.T)):
