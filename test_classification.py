@@ -131,10 +131,16 @@ def test_area():
     Tests:
     if returns a type Polygon and a number
     """
-    path = "Results/labelled_images1216/fronts/fronts_labelled_m_0.png.txt"
-    pol , area = an.area(path)
+    path = "Results/modified_images/fronts/"
+    pre = "m_"
+    suf1 = ".png_sx.txt"
+    suf2 = ".png_dx.txt"
+    file1 = path+pre+"0"+suf1
+    file2 = path+pre+"0"+suf2
+    pol , area = an.area(file1,file2)
     assert isinstance(pol, Polygon) == True
     assert isinstance(area, float)
+    assert area > 0 
 
 
 def test_comparison():
@@ -198,7 +204,7 @@ def test_velocity():
     df0_sx = an.grid(path+fname0+"dx.txt")
     fname1 = "fronts_labelled.m.11.png.txt"
     df1_sx = an.grid(path+fname1+"dx.txt")
-    vel = an.velocity(df0_sx,df1_sx)
+    vel = an.velocity(df0_sx[0],df1_sx[0])
     assert isinstance(vel, pd.Series) == True
     assert len(vel) == len(df0_sx)
     assert len(vel) == len(df1_sx)
@@ -207,12 +213,16 @@ def test_VACF():
     """
     Tests:
     if the output is a numpy array
+    if the output array elements are positive
     """
-    path = "Data/data_fronts/"
-    fname = "Sham_8-2-18_Field 5_"
-    msd = an.VACF(path, fname, side = "_sx",delimiter = "\t")
-    assert isinstance(msd, np.ndarray) == True
+    path = "Results/modified_images/fronts/"
+    pre = "m_"
+    suf = ".png_sx.txt"
+    msd, x, y = an.VACF(path,nframes = 42,pre = pre, suf = suf,delimiter = " ")
 
+    assert isinstance(msd, pd.DataFrame) == True
+    assert all(msd.all() >= 0)
+    assert len(x) == len(y)
 def test_MSD():
     """
     Tests:
@@ -222,10 +232,11 @@ def test_MSD():
     path = "Results/modified_images/fronts/"
     pre = "m_"
     suf = ".png_sx.txt"
-    msd, pos, y = an.MSD(path,nframes = 42,pre = pre, suf = suf,delimiter = " ")
+    msd, x, y = an.MSD(path,nframes = 42,pre = pre, suf = suf,delimiter = " ")
 
     assert isinstance(msd, pd.DataFrame) == True
     assert all(msd.all() >= 0)
+    assert len(x) == len(y)
 
 def test_MSD_Sham():
     """

@@ -8,25 +8,35 @@ import pandas as pd
 
 
 
-def area(fname):
+def area(filesx, filedx):
     """
     Computes the area of the polygon formed by the two borders of the cells
 
     -----------------------------
     Parameters:
     -----------------------------
-    fname : the path of a txt file with the unique front
-
+    filesx : the path of a txt file with the left side of the fronts
+    filedx : the path of a txt file with the right side of the fronts
     -----------------------------
     References:
     -----------------------------
     [1] https://shapely.readthedocs.io/en/latest/manual.html#geometric-objects
+
+    Returns the area between the two fronts
     """
-    #read the file and put the coordinates into a Dataframe
-    pol = pd.DataFrame(pd.read_csv(fname,delimiter =' '))
-    #makes an object polygon in order to compute the area
-    pol = np.array(pol)
-    pol = Polygon(pol)
+
+    polsx = pd.DataFrame(pd.read_csv(filesx,sep =' '))
+    polsx.columns = ["x","y"]
+    poldx = pd.DataFrame(pd.read_csv(filedx,sep =' '))
+    poldx.columns = ["x","y"]
+    if poldx["y"][0]>100:
+        poldx = poldx.reindex(index=poldx.index[::-1])
+    if polsx["y"][0]<100:
+        polsx = polsx.reindex(index=polsx.index[::-1])
+    polsx = polsx.append(poldx)
+    polsx = np.array(polsx)
+
+    pol = Polygon(polsx)
     #rotation of the polygon to have the right side, but not so important, is only for
     #visualization
     rotated = rotate(pol,180)
@@ -373,7 +383,7 @@ def MSD_Sham(dir, side = "dx", delimiter = "\t"):
 def MSD(dir, nframes,pre,suf, delimiter = " "):
     """
     Computes the Mean Square Displacement (MSD)
-    which is the mean squared difference between the y coordinates of the fronts
+    which is the mean squared difference between the x or y coordinates of the fronts
 
     --------------------------
     Parameters:
@@ -395,12 +405,13 @@ def MSD(dir, nframes,pre,suf, delimiter = " "):
 
             file = pre + str(i) + suf
             #df = grid(dir + fname + str(i) + side + ".txt", delimiter = delimiter)
+            #interpolation
             dfx, dfy = necklace_points(dir + file,N=100, sep = delimiter )
 
-            #scaling to mum
+            #scaling to micrometers
             x[i] = dfx/1600*844
             y[i] = dfy/1200*633
-            if i> 0 :
+            if i > 0 :
                 try:
                     dif = velocity(x[i-1],x[i])
                     if np.any(dif>70):
