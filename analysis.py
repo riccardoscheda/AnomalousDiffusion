@@ -281,7 +281,7 @@ def velocity(df0, df1):
 import tidynamics
 
 
-def VACF(dir, fname , side = "_dx", delimiter = " "):
+def VACF(dir, nframes,pre,suf, delimiter = " "):
     """
     Computes the Velocity Autocorrelation Fuction (VACF)
     which is the correlation  between the velocities of the fronts
@@ -290,33 +290,46 @@ def VACF(dir, fname , side = "_dx", delimiter = " "):
     Parameters:
     --------------------------
     dir : the directory which contains the txt files with the coordinates
-    fname : the prefix of the txt files
-    side : the side of the front which is left or right, this distinguish the txt files
+    nframes: the number of the frames to take into account
+    pre: the prefix of the file name before the index
+    suf: the suffix of the file name after the index
     delimiter : the space between the x and y coordinates in the txt file
 
     ----------------------------
     Returns a numpy array with the VACF
     """
-    pos = pd.DataFrame()
-    i = 0
-    for i in range(len(os.listdir(dir))//2-1):
-        if fname.startswith("S"):
-            df1 = grid(dir + fname + str(i+1) + side + ".txt", delimiter = delimiter)
-            df2 = grid(dir + fname + str(i+2) + side + ".txt", delimiter = delimiter)
-        else :
-            df1 = grid(dir + fname + str(i) + side + ".txt", delimiter = delimiter)
-            df2 = grid(dir + fname + str(i+1) + side + ".txt", delimiter = delimiter)
-        pos[i] = velocity(df1,df2)
-        i += 1
+
+    x = pd.DataFrame()
+    y = pd.DataFrame()
+    dif = pd.DataFrame()
+    for i in range(nframes):
+
+            file = pre + str(i) + suf
+            #df = grid(dir + fname + str(i) + side + ".txt", delimiter = delimiter)
+            dfx, dfy = necklace_points(dir + file,N=100, sep = delimiter )
+
+            #scaling to mum
+            x[i] = dfx/1600*844
+            y[i] = dfy/1200*633
+            if i> 0 :
+                try:
+                    dif[i] = velocity(x[i-1],x[i])
+                    if np.any(dif>70):
+                        del dif[i-1]
+                        del dif[i-1]
+                except: pass
 
     count = 0
-    mean = np.zeros(len(pos.T))
-    for i in range(len(mean)):
-        mean = mean +  tidynamics.acf(pos.T[i])
+    #mean = np.zeros(len(x.T))
+    vel = []
+    for i in range(len(dif.T)):
+        #mean = mean + tidynamics.msd(x.T[i])
+        vel.append(tidynamics.acf(dif.T[i]))
         count+=1
 
-    mean/=count
-    return mean
+    #mean/=count
+    vel = pd.DataFrame(vel)
+    return vel, x , y
 
 import re
 
