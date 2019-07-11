@@ -72,7 +72,7 @@ def make_kernel(struct,length):
         kernel.append(struct)
     return np.matrix(kernel)
 
-def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_struct = 10,iterations = 1):
+def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_struct = 5,iterations = 1):
     """
     Takes the two longest borders inside an image and saves in a text file
     the (x,y) coordinates.
@@ -100,11 +100,12 @@ def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_str
     #apply adaptive histogram histogram_equalization
     grid_size = (int(size),int(size))
     gray = cl.adaptive_contrast_enhancement(gray, grid_size= grid_size)
-    median = np.median(gray)
+    mean = np.mean(gray)
+    threshold = mean + 30
     ret, thresh = cv2.threshold(gray,threshold,255,cv2.THRESH_BINARY)
     #now i try using closing to make the cells more uniform
     cstruct = np.ones(length_struct)
-    ckernel = make_kernel(cstruct,length_struct)
+    ckernel = make_kernel(cstruct,length_struct*2)
     ckernel = np.array(ckernel,np.uint8)
     dilate = cv2.dilate(thresh,ckernel,iterations = iterations)
     opening = cv2.morphologyEx(dilate, cv2.MORPH_OPEN, ckernel)
@@ -153,7 +154,7 @@ def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_str
         else :
             np.savetxt(outdir + name + "_sx.txt", df,fmt = '%d', delimiter=' ')
 
-    return dfs , image_with_fronts
+    return dfs , image_with_fronts , opening
 
 
 def divide(coord):
