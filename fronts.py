@@ -103,6 +103,10 @@ def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_str
     mean = np.mean(gray)
     threshold = mean + 30
     ret, thresh = cv2.threshold(gray,threshold,255,cv2.THRESH_BINARY)
+    ###################
+    thresh[0:3,:len(thresh.T)] = 1
+    thresh[len(thresh)-3:len(thresh)-1,:len(thresh.T)] = 1
+
     #now i try using closing to make the cells more uniform
     cstruct = np.ones(length_struct)
     ckernel = make_kernel(cstruct,length_struct*2)
@@ -111,50 +115,39 @@ def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_str
     opening = cv2.morphologyEx(dilate, cv2.MORPH_OPEN, ckernel)
     contours, hierarchy = cv2.findContours(opening, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     lencontours = np.array([len(x) for x in contours])
-    sel = [x in np.sort(lencontours)[-2:] for x in lencontours]
+    sel = [x in np.sort(lencontours)[-1:] for x in lencontours]
     maxcontours = np.array(contours)
     maxcontours = maxcontours[sel]
     image_with_fronts = cv2.drawContours(thresh, maxcontours, -1, (255,255,255), 3)
-    j = 0
     dfs = []
-    for j in range(2) :
-        #maxcontours[j] = list(it.chain.from_iterable(maxcontours[j]))
-        maxcontours[j] = list(it.chain.from_iterable(maxcontours[j]))
-        maxcontours[j] = np.array(maxcontours[j])
-        coord = pd.DataFrame(maxcontours[j])
-        coord.columns = ["x", "y"]
-        # sel = np.where(coordinates["y"]>50)
-        # df = coordinates.iloc[sel]
-        # sel = np.where(df["y"]<1150)
-        #
-        # df = df.iloc[sel]
+    maxcontours = list(it.chain.from_iterable(maxcontours))
+    maxcontours = list(it.chain.from_iterable(maxcontours))
+    maxcontours = np.array(maxcontours)
+    coord = pd.DataFrame(maxcontours)
 
-        if j == 1:
-            #takes the right upper corner and takes what there is after
-            rightup = np.max(np.where(coord["y"] == np.max(coord["y"])))
-            #takes not the last value but the second last because some times there are
-            #problems with the lowest border
-            a = np.where(coord["y"]== np.min(coord["y"]))[0]
-            if len(a)>1:
-                rightdown = a[1]
-            else:
-                rightdown = a[0]
-            df = coord.iloc[rightup  :rightdown ,:]
-            dfs.append(df)
-        else :
-            leftup = np.min(np.where(coord["y"] == np.max(coord["y"])))
-            df = coord.iloc[:leftup + 1, :]
-            dfs.append(df)
+    coord.columns = ["x", "y"]
+    #takes the left upper corner and keep what there is before
+    leftup = np.min(np.where(coord["y"] == np.max(coord["y"])))
+    sx = coord.iloc[:leftup + 1, :]
+    dfs.append(sx)
+    #takes the right upper corner and takes what there is after
+    rightup = np.max(np.where(coord["y"] == np.max(coord["y"])))
+    #takes not the last value but the second last because some times there are
+    #problems with the lowest border
+    a = np.where(coord["y"]== np.min(coord["y"]))[0]
+    if len(a)>1:
+        rightdown = a[1]
+    else:
+        rightdown = a[0]
+    dx = coord.iloc[rightup  :rightdown ,:]
+    dfs.append(dx)
+    name = path.split(".")[0]
+    name = path.split("/")[-1]
 
-        name = path.split(".")[0]
-        name = path.split("/")[-1]
-#        if len(df)>0 :  break
-        if j == 0:
-            np.savetxt(outdir + name + "_dx.txt", df,fmt = '%d', delimiter=' ')
-        else :
-            np.savetxt(outdir + name + "_sx.txt", df,fmt = '%d', delimiter=' ')
+    np.savetxt(outdir + name + "_dx.txt", dx,fmt = '%d', delimiter=' ')
+    np.savetxt(outdir + name + "_sx.txt", sx,fmt = '%d', delimiter=' ')
 
-    return dfs , image_with_fronts , opening
+    return  dfs , image_with_fronts , opening
 
 
 def divide(coord):
