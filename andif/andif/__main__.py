@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import os
+from shapely.geometry import Polygon
 
 #####################################################
 import sys
@@ -134,9 +135,12 @@ class Fast(cli.Application):
 
         if(value == ""):
             if (self.all):
+                cont = 0
                 for value in list(os.listdir(".")):
                     if str(value).endswith(".png"):
                         fr.fast_fronts(value)
+                        print("image "+str(cont))
+                        cont = cont  + 1
                 print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
             else:
                 print(colors.red|"image not given")
@@ -183,33 +187,55 @@ class Divide(cli.Application):
                 np.savetxt("divided_fronts/"+ value +"sx.txt", sx.values, fmt='%d')
                 print(colors.green|"Divided the fronts and saved in dir 'divided_fronts/'")
 
-@AnomalousDiffusion.subcommand("area")
+@AnomalousDiffusion.subcommand("areas")
 class Area(cli.Application):
-    "Computes the area of the polygon formed by the two borders of the cells"
-    all = cli.Flag(["all", "every text file"], help = "If given, I will save area of all the images in a txt file")
-    def main(self, value : str = ""):
+    "Computes the areas for all the directories with the images!"
 
-        if(value == ""):
-            if (self.all):
-                areas = []
-                for value in list(os.listdir(".")):
-                    if str(value).endswith("png.txt"):
-                        pol, area = an.area(value)
-                        areas.append(area)
+    def main(self):
+        df = pd.DataFrame()
+        j = 0
+        d = []
+        for direct in os.listdir("."):
+            if str(direct).endswith("9") or str(direct).endswith("8"):
+                if not os.path.exists(direct + "/images"):
+                    print(colors.yellow|"images/ doesn't exist in directory " +str(direct))
+                    pass
+                else:
+                    print("reading images in directory: "+ str(direct))
+                    d.append(direct)
+                    areas = []
+                    pols1 = []
+                    pols2 = []
+                    for i in range(0,200):
 
-                with open('Areas.txt', 'w+') as f:
-                    for item in areas:
-                        f.write("%s\n" % item)
-                print(colors.green|"areas saved in file 'Areas.txt'")
-            else:
-                print(colors.red|"file not given")
+                        a,b,c = fr.fast_fronts(direct+ "/images/"+ str(i)+".png",outdir = path,size = 30,length_struct=10,iterations = 2)
+                        pol1 = pd.DataFrame(b[0])
+                        pol1 = Polygon(np.array(pol1))
+                        pol2 = pd.DataFrame(b[1])
+                        pol2 = Polygon(np.array(pol2))
+                        areas.append(pol1.area+pol2.area)
+                        pols1.append(pol1)
+                        pols2.append(pol2)
+
+                    areas = np.array(areas)/areas[0]
+                    areas = areas[areas<1]
+                    areas = areas[areas>0.1]
+                    areas = pd.Series(areas)
+                    df[j] = areas
+                    j = j+1
+
+            df.columns = d
+            plt.figure(dpi = 200)
+            for i in list(df.columns):
+                plt.plot(df[i])
+                plt.legend()
+            plt.savefig("aree.png")
+
+            df.to_csv("aree.txt", sep=' ')
+        if j > 0:
+            print(colors.green|"areas saved in file 'areas.txt'")
         else:
-            if(value not in list(os.listdir(path))):
-                print(colors.red|"this file does not exists")
-            else:
-                pol, area = fr.area(value)
-                print("The area of the polygon is "+ str(area))
-
+            print(colors.red|"areas don't saved. There was a problem, maybe wrong directory")
 @AnomalousDiffusion.subcommand("error")
 class Error(cli.Application):
     "Computes the error between two areas between the fronts"
