@@ -72,7 +72,7 @@ def make_kernel(struct,length):
         kernel.append(struct)
     return np.matrix(kernel)
 
-def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_struct = 5,iterations = 1):
+def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_struct = 10,iterations = 2, save = False):
     """
     Takes the two longest borders inside an image and saves in a text file
     the (x,y) coordinates.
@@ -87,6 +87,7 @@ def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_str
     threshold : the value of the threshold to binarize the image
     length_struct : the length for the kernel for the morphological transformations
     iterations : the number of times the dilation is applied
+    save : boolean var for saving the coordinates in a txt file
     ------------
     Returns a list with the two dataframes with the coordinates of the longest borders
 
@@ -107,10 +108,10 @@ def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_str
     threshold = mean + 30
     ret, thresh = cv2.threshold(gray,threshold,255,cv2.THRESH_BINARY)
     ###################
-    thresh[0:3,:len(thresh.T)] = 255
-    thresh[len(thresh)-3:len(thresh)-1,:len(thresh.T)] = 255
-    thresh[:,0:2] = 255
-    thresh[:,len(thresh-3):len(thresh-1)] = 255
+    thresh[0:3,] = 255
+    thresh[len(thresh)-3:len(thresh)-1,:] = 255
+    thresh[:,0:10] = 255
+    thresh[:,-10:] = 255
 
     #now i try using closing to make the cells more uniform
     cstruct = np.ones(length_struct)
@@ -126,20 +127,23 @@ def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_str
     coord = maxcontours
     image_with_fronts = cv2.drawContours(thresh, maxcontours, -1, (255,255,255), 3)
     dfs = []
-    maxcontours = list(it.chain.from_iterable(maxcontours))
+    #maxcontours = list(it.chain.from_iterable(maxcontours))
+    coord[0] = list(it.chain.from_iterable(coord[0]))
     coord[1] = list(it.chain.from_iterable(coord[1]))
-    maxcontours = list(it.chain.from_iterable(maxcontours))
-    maxcontours = np.array(maxcontours)
-    coord = pd.DataFrame(coord[1])
 
-    coord.columns = ["x", "y"]
+    #maxcontours = list(it.chain.from_iterable(maxcontours))
+    #maxcontours = np.array(maxcontours)
+    #maxcontours = pd.DataFrame(maxcontours)
+    coordinates = pd.DataFrame(coord[1])
+
+    coordinates.columns = ["x", "y"]
     #takes the left upper corner and keep what there is before
-    leftup = np.min(np.where(coord["y"] == np.max(coord["y"])))
-    leftdown = np.max(np.where(coord["y"]== np.min(coord["y"])))
-    dx = coord.iloc[leftdown:leftup , :]
+    leftup = np.min(np.where(coordinates["y"] == np.max(coordinates["y"])))
+    leftdown = np.max(np.where(coordinates["y"]== np.min(coordinates["y"])))
+    dx = coordinates.iloc[leftdown:leftup , :]
     dfs.append(dx)
     #takes the right upper corner and takes what there is after
-    rightup = np.max(np.where(coord["y"] == np.max(coord["y"])))
+    rightup = np.max(np.where(coordinates["y"] == np.max(coordinates["y"])))
     #takes not the last value but the second last because some times there are
     #problems with the lowest border
 
@@ -147,15 +151,16 @@ def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_str
     #     rightdown = a[1]
     # else:
     #     rightdown = a[0]
-    sx = coord.iloc[rightup:   ,:]
+    sx = coordinates.iloc[rightup:   ,:]
     dfs.append(sx)
     name = path.split(".")[0]
     name = path.split("/")[-1]
 
-    np.savetxt(outdir + name + "_dx.txt", dx,fmt = '%d', delimiter=' ')
-    np.savetxt(outdir + name + "_sx.txt", sx,fmt = '%d', delimiter=' ')
+    if save:
+        np.savetxt(outdir + name + "_dx.txt", dx,fmt = '%d', delimiter=' ')
+        np.savetxt(outdir + name + "_sx.txt", sx,fmt = '%d', delimiter=' ')
 
-    return  dfs , image_with_fronts , opening
+    return  dfs , maxcontours   , opening
 
 
 def divide(coord):

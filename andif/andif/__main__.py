@@ -38,10 +38,18 @@ class AnomalousDiffusion(cli.Application):
 @AnomalousDiffusion.subcommand("read")
 class Read(cli.Application):
     "Reads the nd2 file and create a new folder with the images in png format"
-    #all = cli.Flag(["all", "every image"], help = "If given, I will save the fronts of all the images in the current directory")
+    all = cli.Flag(["all", "every image"], help = "If given, I will save the fronts of all the images in the current directory")
     #s = cli.Flag(["s", "save"], help = "If given, I will save the image with the borders in the current directory")
     def main( self,n_images : int  , value : str = ""):
-        cl.create_set(n_images, path = value)
+        if self.all:
+            for direct in os.listdir("."):
+                if str(direct).endswith("9") or str(direct).endswith("8"):
+                    print("reading images in directory: "+ str(direct))
+                    for value in ["003.nd2","002.nd2","001.nd2"]:
+                        try:
+                            cl.create_set(n_images, path = direct + "/" + value)
+                            break
+                        except: pass
         print(colors.green|"Saved the images in dir 'images/")
 
 @AnomalousDiffusion.subcommand("modify")
@@ -138,7 +146,7 @@ class Fast(cli.Application):
                 cont = 0
                 for value in list(os.listdir(".")):
                     if str(value).endswith(".png"):
-                        fr.fast_fronts(value)
+                        fr.fast_fronts(value,save = True)
                         print("image "+str(cont))
                         cont = cont  + 1
                 print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
