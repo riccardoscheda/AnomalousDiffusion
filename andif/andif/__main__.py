@@ -138,18 +138,20 @@ class Fast(cli.Application):
     all = cli.Flag(["all", "every image"], help = "If given, I will save the fronts of all the images in the current directory")
     s = cli.Flag(["s", "save"], help = "If given, I will save the image with the borders in the current directory")
     def main(self, value : str = ""):
-        if not os.path.exists("fronts"):
-            os.makedirs("fronts")
-
         if(value == ""):
             if (self.all):
-                cont = 0
-                for value in list(os.listdir(".")):
-                    if str(value).endswith(".png"):
-                        fr.fast_fronts(value,save = True)
-                        print("image "+str(cont))
-                        cont = cont  + 1
-                print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
+                for direct in os.listdir("."):
+                    if str(direct).endswith("9") or str(direct).endswith("8"):
+                        cont = 0
+                        outdir = direct + "/images/fronts/"
+                        if not os.path.exists(outdir):
+                            os.makedirs(outdir)
+                        for value in list(os.listdir(direct+"/images/")):
+                            if str(direct + "/images/" + value).endswith(".png"):
+                                fr.fast_fronts(direct + "/images/" + value,outdir = outdir,save = True)
+                                print("image "+str(cont))
+                                cont = cont  + 1
+                        print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
             else:
                 print(colors.red|"image not given")
         else:
@@ -244,6 +246,9 @@ class Area(cli.Application):
             print(colors.green|"areas saved in file 'areas.txt'")
         else:
             print(colors.red|"areas don't saved. There was a problem, maybe wrong directory")
+
+
+
 @AnomalousDiffusion.subcommand("error")
 class Error(cli.Application):
     "Computes the error between two areas between the fronts"
@@ -256,7 +261,38 @@ class Error(cli.Application):
                 areas_hand = pd.DataFrame(pd.read_csv("Areas_hand.txt"))
                 print(colors.green|"errors saved in file 'error.txt'")
 
+@AnomalousDiffusion.subcommand("msd")
+class MSD(cli.Application):
+    "Computes the Mean Squared Displacement (MSD) for all the directories with the images!"
 
+    def main(self):
+        MSD = []
+        mean = []
+        for direct in os.listdir("."):
+            d = []
+
+            if str(direct).endswith("9") or str(direct).endswith("8"):
+                if not os.path.exists(direct + "/images/fronts"):
+                    print(colors.yellow|"fronts/ doesn't exist in directory " +str(direct))
+                    pass
+                else:
+                    print("reading files in directory: "+ str(direct))
+                    d.append(direct)
+
+                    msd , x , y = an.MSD(direct+"/images/fronts/", nframes = 100,delimiter = " ")
+                    msd = pd.DataFrame(msd)
+                    msd.to_csv(direct + "/msd.txt", sep=' ')
+                    print(colors.green|"msd saved in file 'msd.txt'")
+                    MSD.append(np.mean(msd))
+                    plt.plot(np.mean(msd))
+                    mean.append(np.mean(msd))
+
+        plt.savefig("MSD.png")
+        plt.figure()
+        plt.plot(np.mean(pd.DataFrame(mean)))
+        plt.savefig("mean.png")
+        MSD = pd.DataFrame(MSD)
+        MSD.to_csv("MSD.txt", sep=' ')
 
 
 if __name__ == "__main__":
