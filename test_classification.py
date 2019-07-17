@@ -223,6 +223,8 @@ def test_VACF():
     assert isinstance(msd, pd.DataFrame) == True
     assert all(msd.all() >= 0)
     assert len(x) == len(y)
+
+
 def test_MSD():
     """
     Tests:
@@ -232,11 +234,13 @@ def test_MSD():
     path = "Results/modified_images/fronts/"
     pre = "m_"
     suf = ".png_sx.txt"
-    msd, x, y = an.MSD(path,nframes = 42,pre = pre, suf = suf,delimiter = " ")
+    msdx, msdy = an.MSD(path,nframes = 42,pre = pre, suf = suf,delimiter = " ")
 
-    assert isinstance(msd, pd.DataFrame) == True
-    assert all(msd.all() >= 0)
-    assert len(x) == len(y)
+    assert isinstance(msdx, pd.DataFrame) == True
+    assert isinstance(msdy, pd.DataFrame) == True
+    assert all(msdx.all() >= 0)
+    assert all(msdy.all() >= 0)
+    assert len(msdx) == len(msdy)
 
 def test_MSD_Sham():
     """

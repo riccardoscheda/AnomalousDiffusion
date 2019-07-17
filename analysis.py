@@ -393,7 +393,7 @@ def MSD(dir, nframes,pre = "",suf = ".png_dx.txt", delimiter = " "):
     delimiter : the space between the x and y coordinates in the txt file
 
     ----------------------------
-    Returns a numpy array with the MSD, and the x and y interpolated coordinates
+    Returns two dataframes with the MSD, in x and y directions separately
     """
 
     x = pd.DataFrame()
@@ -411,7 +411,10 @@ def MSD(dir, nframes,pre = "",suf = ".png_dx.txt", delimiter = " "):
             y[i] = dfy/1200*633
             if i > 0 :
                 try:
+                    #computes the distance between the fronts of a frame and the previous
+                    #one, if the distance is too high, then the outlier is removed from the counting
                     dif = velocity(x[i-1],x[i])
+                    # remove outliers from the counting
                     if np.any(dif>70):
                         del x[i-1]
                         del y[i-1]
@@ -419,15 +422,21 @@ def MSD(dir, nframes,pre = "",suf = ".png_dx.txt", delimiter = " "):
 
     count = 0
     #mean = np.zeros(len(x.T))
-    mean = []
+    msdx = []
+    msdy = []
     for i in range(len(x.T)):
         #mean = mean + tidynamics.msd(x.T[i])
-        mean.append(tidynamics.msd(x.T[i]))
+        #computes the msd for the x and y coordinates between the different frames
+        msdx.append(tidynamics.msd(x.T[i]))
+        msdy.append(tidynamics.msd(y.T[i]))
+
         count+=1
 
     #mean/=count
-    mean = pd.DataFrame(mean)
-    return mean, x , y
+    msdx = pd.DataFrame(msdx)
+    msdy = pd.DataFrame(msdy)
+
+    return msdx, msdy
 
 
 from scipy.optimize import curve_fit
@@ -446,4 +455,4 @@ def fit(ydata):
     """
     xdata = np.linspace(0,len(ydata),num = len(ydata))
     popt, pcov = curve_fit(func, xdata, ydata)
-    return popt 
+    return popt
