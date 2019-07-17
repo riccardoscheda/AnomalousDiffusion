@@ -217,16 +217,17 @@ class Area(cli.Application):
                     pols1 = []
                     pols2 = []
                     for i in range(0,200):
+                        try:
+                            a,b,c = fr.fast_fronts(direct+ "/images/"+ str(i)+".png",outdir = path,iterations = 2)
 
-                        a,b,c = fr.fast_fronts(direct+ "/images/"+ str(i)+".png",outdir = path,size = 30,length_struct=10,iterations = 2)
-                        pol1 = pd.DataFrame(b[0])
-                        pol1 = Polygon(np.array(pol1))
-                        pol2 = pd.DataFrame(b[1])
-                        pol2 = Polygon(np.array(pol2))
-                        areas.append(pol1.area+pol2.area)
-                        pols1.append(pol1)
-                        pols2.append(pol2)
-
+                            pol1 = pd.DataFrame(b[0])
+                            pol1 = Polygon(np.array(pol1))
+                            pol2 = pd.DataFrame(b[1])
+                            pol2 = Polygon(np.array(pol2))
+                            areas.append(pol1.area+pol2.area)
+                            pols1.append(pol1)
+                            pols2.append(pol2)
+                        except:pass
                     areas = np.array(areas)/areas[0]
                     areas = areas[areas<1]
                     areas = areas[areas>0.1]
@@ -278,21 +279,62 @@ class MSD(cli.Application):
                 else:
                     print("reading files in directory: "+ str(direct))
                     d.append(direct)
-
-                    msd , x , y = an.MSD(direct+"/images/fronts/", nframes = 100,delimiter = " ")
-                    msd = pd.DataFrame(msd)
-                    msd.to_csv(direct + "/msd.txt", sep=' ')
-                    print(colors.green|"msd saved in file 'msd.txt'")
-                    MSD.append(np.mean(msd))
-                    plt.plot(np.mean(msd))
-                    mean.append(np.mean(msd))
-
+                    try:
+                        msd , x , y = an.MSD(direct+"/images/fronts/", nframes = 100,delimiter = " ")
+                        msd = pd.DataFrame(msd)
+                        msd.to_csv(direct + "/msd.txt", sep=' ')
+                        print(colors.green|"msd saved in file 'msd.txt'")
+                        MSD.append(np.mean(msd))
+                        plt.plot(np.mean(msd),label = direct)
+                        plt.legend()
+                        mean.append(np.mean(msd))
+                    except: pass
         plt.savefig("MSD.png")
         plt.figure()
         plt.plot(np.mean(pd.DataFrame(mean)))
         plt.savefig("mean.png")
         MSD = pd.DataFrame(MSD)
         MSD.to_csv("MSD.txt", sep=' ')
+
+
+
+
+@AnomalousDiffusion.subcommand("fit")
+class FIT(cli.Application):
+    """Computes the fit parameters (D,a) for the Mean Squared Displacement for all the directories and saves
+    in a txt file
+    """
+
+    def main(self):
+        D = []
+        alpha = []
+        cont = 0
+        for direct in os.listdir("."):
+
+            if str(direct).endswith("9") or str(direct).endswith("8"):
+                if not os.path.exists(direct + "/msd.txt"):
+                    print(colors.yellow|"file 'msd.txt' doesn't exist in directory " +str(direct))
+                    pass
+                else:
+                    path = direct+ "/msd.txt"
+                    df = pd.DataFrame(pd.read_csv(path,sep = " "))
+                    #del df[0]
+                    msd = np.mean(df)
+                    popt, popcv = an.fit(msd)
+                    D.append(popt[0])
+                    alpha.append(popt[1])
+                    cont += 1
+
+        D = pd.Series(D)
+        alpha = pd.Series(alpha)
+        fit = pd.DataFrame(columns = ["D","alpha"])
+        fit["D"] = D
+        fit["alpha"] = alpha
+
+        fit.to_csv("fit.txt",sep = " ")
+        if cont > 0 :
+            print(colors.green | "fit parameters saved in file fit.txt")
+        else : print(colors.red| "probably the file fit.txt is empty")
 
 
 if __name__ == "__main__":

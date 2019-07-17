@@ -140,7 +140,7 @@ def test_area():
     pol , area = an.area(file1,file2)
     assert isinstance(pol, Polygon) == True
     assert isinstance(area, float)
-    assert area > 0 
+    assert area > 0
 
 
 def test_comparison():
@@ -251,3 +251,12 @@ def test_MSD_Sham():
     assert isinstance(msd, np.ndarray) == True
     assert np.isclose(msd[0], 0, rtol = 10e-5) == True
     assert all(msd > 0) == True
+
+def test_fit():
+    """
+    Tests
+    if return an array of the parameters
+    """
+    x = np.arange(0,100)
+    fit = an.fit(x)
+    assert isinstance(fit, np.ndarray) == True

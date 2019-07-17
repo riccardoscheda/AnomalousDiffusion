@@ -291,7 +291,7 @@ def velocity(df0, df1):
 import tidynamics
 
 
-def VACF(dir, nframes,pre,suf, delimiter = " "):
+def VACF(dir, nframes,pre = "",suf = ".png_dx.txt", delimiter = " "):
     """
     Computes the Velocity Autocorrelation Fuction (VACF)
     which is the correlation  between the velocities of the fronts
@@ -313,10 +313,9 @@ def VACF(dir, nframes,pre,suf, delimiter = " "):
     y = pd.DataFrame()
     dif = pd.DataFrame()
     for i in range(nframes):
-
             file = pre + str(i) + suf
             #df = grid(dir + fname + str(i) + side + ".txt", delimiter = delimiter)
-            dfx, dfy = necklace_points(dir + file,N=100, sep = delimiter )
+            dfx, dfy = necklace_points(dir + file,N=200, sep = delimiter )
 
             #scaling to mum
             x[i] = dfx/1600*844
@@ -324,9 +323,8 @@ def VACF(dir, nframes,pre,suf, delimiter = " "):
             if i> 0 :
                 try:
                     dif[i] = velocity(x[i-1],x[i])
-                    if np.any(dif>70):
-                        del dif[i-1]
-                        del dif[i-1]
+                    if np.any(abs(dif)>200):
+                        del dif[i]
                 except: pass
 
     count = 0
@@ -380,7 +378,7 @@ def MSD_Sham(dir, side = "dx", delimiter = "\t"):
     mean/=count
     return mean, x , y
 
-def MSD(dir, nframes,pre,suf, delimiter = " "):
+def MSD(dir, nframes,pre = "",suf = ".png_dx.txt", delimiter = " "):
     """
     Computes the Mean Square Displacement (MSD)
     which is the mean squared difference between the x or y coordinates of the fronts
@@ -430,3 +428,22 @@ def MSD(dir, nframes,pre,suf, delimiter = " "):
     #mean/=count
     mean = pd.DataFrame(mean)
     return mean, x , y
+
+
+from scipy.optimize import curve_fit
+
+def func(x,D,a):
+    """
+    The function for the fit of the Mean Squared Displacement
+    """
+    return D*x**a
+
+
+def fit(ydata):
+    """
+    Return the parameter D ( which is the diffusion coefficient) and a, which is the exponent which
+    tell us if the process is subdiffusive or superdiffusive
+    """
+    xdata = np.linspace(0,len(ydata),num = len(ydata))
+    popt, pcov = curve_fit(func, xdata, ydata)
+    return popt 
