@@ -88,80 +88,105 @@ def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_str
     length_struct : the length for the kernel for the morphological transformations
     iterations : the number of times the dilation is applied
     save : boolean var for saving the coordinates in a txt file
+
     ------------
-    Returns a list with the two dataframes with the coordinates of the longest borders
+    Returns:
+    a list with the two dataframes with the coordinates of the longest borders
+    the maxcontours computed by openCV
+    the final image after the morphological transformations
 
     References
     [1] https://docs.opencv.org/3.1.0/d4/d73/tutorial_py_contours_begin.html
     [2] https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_morphological_ops/py_morphological_ops.html
 
     """
+
     im = cv2.imread(path)
     gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+    #the struct is for the kernel for the morphological trasnformations
     struct = [0,0,0,1,1,1,1,0,0,0]
     kernel = make_kernel(struct,length_struct)
     kernel = np.array(kernel,np.uint8)
     #apply adaptive histogram histogram_equalization
     grid_size = (int(size),int(size))
     gray = cl.adaptive_contrast_enhancement(gray, grid_size= grid_size)
+    #the threshold value is given by the mean of the intensity of the image
     mean = np.mean(gray)
-    threshold = mean + 30
+    threshold = mean + 40
+
     ret, thresh = cv2.threshold(gray,threshold,255,cv2.THRESH_BINARY)
+
     ###################
+    #In order to track the right central border, i give to the image a border for each
+    #side, so opencv doesn't consider the border of the image as a contour
     thresh[0:3,] = 255
     thresh[len(thresh)-3:len(thresh)-1,:] = 255
-    thresh[:,0:10] = 255
-    thresh[:,-10:] = 255
+    thresh[:,0:400] = 255
+    thresh[:,-400:] = 255
 
-    #now i try using closing to make the cells more uniform
+    #now i try using dilate, opening and closing to make the cells more uniform
     cstruct = np.ones(length_struct)
     ckernel = make_kernel(cstruct,length_struct*2)
     ckernel = np.array(ckernel,np.uint8)
     dilate = cv2.dilate(thresh,ckernel,iterations = iterations)
     opening = cv2.morphologyEx(dilate, cv2.MORPH_OPEN, ckernel)
-    contours, hierarchy = cv2.findContours(opening, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    cstruct = np.ones(length_struct*3)
+    ckernel = make_kernel(cstruct,length_struct*3)
+    closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, ckernel)
+    contours, hierarchy = cv2.findContours(closing, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     lencontours = np.array([len(x) for x in contours])
-    sel = [x in np.sort(lencontours)[-2:] for x in lencontours]
+    sel = [x in np.sort(lencontours)[-1:] for x in lencontours]
     maxcontours = np.array(contours)
     maxcontours = maxcontours[sel]
+
     coord = maxcontours
     image_with_fronts = cv2.drawContours(thresh, maxcontours, -1, (255,255,255), 3)
+    #dfs is a list which will contain the left and right borders
     dfs = []
-    #maxcontours = list(it.chain.from_iterable(maxcontours))
-    coord[0] = list(it.chain.from_iterable(coord[0]))
-    coord[1] = list(it.chain.from_iterable(coord[1]))
 
-    #maxcontours = list(it.chain.from_iterable(maxcontours))
-    #maxcontours = np.array(maxcontours)
-    #maxcontours = pd.DataFrame(maxcontours)
-    coordinates = pd.DataFrame(coord[1])
+    #opencv not always find two longest borders, so if don't, passes; it depends by the
+    #parameters for the threshold and the morphological transformations
+    #try:
+    #     coord[0] = list(it.chain.from_iterable(coord[0]))
+    #     coord[1] = list(it.chain.from_iterable(coord[1]))
 
+
+    maxcontours = list(it.chain.from_iterable(maxcontours))
+    maxcontours = list(it.chain.from_iterable(maxcontours))
+    maxcontours = np.array(maxcontours)
+    maxcontours = pd.DataFrame(maxcontours)
+    coordinates = maxcontours
+    #this takes only the longest border, which should be the border which refers to
+    #the two fronts of the cells
+    #
+    # if len(coord[0])>len(coord[1]):
+    #     coordinates = pd.DataFrame(coord[0])
+    # else:
+    #     coordinates = pd.DataFrame(coord[1])
     coordinates.columns = ["x", "y"]
-    #takes the left upper corner and keep what there is before
+    #takes the left upper corner and keep what there is before,
+    #taking only the borders which i need
     leftup = np.min(np.where(coordinates["y"] == np.max(coordinates["y"])))
     leftdown = np.max(np.where(coordinates["y"]== np.min(coordinates["y"])))
     dx = coordinates.iloc[leftdown:leftup , :]
     dfs.append(dx)
     #takes the right upper corner and takes what there is after
     rightup = np.max(np.where(coordinates["y"] == np.max(coordinates["y"])))
-    #takes not the last value but the second last because some times there are
-    #problems with the lowest border
 
-    # if len(a)>1:
-    #     rightdown = a[1]
-    # else:
-    #     rightdown = a[0]
-    sx = coordinates.iloc[rightup:   ,:]
+    sx = coordinates.iloc[rightup: ,:]
     dfs.append(sx)
     name = path.split(".")[0]
     name = path.split("/")[-1]
 
+    #saves the right and left borders i need
     if save:
         np.savetxt(outdir + name + "_dx.txt", dx,fmt = '%d', delimiter=' ')
         np.savetxt(outdir + name + "_sx.txt", sx,fmt = '%d', delimiter=' ')
 
-    return  dfs , maxcontours   , opening
-
+    return  dfs , maxcontours  , closing
+    # except:
+    #     dfs = []
+    #    return dfs,maxcontours ,closing
 
 def divide(coord):
     """

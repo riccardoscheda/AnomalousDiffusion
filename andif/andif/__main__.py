@@ -148,7 +148,7 @@ class Fast(cli.Application):
                             os.makedirs(outdir)
                         for value in list(os.listdir(direct+"/images/")):
                             if str(direct + "/images/" + value).endswith(".png"):
-                                fr.fast_fronts(direct + "/images/" + value,outdir = outdir,save = True)
+                                fr.fast_fronts(direct + "/images/" + value,outdir = outdir,save = True,iterations = 3)
                                 print("image "+str(cont))
                                 cont = cont  + 1
                         print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
@@ -219,18 +219,18 @@ class Area(cli.Application):
                     for i in range(0,200):
                         try:
                             a,b,c = fr.fast_fronts(direct+ "/images/"+ str(i)+".png",outdir = path,iterations = 2)
+                            pol = Polygon(np.array(b))
+                            areas.append(pol.area)
 
-                            pol1 = pd.DataFrame(b[0])
-                            pol1 = Polygon(np.array(pol1))
-                            pol2 = pd.DataFrame(b[1])
-                            pol2 = Polygon(np.array(pol2))
-                            areas.append(pol1.area+pol2.area)
-                            pols1.append(pol1)
-                            pols2.append(pol2)
+
+                            # filesx = direct+ "/images/fronts/"+ str(i)+".png_sx.txt"
+                            # filedx = direct+ "/images/fronts/"+ str(i)+".png_dx.txt"
+                            # pol, area = an.area(filesx,filedx)
+                            # areas.append(area)
                         except:pass
                     areas = np.array(areas)/areas[0]
-                    areas = areas[areas<1]
-                    areas = areas[areas>0.1]
+                    areas = areas[areas<1.2]
+                    #areas = areas[areas>0.1]
                     areas = pd.Series(areas)
                     df[j] = areas
                     j = j+1

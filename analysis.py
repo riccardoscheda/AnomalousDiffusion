@@ -29,9 +29,9 @@ def area(filesx, filedx):
     polsx.columns = ["x","y"]
     poldx = pd.DataFrame(pd.read_csv(filedx,sep =' '))
     poldx.columns = ["x","y"]
-    if poldx["y"][0]>100:
+    if poldx["y"][0]>500:
         poldx = poldx.reindex(index=poldx.index[::-1])
-    if polsx["y"][0]<100:
+    if polsx["y"][0]<500:
         polsx = polsx.reindex(index=polsx.index[::-1])
     polsx = polsx.append(poldx)
     polsx = np.array(polsx)
