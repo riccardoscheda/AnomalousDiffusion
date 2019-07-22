@@ -97,9 +97,9 @@ def test_fast_fronts():
     if the output is a list of two pandas dataframes
     if it saves two txt file for each input image
     """
-    df, im, im2 = fr.fast_fronts("Results/modified_images/m_1.png", outdir = "")
+    df, im, im2 = fr.fast_fronts("Data/images/1.png", outdir = "")
     assert isinstance(df, list) == True
-    assert len(df) == 2
+    assert len(df) == 2 or len(df) == 0
 
 def test_divide():
     """
@@ -264,3 +264,26 @@ def test_fit():
     x = np.arange(0,100)
     fit = an.fit(x)
     assert isinstance(fit, np.ndarray) == True
+
+def test_cdf():
+    """
+    Tests
+    if return a numpy array
+    if the last element of the output array is 1.0
+
+    """
+    c = fr.cdf(im_gray)
+    assert isinstance(c, np.ndarray)
+    assert np.isclose(c[-1],1) == True
+
+def test_hist_matching():
+    """
+    Tests
+    if return an image of the same shape
+
+    """
+    ct=fr.cdf(im_gray)
+    c=fr.cdf(im_gray)
+    im=fr.hist_matching(c,ct,im_gray)
+
+    assert im_gray.shape == im.shape

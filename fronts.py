@@ -72,6 +72,34 @@ def make_kernel(struct,length):
         kernel.append(struct)
     return np.matrix(kernel)
 
+
+
+from skimage.exposure import cumulative_distribution
+
+def cdf(im):
+ '''
+ computes the CDF of an image im as 2D numpy ndarray
+ '''
+ c, b = cumulative_distribution(im)
+ # pad the beginning and ending pixels and their CDF values
+ c = np.insert(c, 0, [0]*b[0])
+ c = np.append(c, [1]*(255-b[-1]))
+ return c
+
+def hist_matching(c, c_t, im):
+ '''
+ c: CDF of input image computed with the function cdf()
+ c_t: CDF of template image computed with the function cdf()
+ im: input image as 2D numpy ndarray
+ returns the modified pixel values
+ '''
+ pixels = np.arange(256)
+ # find closest pixel-matches corresponding to the CDF of the input image, given the value of the CDF H of
+ # the template image at the corresponding pixels, s.t. c_t = H(pixels) <=> pixels = H-1(c_t)
+ new_pixels = np.interp(c, c_t, pixels)
+ im = (np.reshape(new_pixels[im.ravel()], im.shape)).astype(np.uint8)
+ return im
+
 def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_struct = 10,iterations = 2, save = False):
     """
     Takes the two longest borders inside an image and saves in a text file
@@ -101,8 +129,18 @@ def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_str
 
     """
 
+    file = path.split("/")[-1]
+    if file in path:
+        directory = path.replace(file,"")
+
+    im0 = cv2.imread(directory+"0.png")
     im = cv2.imread(path)
-    gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+
+    ct=cdf(im0)
+    c=cdf(im)
+    new_im=hist_matching(c,ct,im)
+
+    gray = cv2.cvtColor(new_im, cv2.COLOR_BGR2GRAY)
     #the struct is for the kernel for the morphological trasnformations
     struct = [0,0,0,1,1,1,1,0,0,0]
     kernel = make_kernel(struct,length_struct)
@@ -133,6 +171,8 @@ def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_str
     cstruct = np.ones(length_struct*3)
     ckernel = make_kernel(cstruct,length_struct*3)
     closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, ckernel)
+
+    #now opencv finds the longest border
     contours, hierarchy = cv2.findContours(closing, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     lencontours = np.array([len(x) for x in contours])
     sel = [x in np.sort(lencontours)[-1:] for x in lencontours]
