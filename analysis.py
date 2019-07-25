@@ -398,46 +398,46 @@ def MSD(dir, nframes,pre = "",suf = ".png_dx.txt", delimiter = " "):
 
     x = pd.DataFrame()
     y = pd.DataFrame()
-    try:
-        for i in range(nframes):
 
-                file = pre + str(i) + suf
-                #df = grid(dir + fname + str(i) + side + ".txt", delimiter = delimiter)
-                #interpolation
-                dfx, dfy = necklace_points(dir + file,N=100, sep = delimiter )
+    for i in range(nframes):
+        try:
+            file = pre + str(i) + suf
+            #df = grid(dir + fname + str(i) + side + ".txt", delimiter = delimiter)
+            #interpolation
+            dfx, dfy = necklace_points(dir + file,N=100, sep = delimiter )
 
-                #scaling to micrometers
-                x[i] = dfx/1600*844
-                y[i] = dfy/1200*633
-                # if i > 0 :
-                #     try:
-                #         #computes the distance between the fronts of a frame and the previous
-                #         #one, if the distance is too high, then the outlier is removed from the counting
-                #         dif = velocity(x[i-1],x[i])
-                #         # remove outliers from the counting
-                #         if np.any(dif>70):
-                #             del x[i-1]
-                #             del y[i-1]
-                #     except: pass
+            #scaling to micrometers
+            x[i] = dfx/1600*844
+            y[i] = dfy/1200*633
+            # if i > 0 :
+            #     try:
+            #         #computes the distance between the fronts of a frame and the previous
+            #         #one, if the distance is too high, then the outlier is removed from the counting
+            #         dif = velocity(x[i-1],x[i])
+            #         # remove outliers from the counting
+            #         if np.any(dif>70):
+            #             del x[i-1]
+            #             del y[i-1]
+            #     except: pass
+        except: pass
+    count = 0
+    #mean = np.zeros(len(x.T))
+    msdx = []
+    msdy = []
+    for i in range(len(x.T)):
+        #mean = mean + tidynamics.msd(x.T[i])
+        #computes the msd for the x and y coordinates between the different frames
+        msdx.append(tidynamics.msd(x.T[i]))
+        msdy.append(tidynamics.msd(y.T[i]))
 
-        count = 0
-        #mean = np.zeros(len(x.T))
-        msdx = []
-        msdy = []
-        for i in range(len(x.T)):
-            #mean = mean + tidynamics.msd(x.T[i])
-            #computes the msd for the x and y coordinates between the different frames
-            msdx.append(tidynamics.msd(x.T[i]))
-            msdy.append(tidynamics.msd(y.T[i]))
+        count+=1
 
-            count+=1
+    #mean/=count
+    msdx = pd.DataFrame(msdx)
+    msdy = pd.DataFrame(msdy)
 
-        #mean/=count
-        msdx = pd.DataFrame(msdx)
-        msdy = pd.DataFrame(msdy)
-
-        return msdx, msdy
-    except: return pd.DataFrame(),pd.DataFrame()
+    return msdx, msdy
+    #except: return pd.DataFrame(),pd.DataFrame()
 
 
 from scipy.optimize import curve_fit

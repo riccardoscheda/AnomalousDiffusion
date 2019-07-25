@@ -216,7 +216,7 @@ class Area(cli.Application):
                     areas = []
                     pols1 = []
                     pols2 = []
-                    for i in range(0,200):
+                    for i in range(0,300):
                         try:
                             # a,b,c = fr.fast_fronts(direct+ "/images/"+ str(i)+".png",outdir = path)
                             # pol = Polygon(np.array(b))
@@ -229,7 +229,7 @@ class Area(cli.Application):
                             areas.append(area)
                         except:pass
                     areas = np.array(areas)/areas[0]
-                    #areas = areas[areas<1.2]
+                    areas = areas[areas<1.2]
                     #areas = areas[areas>0.1]
                     areas = pd.Series(areas)
                     df[j] = areas
@@ -280,25 +280,25 @@ class MSD(cli.Application):
                 else:
                     print("reading files in directory: "+ str(direct))
                     d.append(direct)
-                    #try:
-                    msdx , msdy = an.MSD(direct+"/images/fronts/", nframes = 80,delimiter = " ")
+
+                    msdx , msdy = an.MSD(direct+"/images/fronts/", nframes = 97,delimiter = " ")
                     msdx = pd.DataFrame(msdx)
                     msdy = pd.DataFrame(msdy)
                     msdx.to_csv(direct + "/msdx.txt", sep=' ')
                     msdy.to_csv(direct + "/msdy.txt", sep=' ')
-                    print(colors.green|"msd saved in files 'msdx.txt' and msdy.txt")
+                    print(colors.green|"msd saved in files 'msdx.txt' and 'msdy.txt'")
                     MSDX.append(np.mean(msdx))
                     plt.plot(np.mean(msdx),label = direct)
-                    plt.plot(np.mean(msdy),label = direct)
+                    #plt.plot(np.mean(msdy),label = direct)
                     plt.legend()
                     mean.append(np.mean(msdx))
-                    #except: pass
+
         plt.savefig("MSD.png")
         plt.figure()
         plt.plot(np.mean(pd.DataFrame(mean)))
         plt.savefig("mean.png")
         MSDX = pd.DataFrame(MSDX)
-        MSDX.to_csv("MSD.txt", sep=' ')
+        MSDX.to_csv("MSDX.txt", sep=' ')
 
 
 
