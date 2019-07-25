@@ -1,6 +1,7 @@
 # AnomalousDiffusion
 This repository is dedicated for the project of the Patter Recognition course from the master in Applied Physics of the University of Bologna
 
+##Pattern Recognition
 In this project i'm trying to evaluate if the process of cell migration is an anomalous diffusion process.
 Given a set of frames of a monolayer of cells acting migration,
 in the first part of the project i try to recognize the cells from the background through a texture matching method, using the locally binary pattern (LBP) of the images. 
@@ -20,4 +21,21 @@ In the second part of the project i use the fronts of the cells in each frame fo
 diffusion process.
 The main measures for the diffusion process are the Mean Square Displacement (MSD) and the Velocity AutoCorrelation Function (VACF).
 
-Both of these measure in an anomalous diffusion processes should have an exponential behaviour, so i fit them with an exponential function and evaluate the diffusion coefficent D and the exponent \alpha.
+Both of these measure in an anomalous diffusion processes should have an exponential behaviour, so i fit them with an exponential function and evaluate the
+ diffusion coefficent D and the exponent \alpha.
+
+##Faster method
+Using PCA and Gaussian mixture for all the images is quite slow, so i tried to implement a faster method to do so.
+This method is based on thresholding and morphological operations on the images, such as dilation, opening and closing.
+This method can be resumed in:
+- Using the adaptive histogram equalization on the image
+- Thresholding the image to make it binary
+- Using dilation and opening to reduce noise in the centre of the frames and to make the fronts smoother
+- Track the fronts with OpenCV
+- Save the coordinates of the fronts in file txt
+
+## andif Application
+To do so in a fast way there is the plumbum application 'andif' which allow to do this from command line.
+####Read the images from nd2 file
+if you want to read the images from a nd2 file and save them you can use the command 'andif read <N>', where '<N>' is the number of frames you want to save.
+
