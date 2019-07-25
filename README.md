@@ -37,5 +37,5 @@ This method can be resumed in:
 ## andif Application
 To do so in a fast way there is the plumbum application 'andif' which allow to do this from command line.
 ####Read the images from nd2 file
-if you want to read the images from a nd2 file and save them you can use the command 'andif read <N>', where '<N>' is the number of frames you want to save.
+if you want to read the images from a nd2 file and save them you can use the command `andif read <N>`, where `<N>` is the number of frames you want to save.
 
