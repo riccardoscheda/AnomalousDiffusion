@@ -218,18 +218,18 @@ class Area(cli.Application):
                     pols2 = []
                     for i in range(0,200):
                         try:
-                            a,b,c = fr.fast_fronts(direct+ "/images/"+ str(i)+".png",outdir = path,iterations = 2)
-                            pol = Polygon(np.array(b))
-                            areas.append(pol.area)
+                            # a,b,c = fr.fast_fronts(direct+ "/images/"+ str(i)+".png",outdir = path)
+                            # pol = Polygon(np.array(b))
+                            # areas.append(pol.area)
 
 
-                            # filesx = direct+ "/images/fronts/"+ str(i)+".png_sx.txt"
-                            # filedx = direct+ "/images/fronts/"+ str(i)+".png_dx.txt"
-                            # pol, area = an.area(filesx,filedx)
-                            # areas.append(area)
+                            filesx = direct+ "/images/fronts/"+ str(i)+".png_sx.txt"
+                            filedx = direct+ "/images/fronts/"+ str(i)+".png_dx.txt"
+                            pol, area = an.area(filesx,filedx)
+                            areas.append(area)
                         except:pass
                     areas = np.array(areas)/areas[0]
-                    areas = areas[areas<1.2]
+                    #areas = areas[areas<1.2]
                     #areas = areas[areas>0.1]
                     areas = pd.Series(areas)
                     df[j] = areas
@@ -267,7 +267,8 @@ class MSD(cli.Application):
     "Computes the Mean Squared Displacement (MSD) for all the directories with the images!"
 
     def main(self):
-        MSD = []
+        MSDX = []
+        MSDY = []
         mean = []
         for direct in os.listdir("."):
             d = []
@@ -279,22 +280,25 @@ class MSD(cli.Application):
                 else:
                     print("reading files in directory: "+ str(direct))
                     d.append(direct)
-                    try:
-                        msdx , msdy= an.MSD(direct+"/images/fronts/", nframes = 100,delimiter = " ")
-                        msdx = pd.DataFrame(msdx)
-                        msdx.to_csv(direct + "/msd.txt", sep=' ')
-                        print(colors.green|"msd saved in file 'msd.txt'")
-                        MSD.append(np.mean(msdx))
-                        plt.plot(np.mean(msdx),label = direct)
-                        plt.legend()
-                        mean.append(np.mean(msdx))
-                    except: pass
+                    #try:
+                    msdx , msdy = an.MSD(direct+"/images/fronts/", nframes = 80,delimiter = " ")
+                    msdx = pd.DataFrame(msdx)
+                    msdy = pd.DataFrame(msdy)
+                    msdx.to_csv(direct + "/msdx.txt", sep=' ')
+                    msdy.to_csv(direct + "/msdy.txt", sep=' ')
+                    print(colors.green|"msd saved in files 'msdx.txt' and msdy.txt")
+                    MSDX.append(np.mean(msdx))
+                    plt.plot(np.mean(msdx),label = direct)
+                    plt.plot(np.mean(msdy),label = direct)
+                    plt.legend()
+                    mean.append(np.mean(msdx))
+                    #except: pass
         plt.savefig("MSD.png")
         plt.figure()
         plt.plot(np.mean(pd.DataFrame(mean)))
         plt.savefig("mean.png")
-        MSD = pd.DataFrame(MSD)
-        MSD.to_csv("MSD.txt", sep=' ')
+        MSDX = pd.DataFrame(MSDX)
+        MSDX.to_csv("MSD.txt", sep=' ')
 
 
 
