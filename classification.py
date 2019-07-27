@@ -7,32 +7,34 @@ from nd2reader import ND2Reader
 import pandas as pd
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
+from sklearn.mixture import GaussianMixture
 import itertools
 
-def create_set(n_images = 60):
+def create_set( n_images , path = "../data_prova/Sham_8_2_18_Field_5.nd2"):
     #creating output directories
     outfolder = "images/"
-    if not os.path.exists(outfolder):
-        os.makedirs(outfolder)
+    name = path.split("/")[0]
+    if not os.path.exists(name + "/" + outfolder):
+        os.makedirs(name + "/" + outfolder)
 
     #Reading images from nd2 file
-    image = []
-    with ND2Reader("../data_prova/Sham_8_2_18_Field_5.nd2") as images:
-        for i in range(n_images):
-            image.append(np.asmatrix(images[i]).astype('uint16'))
-
     #creating the set of images i will modify
 
+    with ND2Reader(path) as images:
         for i in range(n_images):
-            plt.imsave(outfolder+str(i)+".png",image[i],cmap="gray")
+            print("reading image "+str(i))
+            image = np.asmatrix(images[i]).astype('uint16')
+            plt.imsave(name + "/" + outfolder+str(i)+".png",image,cmap="gray")
 
 
-def adaptive_contrast_enhancement(image,grid_size):
+def adaptive_contrast_enhancement(image,grid_size = (50,50)):
     """
     This function uses adaptive histogram equalization in order
     to enhance fronts of the cells. Returns the modified image.
     Parameters
     -----------------------
+    Parameters
+
     image : image in matrix format
     grid_size : tuple with the size of the grid
 
@@ -46,17 +48,16 @@ def adaptive_contrast_enhancement(image,grid_size):
 
 
 
-def create_modified_images(image , n_images = 60, grid_size = (100,100)):
-    modimg = []
+def create_modified_images(path , grid_size = (100,100)):
     modified_images = "modified_images/"
     if not os.path.exists(modified_images):
         os.makedirs(modified_images)
-
-    for i in range(n_images):
-        #contrast enhancement on the images
-        im = adaptive_contrast_enhancement(image[i],grid_size)
-        modimg.append(im)
-        plt.imsave("m_"+str(i)+".png",im,cmap="gray")
+    image =  cv2.imread(path)
+    #make it gray
+    imgray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    #contrast enhancement on the images
+    im = adaptive_contrast_enhancement(imgray,grid_size)
+    plt.imsave("modified_images/"+ path ,im,cmap="gray")
 
 
 def LBP(image):
@@ -77,8 +78,9 @@ def LBP(image):
     radius = 1
     # Number of points to be considered as neighbours
     no_points = 8 * radius
+    ret, thresh = cv2.threshold(image,127,255,cv2.THRESH_BINARY)
     # Uniform LBP is used
-    lbp = local_binary_pattern(image,no_points,radius,method="uniform")
+    lbp = local_binary_pattern(thresh,no_points,radius,method="uniform")
     #make the histogram of pixel intensities
     (hist, _) = np.histogram(lbp.ravel(),bins=np.arange(0, no_points + 3),range=(0, no_points + 2))
     hist = hist.astype("float")
@@ -101,6 +103,8 @@ def Principal_components_analysis(image , window_sizeX = 12, window_sizeY = 16):
     image : image in matrix format
     window_sizeX : the size of the width of the subimages
     window_sizeY : the size of the height of the subimages
+
+    Returns a dataframe with the first 5 principal components
     """
     #divides the image in many subimages, and for these the LBP histogram is computed
     rows = int(len(image)/window_sizeX)
@@ -139,6 +143,8 @@ def classification(image, data, window_sizeX = 12, window_sizeY = 16):
     window_sizeX : the size of the width of the subimages
     window_sizeY : the size of the height of the subimages
 
+    Returns the labelled image in uint8
+
     References
     ----------------------
     [1] https://jakevdp.github.io/PythonDataScienceHandbook/05.11-k-means.html
@@ -147,9 +153,12 @@ def classification(image, data, window_sizeX = 12, window_sizeY = 16):
     cols = int(len(image.T)/window_sizeY)
 
     #using the K-means algorithm to classify the 2 clusters given by the principal components
-    kmeans = KMeans(2)
-    kmeans.fit(data)
-    labels = kmeans.predict(data)
+    # kmeans = KMeans(2)
+    # kmeans.fit(data)
+    # labels = kmeans.predict(data)
+
+    #Using Gaussian Mixture instead of K-means gives a better result
+    labels = GaussianMixture(2).fit_predict(data)
     labels = labels.reshape(rows,cols)
     #sometimes Kmeans predict inverted labels, so i make all the images with the same ordered labels
     if (labels[0][0] == 1):

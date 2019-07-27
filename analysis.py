@@ -24,11 +24,12 @@ def area(filesx, filedx):
 
     Returns the area between the two fronts
     """
-
+    #make the polygon from the coordinates files
     polsx = pd.DataFrame(pd.read_csv(filesx,sep =' '))
     polsx.columns = ["x","y"]
     poldx = pd.DataFrame(pd.read_csv(filedx,sep =' '))
     poldx.columns = ["x","y"]
+    #sometimes Polygon takes the wrong order from the dataframe so i reverse it
     if poldx["y"][0]>500:
         poldx = poldx.reindex(index=poldx.index[::-1])
     if polsx["y"][0]<500:
@@ -45,7 +46,7 @@ def area(filesx, filedx):
     #returns the polygon and its area
     return reflected,  reflected.area
 
-
+#This function was needed to evaluate the method with the correct fronts, now is useless
 def comparison():
     """
     Makes the comparison between the areas found by the fronts and the hand drawn fronts
@@ -185,8 +186,10 @@ def error(area, area_hand):
     ------------------------------------
     Parameters:
     ------------------------------------
-    area : array with the areas found with the borders found with PCA
+    area : array of floats with the areas found with the borders found with PCA
     area_hand : array with the areas found by the union of the hand drawn borders of the cells
+
+    Returns an array with errors for each frame
     """
     #computes the error in L^2 between the two areas
     error = np.sqrt((area - area_hand)**2)
@@ -195,11 +198,24 @@ def error(area, area_hand):
 from scipy.interpolate import interp1d
 
 def necklace_points(file,sep = " ",N=100,method='quadratic'):
+    """
+    Computes the interpolation based on the distance of x and y
+
+    Parameters:
+    -----------------------
+
+    file : the path of the txt file with x and y coordinates
+    sep : the delimiter
+    N : number of intrpolation points
+    method: the method for doing the interpolation
+
+    Returns two pandas Series with the interpolated coordinates
+    """
     points = pd.read_csv(file, sep = sep)
     points = points.values
     if points.T[1][0]>points.T[1][-1]:
         points=points[::-1]
-# Linear length along the line:
+    # Linear length along the line:
     distance = np.cumsum( np.sqrt(np.sum( np.diff(points, axis=0)**2, axis=1 )) )
     distance = np.insert(distance, 0, 0)/distance[-1]
     # Interpolation for different methods:
@@ -341,6 +357,7 @@ def VACF(dir, nframes,pre = "",suf = ".png_dx.txt", delimiter = " "):
 
 import re
 
+## MSD for the old images, now useless
 def MSD_Sham(dir, side = "dx", delimiter = "\t"):
     """
     Computes the Mean Square Displacement (MSD)
@@ -402,6 +419,7 @@ def MSD(dir, nframes,pre = "",suf = ".png_dx.txt", delimiter = " "):
     for i in range(nframes):
         try:
             file = pre + str(i) + suf
+            #old interpolation
             #df = grid(dir + fname + str(i) + side + ".txt", delimiter = delimiter)
             #interpolation
             dfx, dfy = necklace_points(dir + file,N=100, sep = delimiter )
@@ -409,35 +427,23 @@ def MSD(dir, nframes,pre = "",suf = ".png_dx.txt", delimiter = " "):
             #scaling to micrometers
             x[i] = dfx/1600*844
             y[i] = dfy/1200*633
-            # if i > 0 :
-            #     try:
-            #         #computes the distance between the fronts of a frame and the previous
-            #         #one, if the distance is too high, then the outlier is removed from the counting
-            #         dif = velocity(x[i-1],x[i])
-            #         # remove outliers from the counting
-            #         if np.any(dif>70):
-            #             del x[i-1]
-            #             del y[i-1]
-            #     except: pass
+
         except: pass
     count = 0
-    #mean = np.zeros(len(x.T))
     msdx = []
     msdy = []
     for i in range(len(x.T)):
-        #mean = mean + tidynamics.msd(x.T[i])
         #computes the msd for the x and y coordinates between the different frames
         msdx.append(tidynamics.msd(x.T[i]))
         msdy.append(tidynamics.msd(y.T[i]))
 
         count+=1
 
-    #mean/=count
+
     msdx = pd.DataFrame(msdx)
     msdy = pd.DataFrame(msdy)
 
     return msdx, msdy
-    #except: return pd.DataFrame(),pd.DataFrame()
 
 
 from scipy.optimize import curve_fit

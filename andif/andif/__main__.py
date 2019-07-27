@@ -1,14 +1,10 @@
 from plumbum import cli, colors
 import os
 from plumbum import local
-#from PIL import Image as imreader
-#from plumbum.cli.image import Image as imdisplay
-#from plumbum.cli.terminal import Progress
 
 ############################################
 import cv2
 import matplotlib.pyplot as plt
-#from mpl_toolkits.mplot3d import Axes3D
 import pandas as pd
 import numpy as np
 import os
@@ -39,12 +35,13 @@ class AnomalousDiffusion(cli.Application):
 class Read(cli.Application):
     "Reads the nd2 file and create a new folder with the images in png format"
     all = cli.Flag(["all", "every image"], help = "If given, I will save the fronts of all the images in the current directory")
-    #s = cli.Flag(["s", "save"], help = "If given, I will save the image with the borders in the current directory")
+
     def main( self,n_images : int  , value : str = ""):
         if self.all:
             for direct in os.listdir("."):
                 if str(direct).endswith("9") or str(direct).endswith("8"):
                     print("reading images in directory: "+ str(direct))
+                    ## The files in the directories have the same images so i take the last one first
                     for value in ["003.nd2","002.nd2","001.nd2"]:
                         try:
                             cl.create_set(n_images, path = direct + "/" + value)
@@ -55,12 +52,20 @@ class Read(cli.Application):
 @AnomalousDiffusion.subcommand("modify")
 class Modify(cli.Application):
     "Modify an image with histogram equalization and saves it in a new folder with the images in png format"
-    #all = cli.Flag(["all", "every image"], help = "If given, I will save the fronts of all the images in the current directory")
-    #s = cli.Flag(["s", "save"], help = "If given, I will save the image with the borders in the current directory")
-    def main( self,n_images : int = 1, value : str = ""):
-        cl.create_modified_images(path = value,n_images = n_images)
-        print(colors.green|"Saved the images in dir 'modified_images/")
+    all = cli.Flag(["all", "every image"], help = "If given, I will save the modified images in the directory modified_images/")
 
+    def main( self, value : str = ""):
+
+                if(value == ""):
+                    if (self.all):
+                        cont = 0
+                        for value in list(os.listdir(".")):
+                            if str(value).endswith(".png"):
+                                cl.create_modified_images(path = value)
+                        print(colors.green|"Saved the binary images in dir 'labelled_images/'")
+                else:
+                        cl.create_modified_images(path = value)
+                        print(colors.green|"Saved the image in dir 'modified_images/")
 
 @AnomalousDiffusion.subcommand("label")
 class Label(cli.Application):
@@ -214,13 +219,9 @@ class Area(cli.Application):
                     print("reading images in directory: "+ str(direct))
                     d.append(direct)
                     areas = []
-                    pols1 = []
-                    pols2 = []
+
                     for i in range(0,300):
                         try:
-                            # a,b,c = fr.fast_fronts(direct+ "/images/"+ str(i)+".png",outdir = path)
-                            # pol = Polygon(np.array(b))
-                            # areas.append(pol.area)
 
 
                             filesx = direct+ "/images/fronts/"+ str(i)+".png_sx.txt"

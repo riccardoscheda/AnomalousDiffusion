@@ -21,8 +21,12 @@ def fronts(path):
 
     Parameters
     path : the path of the image in the directory
-    ------------
+
+    Returns a dataframe with the x and y coordinates of the longest border
+    and the image with the drawn found front
+
     References
+    ------------
     [1] https://docs.opencv.org/3.1.0/d4/d73/tutorial_py_contours_begin.html
     [2] https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_morphological_ops/py_morphological_ops.html
 
@@ -57,6 +61,7 @@ def fronts(path):
     maxcontours = list(it.chain.from_iterable(maxcontours))
     maxcontours = list(it.chain.from_iterable(maxcontours))
     maxcontours = np.array(maxcontours)
+    #making it dataframe
     coordinates = pd.DataFrame(maxcontours)
     coordinates.columns = ["x", "y"]
 
@@ -65,6 +70,8 @@ def fronts(path):
 def make_kernel(struct,length):
     """
     Makes the Structuring Element for the morphological operations
+
+    Returns a numpy matrix
     """
     kernel = []
     #making a matrix with rows all equal to the struct
@@ -105,10 +112,10 @@ def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_str
     Takes the two longest borders inside an image and saves in a text file
     the (x,y) coordinates.
     The input image is modified by morphological transformation in order to have a smoother border
-    -----------
 
     Parameters
     ---------
+
     path : the path of the image in the directory
     outdir : the ouput directory where it saves the txt files
     size : the size of the window for the adaptive histogram equalization
@@ -119,6 +126,7 @@ def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_str
 
     ------------
     Returns:
+    --------
     a list with the two dataframes with the coordinates of the longest borders
     the maxcontours computed by openCV
     the final image after the morphological transformations
@@ -128,19 +136,24 @@ def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_str
     [2] https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_morphological_ops/py_morphological_ops.html
 
     """
+    # HISTOGRAM MATCHING
+    # file = path.split("/")[-1]
+    # if file in path:
+    #     directory = path.replace(file,"")
+    #
+    # im0 = cv2.imread(directory+"0.png")
+    # im0 = cv2.cvtColor(im0, cv2.COLOR_BGR2GRAY)
+    # im = cv2.imread(path)
+    # im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+    # ct=cdf(im0)
+    # c=cdf(im)
+    # gray=hist_matching(c,ct,im)
 
-    file = path.split("/")[-1]
-    if file in path:
-        directory = path.replace(file,"")
 
-    im0 = cv2.imread(directory+"0.png")
     im = cv2.imread(path)
+    gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
 
-    ct=cdf(im0)
-    c=cdf(im)
-    new_im=hist_matching(c,ct,im)
 
-    gray = cv2.cvtColor(new_im, cv2.COLOR_BGR2GRAY)
     #the struct is for the kernel for the morphological trasnformations
     struct = [0,0,0,1,1,1,1,0,0,0]
     kernel = make_kernel(struct,length_struct)
@@ -149,6 +162,7 @@ def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_str
     grid_size = (int(size),int(size))
     gray = cl.adaptive_contrast_enhancement(gray, grid_size= grid_size)
     #the threshold value is given by the mean of the intensity of the image
+    #mean = np.mean(im0)
     mean = np.mean(gray)
     threshold = mean + 40
 
