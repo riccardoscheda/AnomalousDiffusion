@@ -9,7 +9,8 @@ import itertools as it
 from collections import Counter
 from functools import partial
 
-import classification as cl
+#import classification as cl
+
 def fronts(path):
     """
     Takes the longest border inside an image and saves in a text file
@@ -150,9 +151,7 @@ def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_str
     # gray=hist_matching(c,ct,im)
 
 
-    im = cv2.imread(path)
-    gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
-
+    gray = path
 
     #the struct is for the kernel for the morphological trasnformations
     struct = [0,0,0,1,1,1,1,0,0,0]
@@ -229,13 +228,13 @@ def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_str
 
     sx = coordinates.iloc[rightup: ,:]
     dfs.append(sx)
-    name = path.split(".")[0]
-    name = path.split("/")[-1]
+    # name = path.split(".")[0]
+    # name = path.split("/")[-1]
 
     #saves the right and left borders i need
     if save:
-        np.savetxt(outdir + name + "_dx.txt", dx,fmt = '%d', delimiter=' ')
-        np.savetxt(outdir + name + "_sx.txt", sx,fmt = '%d', delimiter=' ')
+        np.savetxt(outdir + "_dx.txt", dx,fmt = '%d', delimiter=' ')
+        np.savetxt(outdir + "_sx.txt", sx,fmt = '%d', delimiter=' ')
 
     return  dfs , maxcontours  , closing
     # except:

@@ -1,6 +1,7 @@
 from plumbum import cli, colors
 import os
 from plumbum import local
+from nd2reader import ND2Reader
 
 ############################################
 import cv2
@@ -340,6 +341,44 @@ class FIT(cli.Application):
         if cont > 0 :
             print(colors.green | "fit parameters saved in file fit.txt")
         else : print(colors.red| "probably the file fit.txt is empty")
+
+
+@AnomalousDiffusion.subcommand("faster")
+class Faster(cli.Application):
+    "Tracks the longest borders in the images and saves the coordinates in a txt file"
+    all = cli.Flag(["all", "every image"], help = "If given, I will save the fronts of all the images in the current directory")
+    s = cli.Flag(["s", "save"], help = "If given, I will save the image with the borders in the current directory")
+    def main(self, value : str = ""):
+        if(value == ""):
+            if (self.all):
+                for direct in os.listdir("."):
+                    if str(direct).endswith("9") or str(direct).endswith("8"):
+                        cont = 0
+                        outdir = direct + "/fronts/"
+                        if not os.path.exists(outdir):
+                            os.makedirs(outdir)
+                        for value in ["003.nd2","002.nd2","001.nd2"]:
+                            try:
+                                with ND2Reader(direct + "/" + value) as images:
+                                    images.iter_axes = "vt"
+                                    #for i in range(3000):
+                                    im = np.matrix(images[10]).astype("uint8")
+                                    fr.fast_fronts(im,size = 5, threshold = 120,outdir = outdir,save = True, length_struct = 1,iterations = 1)
+                                    print("image "+str(cont))
+                                    cont = cont + 1
+                                break
+                            except:
+                                pass
+                        print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
+            else:
+                print(colors.red|"image not given")
+        else:
+            if(value not in list(os.listdir(path))):
+                print(colors.red|"this image does not exists")
+            else:
+                print("image taken")
+                fr.fast_fronts(value)
+                print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
 
 
 if __name__ == "__main__":
