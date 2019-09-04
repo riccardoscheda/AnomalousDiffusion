@@ -9,7 +9,7 @@ import itertools as it
 from collections import Counter
 from functools import partial
 
-#import classification as cl
+import classification as cl
 
 def fronts(path):
     """
@@ -108,7 +108,7 @@ def hist_matching(c, c_t, im):
  im = (np.reshape(new_pixels[im.ravel()], im.shape)).astype(np.uint8)
  return im
 
-def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_struct = 10,iterations = 2, save = False):
+def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_struct = 10,iterations = 2, save = False, fname = ""):
     """
     Takes the two longest borders inside an image and saves in a text file
     the (x,y) coordinates.
@@ -124,7 +124,7 @@ def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_str
     length_struct : the length for the kernel for the morphological transformations
     iterations : the number of times the dilation is applied
     save : boolean var for saving the coordinates in a txt file
-
+    fname : the name of the output files
     ------------
     Returns:
     --------
@@ -161,7 +161,6 @@ def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_str
     grid_size = (int(size),int(size))
     gray = cl.adaptive_contrast_enhancement(gray, grid_size= grid_size)
     #the threshold value is given by the mean of the intensity of the image
-    #mean = np.mean(im0)
     mean = np.mean(gray)
     threshold = mean + 40
 
@@ -233,8 +232,8 @@ def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_str
 
     #saves the right and left borders i need
     if save:
-        np.savetxt(outdir + "_dx.txt", dx,fmt = '%d', delimiter=' ')
-        np.savetxt(outdir + "_sx.txt", sx,fmt = '%d', delimiter=' ')
+        np.savetxt(outdir + fname + "_dx.txt", dx,fmt = '%d', delimiter=' ')
+        np.savetxt(outdir + fname + "_sx.txt", sx,fmt = '%d', delimiter=' ')
 
     return  dfs , maxcontours  , closing
     # except:

@@ -97,7 +97,7 @@ def test_fast_fronts():
     if the output is a list of two pandas dataframes
     if it saves two txt file for each input image
     """
-    df, im, im2 = fr.fast_fronts("Data/images/1.png", outdir = "")
+    df, im, im2 = fr.fast_fronts(im_gray, outdir = "")
     assert isinstance(df, list) == True
     assert len(df) == 2 or len(df) == 0
 

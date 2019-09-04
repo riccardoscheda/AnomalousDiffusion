@@ -361,11 +361,11 @@ class Faster(cli.Application):
                             try:
                                 with ND2Reader(direct + "/" + value) as images:
                                     images.iter_axes = "vt"
-                                    #for i in range(3000):
-                                    im = np.matrix(images[10]).astype("uint8")
-                                    fr.fast_fronts(im,size = 5, threshold = 120,outdir = outdir,save = True, length_struct = 1,iterations = 1)
-                                    print("image "+str(cont))
-                                    cont = cont + 1
+                                    for i in range(10):
+                                        im = np.matrix(images[i]).astype("uint8")
+                                        fr.fast_fronts(im,size = 5, threshold = 120,outdir = outdir,save = True, fname = str(i), length_struct = 1,iterations = 1)
+                                        print("image "+str(cont))
+                                        cont = cont + 1
                                 break
                             except:
                                 pass
