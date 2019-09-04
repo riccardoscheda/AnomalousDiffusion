@@ -392,7 +392,13 @@ class Faster(cli.Application):
                             fields = images.sizes["v"]
                             frames = images.sizes["t"]
                             for i in range(1,fields+1):
+                                if not os.path.exists(outdir + str(i)):
+                                    os.makedirs(outdir + str(i))
                                 #don't need all the frames
+                                xs = pd.DataFrame()
+                                ys = pd.DataFrame()
+                                xr = pd.DataFrame()
+                                yr = pd.DataFrame()
                                 for j in range(frames - 90):
                                     im0 = np.matrix(images[0]).astype("uint8")
                                     im = np.matrix(images[i*j]).astype("uint8")
@@ -401,10 +407,18 @@ class Faster(cli.Application):
                                     ct = fr.cdf(im0)
                                     c = fr.cdf(im)
                                     gray = fr.hist_matching(c,ct,im)
-                                    fr.fast_fronts(gray,size = 5, threshold = 127,outdir = outdir,save = True, fname = str(i)+"-"+str(j), length_struct = 1,iterations = 1)
+                                    dfs, _ , _ = fr.fast_fronts(gray,size = 5, threshold = 127,outdir = outdir,save = False, length_struct = 1,iterations = 1)
+                                    xr.insert(j,str(j),dfs[0]["x"],True)
+                                    xs.insert(j,str(j),dfs[1]["x"],True)
+                                    yr.insert(j,str(j),dfs[0]["y"],True)
+                                    ys.insert(j,str(j),dfs[1]["y"],True)
                                     print("field "+str(cont)+" ["+"#"*int(j/10)+"-"*int(20-int(j/10))+"] "+str(j/2)+"% ", end="\r")
                                 print("field "+str(cont)+" ["+"#"*20+"] 100%")
                                 cont = cont + 1
+                                xs.to_csv(outdir + str(i) + "/xs.txt", sep = " ")
+                                xr.to_csv(outdir + str(i) + "/xr.txt", sep = " ")
+                                ys.to_csv(outdir + str(i) + "/ys.txt", sep = " ")
+                                yr.to_csv(outdir + str(i) + "/yr.txt", sep = " ")
                         break
                     except:
                         pass
