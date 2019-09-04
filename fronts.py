@@ -86,7 +86,7 @@ from skimage.exposure import cumulative_distribution
 
 def cdf(im):
  '''
- computes the CDF of an image im as 2D numpy ndarray
+ computes the CDF of an image as 2D numpy ndarray
  '''
  c, b = cumulative_distribution(im)
  # pad the beginning and ending pixels and their CDF values
@@ -162,7 +162,7 @@ def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_str
     gray = cl.adaptive_contrast_enhancement(gray, grid_size= grid_size)
     #the threshold value is given by the mean of the intensity of the image
     mean = np.mean(gray)
-    threshold = mean + 40
+    #threshold = mean + 40
 
     ret, thresh = cv2.threshold(gray,threshold,255,cv2.THRESH_BINARY)
 
@@ -227,8 +227,6 @@ def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_str
 
     sx = coordinates.iloc[rightup: ,:]
     dfs.append(sx)
-    # name = path.split(".")[0]
-    # name = path.split("/")[-1]
 
     #saves the right and left borders i need
     if save:
@@ -236,9 +234,6 @@ def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_str
         np.savetxt(outdir + fname + "_sx.txt", sx,fmt = '%d', delimiter=' ')
 
     return  dfs , maxcontours  , closing
-    # except:
-    #     dfs = []
-    #    return dfs,maxcontours ,closing
 
 def divide(coord):
     """

@@ -361,17 +361,54 @@ class Faster(cli.Application):
                             try:
                                 with ND2Reader(direct + "/" + value) as images:
                                     images.iter_axes = "vt"
-                                    for i in range(10):
-                                        im = np.matrix(images[i]).astype("uint8")
-                                        fr.fast_fronts(im,size = 5, threshold = 120,outdir = outdir,save = True, fname = str(i), length_struct = 1,iterations = 1)
-                                        print("image "+str(cont))
+                                    fields = images.sizes["v"]
+                                    frames = images.sizes["t"]
+                                    for i in range(1,fields+1):
+                                        for j in range(frames- 90):
+                                            im0 = np.matrix(images[0]).astype("uint8")
+                                            im = np.matrix(images[i*j]).astype("uint8")
+                                            im0 = np.asarray(im0)
+                                            im = np.asarray(im)
+                                            ct = fr.cdf(im0)
+                                            c = fr.cdf(im)
+                                            gray = fr.hist_matching(c,ct,im)
+                                            fr.fast_fronts(gray,size = 5, threshold = 127,outdir = outdir,save = True, fname = str(i)+"-"+str(j), length_struct = 1,iterations = 1)
+                                            print("field "+str(cont)+" ["+"#"*int(j/10)+"-"*int(20-int(j/10))+"] "+str(j/2)+"% ", end="\r")
+                                        print("field "+str(cont)+" ["+"#"*20+"] 100%")
                                         cont = cont + 1
                                 break
                             except:
                                 pass
                         print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
             else:
-                print(colors.red|"image not given")
+                cont = 0
+                outdir = "fronts/"
+                if not os.path.exists(outdir):
+                    os.makedirs(outdir)
+                for value in ["003.nd2","002.nd2","001.nd2"]:
+                    try:
+                        with ND2Reader(value) as images:
+                            images.iter_axes = "vt"
+                            fields = images.sizes["v"]
+                            frames = images.sizes["t"]
+                            for i in range(1,fields+1):
+                                #don't need all the frames
+                                for j in range(frames - 90):
+                                    im0 = np.matrix(images[0]).astype("uint8")
+                                    im = np.matrix(images[i*j]).astype("uint8")
+                                    im0 = np.asarray(im0)
+                                    im = np.asarray(im)
+                                    ct = fr.cdf(im0)
+                                    c = fr.cdf(im)
+                                    gray = fr.hist_matching(c,ct,im)
+                                    fr.fast_fronts(gray,size = 5, threshold = 127,outdir = outdir,save = True, fname = str(i)+"-"+str(j), length_struct = 1,iterations = 1)
+                                    print("field "+str(cont)+" ["+"#"*int(j/10)+"-"*int(20-int(j/10))+"] "+str(j/2)+"% ", end="\r")
+                                print("field "+str(cont)+" ["+"#"*20+"] 100%")
+                                cont = cont + 1
+                        break
+                    except:
+                        pass
+                print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
         else:
             if(value not in list(os.listdir(path))):
                 print(colors.red|"this image does not exists")
