@@ -348,7 +348,7 @@ class Faster(cli.Application):
     "Tracks the longest borders in the images and saves the coordinates in a txt file"
     all = cli.Flag(["all", "every image"], help = "If given, I will save the fronts of all the images in the current directory")
     s = cli.Flag(["s", "save"], help = "If given, I will save the image with the borders in the current directory")
-    def main(self, value : str = ""):
+    def main(self, value : str = "", fields : int = 1):
         if(value == ""):
             if (self.all):
                 for direct in os.listdir("."):
@@ -372,7 +372,7 @@ class Faster(cli.Application):
                                             ct = fr.cdf(im0)
                                             c = fr.cdf(im)
                                             gray = fr.hist_matching(c,ct,im)
-                                            fr.fast_fronts(gray,size = 5, threshold = 127,outdir = outdir,save = True, fname = str(i)+"-"+str(j), length_struct = 1,iterations = 1)
+                                            fr.fast_fronts(gray,size = 5, threshold = 200,outdir = outdir,save = True, fname = str(i)+"-"+str(j), length_struct = 1,iterations = 1)
                                             print("field "+str(cont)+" ["+"#"*int(j/10)+"-"*int(20-int(j/10))+"] "+str(j/2)+"% ", end="\r")
                                         print("field "+str(cont)+" ["+"#"*20+"] 100%")
                                         cont = cont + 1
@@ -389,7 +389,7 @@ class Faster(cli.Application):
                     try:
                         with ND2Reader(value) as images:
                             images.iter_axes = "vt"
-                            fields = images.sizes["v"]
+                            #fields = images.sizes["v"]
                             frames = images.sizes["t"]
                             for i in range(1,fields+1):
                                 if not os.path.exists(outdir + str(i)):
@@ -400,13 +400,13 @@ class Faster(cli.Application):
                                 xr = pd.DataFrame()
                                 yr = pd.DataFrame()
                                 for j in range(frames - 90):
-                                    im0 = np.matrix(images[0]).astype("uint8")
+                                    im0 = np.matrix(images[i*j]).astype("uint8")
                                     im = np.matrix(images[i*j]).astype("uint8")
                                     im0 = np.asarray(im0)
                                     im = np.asarray(im)
                                     ct = fr.cdf(im0)
                                     c = fr.cdf(im)
-                                    gray = fr.hist_matching(c,ct,im)
+                                    gray = fr.hist_matching(ct,c,im)
                                     dfs, _ , _ = fr.fast_fronts(gray,size = 5, threshold = 127,outdir = outdir,save = False, length_struct = 1,iterations = 1)
                                     xr.insert(j,str(j),dfs[0]["x"],True)
                                     xs.insert(j,str(j),dfs[1]["x"],True)

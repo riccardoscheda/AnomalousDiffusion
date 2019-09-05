@@ -159,13 +159,13 @@ def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_str
     kernel = np.array(kernel,np.uint8)
     #apply adaptive histogram histogram_equalization
     grid_size = (int(size),int(size))
-    gray = cl.adaptive_contrast_enhancement(gray, grid_size= grid_size)
+    #gray = cl.adaptive_contrast_enhancement(gray, grid_size= grid_size)
     #the threshold value is given by the mean of the intensity of the image
-    mean = np.mean(gray)
+    #mean = np.mean(gray)
     #threshold = mean + 40
 
-    ret, thresh = cv2.threshold(gray,threshold,255,cv2.THRESH_BINARY)
-
+    blur = cv2.GaussianBlur(gray,(5,5),0)
+    ret3,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
     ###################
     #In order to track the right central border, i give to the image a border for each
     #side, so opencv doesn't consider the border of the image as a contour
@@ -233,7 +233,7 @@ def fast_fronts(path, outdir = "fronts/", size = 20, threshold = 127, length_str
         np.savetxt(outdir + fname + "_dx.txt", dx,fmt = '%d', delimiter=' ')
         np.savetxt(outdir + fname + "_sx.txt", sx,fmt = '%d', delimiter=' ')
 
-    return  dfs , maxcontours  , closing
+    return  dfs , maxcontours  , thresh
 
 def divide(coord):
     """
