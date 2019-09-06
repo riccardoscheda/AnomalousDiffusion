@@ -158,8 +158,8 @@ def fast_fronts(path, outdir = "fronts/", size = 50, threshold = 127, length_str
     kernel = make_kernel(struct,length_struct)
     kernel = np.array(kernel,np.uint8)
     #apply adaptive histogram histogram_equalization
-    grid_size = (int(size),int(size))
-    gray = cl.adaptive_contrast_enhancement(gray, grid_size= grid_size)
+    #grid_size = (int(size),int(size))
+    #gray = cl.adaptive_contrast_enhancement(gray, grid_size= grid_size)
     #the threshold value is given by the mean of the intensity of the image
     # mean = np.mean(gray)
     # threshold = mean + 40
