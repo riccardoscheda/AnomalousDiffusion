@@ -169,8 +169,8 @@ def fast_fronts(path, outdir = "fronts/", size = 50, threshold = 127, length_str
     ###################
     #In order to track the right central border, i give to the image a border for each
     #side, so opencv doesn't consider the border of the image as a contour
-    thresh[0:3,] = 255
-    thresh[len(thresh)-3:len(thresh)-1,:] = 255
+    thresh[0:2,] = 255
+    thresh[len(thresh)-2:len(thresh)-1,:] = 255
     thresh[:,0:400] = 255
     thresh[:,-400:] = 255
 
