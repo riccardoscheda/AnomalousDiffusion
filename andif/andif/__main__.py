@@ -385,18 +385,18 @@ class Faster(cli.Application):
                                             blur = cv2.GaussianBlur(new,(7,7),1)
                                             ret3,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
                                             dfs, b, c = fr.fast_fronts(thresh,iterations=1)
-
-                                            xr.insert(j,str(j),dfs[0]["x"],True)
-                                            xs.insert(j,str(j),dfs[1]["x"],True)
-                                            yr.insert(j,str(j),dfs[0]["y"],True)
-                                            ys.insert(j,str(j),dfs[1]["y"],True)
+                                            if len(dfs[0]["x"] != 0 ) and (len(dfs[1]["x"] != 0 )):
+                                                xr.insert(j,str(j),dfs[0]["x"],True)
+                                                xs.insert(j,str(j),dfs[1]["x"],True)
+                                                yr.insert(j,str(j),dfs[0]["y"],True)
+                                                ys.insert(j,str(j),dfs[1]["y"],True)
                                             print("field "+str(cont)+" ["+"#"*int(j/10)+"-"*int(20-int(j/10))+"] "+str(j/2)+"% ", end="\r")
                                         print("field "+str(cont)+" ["+"#"*20+"] 100%")
                                         cont = cont + 1
-                                        xs.to_csv(outdir + str(i) + "/xs.txt", sep = "\n")
-                                        xr.to_csv(outdir + str(i) + "/xr.txt", sep = "\n")
-                                        ys.to_csv(outdir + str(i) + "/ys.txt", sep = "\n")
-                                        yr.to_csv(outdir + str(i) + "/yr.txt", sep = "\n")
+                                        xs.to_excel(outdir + str(i) + "/xs.xlsx")
+                                        xr.to_excel(outdir + str(i) + "/xr.xlsx")
+                                        ys.to_excel(outdir + str(i) + "/ys.xlsx")
+                                        yr.to_excel(outdir + str(i) + "/yr.xlsx")
                                 break
                             except:
                                 pass
@@ -421,7 +421,7 @@ class Faster(cli.Application):
                                 xr = pd.DataFrame()
                                 yr = pd.DataFrame()
                                 for j in range(frames - 90):
-                                    im0 = cv2.convertScaleAbs(images[0],alpha=(255.0/65535.0))
+                                    #im0 = cv2.convertScaleAbs(images[0],alpha=(255.0/65535.0))
                                     im = cv2.convertScaleAbs(images[i*j],alpha=(255.0/65535.0))
                                     # im0 = np.asarray(im0)
                                     # im = np.asarray(im)
@@ -433,19 +433,24 @@ class Faster(cli.Application):
                                     new = cl.adaptive_contrast_enhancement(im,(50,50),1)
                                     blur = cv2.GaussianBlur(new,(7,7),1)
                                     ret3,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-                                    dfs, b, c = fr.fast_fronts(thresh,iterations=1)
-
-                                    xr.insert(j,str(j),dfs[0]["x"],True)
-                                    xs.insert(j,str(j),dfs[1]["x"],True)
-                                    yr.insert(j,str(j),dfs[0]["y"],True)
-                                    ys.insert(j,str(j),dfs[1]["y"],True)
+                                    dfs, b, c = fr.fast_fronts(im)
+                                    if len(dfs[0]["x"] != 0 ) and (len(dfs[1]["x"] != 0 )):
+                                        s = pd.Series(dfs[0]["x"],name = j)
+                                        xr[j] = s
+                                        s = pd.Series(dfs[1]["x"], name = j)
+                                        xs[j] = s
+                                        s = pd.Series(dfs[0]["y"], name = j)
+                                        yr[j] = s
+                                        s = pd.Series(dfs[1]["y"], name = j)
+                                        ys[j] = s
                                     print("field "+str(cont)+" ["+"#"*int(j/10)+"-"*int(20-int(j/10))+"] "+str(j/2)+"% ", end="\r")
                                 print("field "+str(cont)+" ["+"#"*20+"] 100%")
                                 cont = cont + 1
-                                xs.to_csv(outdir + str(i) + "/xs.txt",index = True, sep = " ")
-                                xr.to_csv(outdir + str(i) + "/xr.txt",index = True, sep = " ")
-                                ys.to_csv(outdir + str(i) + "/ys.txt",index = True, sep = " ")
-                                yr.to_csv(outdir + str(i) + "/yr.txt",index = True, sep = " ")
+                                xs.to_excel(outdir + str(i) + "/xs.xlsx")
+                                xr.to_excel(outdir + str(i) + "/xr.xlsx")
+                                ys.to_excel(outdir + str(i) + "/ys.xlsx")
+                                yr.to_excel(outdir + str(i) + "/yr.xlsx")
+
                         break
                     except:
                         pass
