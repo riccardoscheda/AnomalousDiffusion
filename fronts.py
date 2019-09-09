@@ -96,6 +96,12 @@ def cdf(im):
 
 def hist_matching(c, c_t, im):
  '''
+ Returns the image with the histogram similar to the sample image, using operations on the cumulative distributions
+ of the two images.
+
+ Parameters:
+ -------------------------
+
  c: CDF of input image computed with the function cdf()
  c_t: CDF of template image computed with the function cdf()
  im: input image as 2D numpy ndarray
@@ -108,19 +114,18 @@ def hist_matching(c, c_t, im):
  im = (np.reshape(new_pixels[im.ravel()], im.shape)).astype(np.uint8)
  return im
 
-def fast_fronts(path, outdir = "fronts/", size = 50, threshold = 127, length_struct = 10,iterations = 2, save = False, fname = ""):
+def fast_fronts(path, outdir = "fronts/", size = 50, length_struct = 10,iterations = 2, save = False, fname = ""):
     """
-    Takes the two longest borders inside an image and saves in a text file
+    Takes the two longest borders inside an image and it may save in a text file
     the (x,y) coordinates.
     The input image is modified by morphological transformation in order to have a smoother border
 
     Parameters
     ---------
 
-    path : the path of the image in the directory
+    path : the image matrix in uint8 format
     outdir : the ouput directory where it saves the txt files
     size : the size of the window for the adaptive histogram equalization
-    threshold : the value of the threshold to binarize the image
     length_struct : the length for the kernel for the morphological transformations
     iterations : the number of times the dilation is applied
     save : boolean var for saving the coordinates in a txt file
@@ -130,42 +135,30 @@ def fast_fronts(path, outdir = "fronts/", size = 50, threshold = 127, length_str
     --------
     a list with the two dataframes with the coordinates of the longest borders
     the maxcontours computed by openCV
-    the final image after the morphological transformations
+    the final binary image after the morphological transformations
 
     References
-    [1] https://docs.opencv.org/3.1.0/d4/d73/tutorial_py_contours_begin.html
-    [2] https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_morphological_ops/py_morphological_ops.html
+    --------------------------------------
 
+    [1] contours: https://docs.opencv.org/3.1.0/d4/d73/tutorial_py_contours_begin.html
+    [2] morphological transformations: https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_morphological_ops/py_morphological_ops.html
+    [3] Otsu thresholding : https://docs.opencv.org/3.4.0/d7/d4d/tutorial_py_thresholding.html
     """
-    # HISTOGRAM MATCHING
-    # file = path.split("/")[-1]
-    # if file in path:
-    #     directory = path.replace(file,"")
-    #
-    # im0 = cv2.imread(directory+"0.png")
-    # im0 = cv2.cvtColor(im0, cv2.COLOR_BGR2GRAY)
-    # im = cv2.imread(path)
-    # im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
-    # ct=cdf(im0)
-    # c=cdf(im)
-    # gray=hist_matching(c,ct,im)
 
-
-    gray = path
 
     #the struct is for the kernel for the morphological trasnformations
     struct = [0,0,0,1,1,1,1,0,0,0]
     kernel = make_kernel(struct,length_struct)
     kernel = np.array(kernel,np.uint8)
+
     #apply adaptive histogram histogram_equalization
     #grid_size = (int(size),int(size))
     #gray = cl.adaptive_contrast_enhancement(gray, grid_size= grid_size)
-    #the threshold value is given by the mean of the intensity of the image
-    # mean = np.mean(gray)
-    # threshold = mean + 40
 
-    blur = cv2.GaussianBlur(gray,(7,7),1)
+    #blurring the image will give better results for the Otsu thresholding
+    blur = cv2.GaussianBlur(path,(7,7),1)
     ret3, thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+
     ###################
     #In order to track the right central border, i give to the image a border for each
     #side, so opencv doesn't consider the border of the image as a contour
@@ -196,26 +189,16 @@ def fast_fronts(path, outdir = "fronts/", size = 50, threshold = 127, length_str
     #dfs is a list which will contain the left and right borders
     dfs = []
 
-    #opencv not always find two longest borders, so if don't, passes; it depends by the
-    #parameters for the threshold and the morphological transformations
-    #try:
-    #     coord[0] = list(it.chain.from_iterable(coord[0]))
-    #     coord[1] = list(it.chain.from_iterable(coord[1]))
-
-
+    #now make the maxcontours as dataframes (seems to work only in this way)
     maxcontours = list(it.chain.from_iterable(maxcontours))
     maxcontours = list(it.chain.from_iterable(maxcontours))
     maxcontours = np.array(maxcontours)
     maxcontours = pd.DataFrame(maxcontours)
     coordinates = maxcontours
-    #this takes only the longest border, which should be the border which refers to
-    #the two fronts of the cells
-    #
-    # if len(coord[0])>len(coord[1]):
-    #     coordinates = pd.DataFrame(coord[0])
-    # else:
-    #     coordinates = pd.DataFrame(coord[1])
     coordinates.columns = ["x", "y"]
+
+    #now divide the longest border in the left and right borders
+    
     #takes the left upper corner and keep what there is before,
     #taking only the borders which i need
     leftup = np.min(np.where(coordinates["y"] == np.max(coordinates["y"])))

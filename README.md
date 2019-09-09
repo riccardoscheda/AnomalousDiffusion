@@ -4,7 +4,7 @@ This repository is dedicated for the project of the Patter Recognition course fr
 ## Pattern Recognition
 In this project i'm trying to evaluate if the process of cell migration is an anomalous diffusion process.
 Given a set of frames of a monolayer of cells acting migration,
-in the first part of the project i try to recognize the cells from the background through a texture matching method, using the locally binary pattern (LBP) of the images. 
+in the first part of the project i try to recognize the cells from the background through a texture matching method, using the locally binary pattern (LBP) of the images.
 First the image is divided in 10000 subimages.Then for each subimage  the LBP image is computed with the method 'uniform' which recognizes the number of uniform patterns formed by the nearest neighbours of the pixels.
 What we obtain is an histogram for each subimage, containing the number of uniform patterns.
 So at the end we have 10000 histogram with 10 bins each.
@@ -39,7 +39,7 @@ This method can be resumed in:
 
 To do so in a fast way there is the plumbum application `andif` which allow to do this from command line.
 ## andif Application
-## Installation 
+## Installation
 to install the application clone the repository [AnomalousDiffusion](https://github.com/riccardoscheda/AnomalousDiffusion) and use pip:
 ```
 git clone https://github.com/riccardoscheda/AnomalousDiffusion
@@ -60,7 +60,7 @@ if you want to read the images from a nd2 file and save them you can use the com
 ###### Modify the images with histogram equalization
 If you want to modify an image with adaptive histogram equalization you can use the command `andif modify <image>` and it saves the modified image in a new directory named `modified_images/`
 
-If you want to modify all the images in a directory, use 
+If you want to modify all the images in a directory, use
 ```
 cd <directory>
 andif modify --all
@@ -77,6 +77,7 @@ Use the command `andif label <image>` or `andif label --all` to binarize all the
 In this project i had to track the borders from a layer of cells, so the command `andif fronts <image>` will track the longest border in the image which should correspond to the center of the image, i.e. the background, and save the x and y coordinates in a txt file.
 To do this for all the images use `andif fronts --all` This command will save the txt files in the directory `fronts/`
 
+
 ###### Divide the front
 To divide the front found with the command `fronts`, you can use the command `andif divide`, which takes the txt file with the coordinates of the front and divide it in left and right borders, and save them in two different txt files in the directory `divided_fronts/`.
 To do this for all the fronts use `andif divide --all`.
@@ -85,14 +86,15 @@ To do this for all the fronts use `andif divide --all`.
 If you don't need intermediate steps and you want immediately the fronts you can use `andif fast` which use the second method to binarize the images.
 if you want to use the command for all the directories you have to use `andif fast --all` in the parent directory
 
-###### Areas 
+Since in some nd2 files there are more than one field of view, saving all the images in png format is slow and inefficient. So there is the command `andif faster "" <N>` which takes the data directly from the nd2 files and will track the borders for the first fields of view you choose (<N>).
+To do this for all the directories use `andif faster --all` in the parent directory with all the directories with the nd2 files and it will save the coordinates of the different frames in 4 excel files, which correspond to the x and y coordinates for the two borders, left and right.
+
+###### Areas
 The command `andif areas` will compute the areas between the left and right borders and normalize it with respect to the area found in the first frame. You have to use this command in the parent directory with the directories with the different images.
 
 ###### Mean Squared Displacement
 The command `andif msd` will compute the MSD. You have to use this command in the parent directory with the directories with the different images.
 
-###### Fit 
+###### Fit
 The command `andif fit` will fit the msd. You have to use this command in the parent directory with the directories with the different images. It will save a txt file with the fitted parameters D which is the Diffusion coefficent and the exponent alpha:
 MSD = Dt^{alpha}
-
-

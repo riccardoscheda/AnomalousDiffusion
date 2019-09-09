@@ -40,6 +40,7 @@ class Read(cli.Application):
     def main( self,n_images : int  , value : str = ""):
         if self.all:
             for direct in os.listdir("."):
+                #Rough way to detect only the directories of the experiments
                 if str(direct).endswith("9") or str(direct).endswith("8"):
                     print("reading images in directory: "+ str(direct))
                     ## The files in the directories have the same images so i take the last one first
@@ -63,14 +64,14 @@ class Modify(cli.Application):
                         for value in list(os.listdir(".")):
                             if str(value).endswith(".png"):
                                 cl.create_modified_images(path = value)
-                        print(colors.green|"Saved the binary images in dir 'labelled_images/'")
+                        print(colors.green|"Saved the modified images in dir 'modified_images/'")
                 else:
                         cl.create_modified_images(path = value)
                         print(colors.green|"Saved the image in dir 'modified_images/")
 
 @AnomalousDiffusion.subcommand("label")
 class Label(cli.Application):
-    "Saves the binary image using pca and K-means algorithms"
+    "Saves the binary image using pca and Gaussian-mixture algorithms"
     all = cli.Flag(["all", "every image"], help = "If given, I will label all the images in the current directory")
     def main(self, value : str = ""):
         if not os.path.exists("labelled_images"):
@@ -101,9 +102,9 @@ class Label(cli.Application):
                 print("i'm doing PCA on the LBP image")
                 pca = cl.Principal_components_analysis(im_gray,window_sizeX=10,window_sizeY=10)
                 print("PCA finished")
-                print("Now i'm using K-means to classify the subimages")
+                print("Now i'm using Gaussian-mixture to classify the subimages")
                 labelled_image = cl.classification(im_gray, pca,window_sizeX=10,window_sizeY=10)
-                print("K-means finished")
+                print("finished")
                 plt.imsave("labelled_images/labelled_"+value,labelled_image)
                 print(colors.green|"Saved the labelled image in dir 'labelled_images/'")
 
@@ -147,6 +148,7 @@ class Fast(cli.Application):
         if(value == ""):
             if (self.all):
                 for direct in os.listdir("."):
+                    #Rough way to detect only the directories of the experiments
                     if str(direct).endswith("9") or str(direct).endswith("8"):
                         cont = 0
                         outdir = direct + "/images/fronts/"
@@ -212,6 +214,7 @@ class Area(cli.Application):
         j = 0
         d = []
         for direct in os.listdir("."):
+            #Rough way to detect only the directories of the experiments
             if str(direct).endswith("9") or str(direct).endswith("8"):
                 if not os.path.exists(direct + "/images"):
                     print(colors.yellow|"images/ doesn't exist in directory " +str(direct))
@@ -274,7 +277,7 @@ class MSD(cli.Application):
         mean = []
         for direct in os.listdir("."):
             d = []
-
+            #Rough way to detect only the directories of the experiments
             if str(direct).endswith("9") or str(direct).endswith("8"):
                 if not os.path.exists(direct + "/images/fronts"):
                     print(colors.yellow|"fronts/ doesn't exist in directory " +str(direct))
@@ -316,7 +319,7 @@ class FIT(cli.Application):
         alpha = []
         cont = 0
         for direct in os.listdir("."):
-
+            #Rough way to detect only the directories of the experiments
             if str(direct).endswith("9") or str(direct).endswith("8"):
                 if not os.path.exists(direct + "/msd.txt"):
                     print(colors.yellow|"file 'msd.txt' doesn't exist in directory " +str(direct))
@@ -345,13 +348,14 @@ class FIT(cli.Application):
 
 @AnomalousDiffusion.subcommand("faster")
 class Faster(cli.Application):
-    "Tracks the longest borders in the images and saves the coordinates in a txt file"
+    "Tracks the longest borders in the images and may save the coordinates in a txt file"
     all = cli.Flag(["all", "every image"], help = "If given, I will save the fronts of all the images in the current directory")
     s = cli.Flag(["s", "save"], help = "If given, I will save the image with the borders in the current directory")
     def main(self, value : str = "", fields : int = 1):
         if(value == ""):
             if (self.all):
                 for direct in os.listdir("."):
+                    #Rough way to detect only the directories of the experiments
                     if str(direct).endswith("9") or str(direct).endswith("8"):
                         cont = 0
                         outdir = direct + "/fronts/"
