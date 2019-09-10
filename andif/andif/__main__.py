@@ -354,27 +354,22 @@ class Faster(cli.Application):
     def main(self, value : str = "", fields : int = 8):
         if(value == ""):
             if (self.all):
-                for direct in os.listdir("."):
+                for outdir in os.listdir("."):
                     #Rough way to detect only the directories of the experiments
-                    if str(direct).endswith("9") or str(direct).endswith("8"):
+                    if str(outdir).endswith("9") or str(outdir).endswith("8"):
                         cont = 0
-                        outdir = direct + "/fronts/"
-                        if not os.path.exists(outdir):
-                            os.makedirs(outdir)
                         for value in ["003.nd2","002.nd2","001.nd2"]:
                             try:
-                                with ND2Reader(direct + "/" + value) as images:
+                                with ND2Reader(outdir + "/" + value) as images:
                                     images.iter_axes = "vt"
                                     fields = images.sizes["v"]
                                     frames = images.sizes["t"]
-
-                                    for field in range(1,fields+1):
-                                        if not os.path.exists(outdir + str(field)):
-                                            os.makedirs(outdir + str(field))
-
-                                        for frame in range(frames - 90):
+                                    df = pd.DataFrame(columns = ["i","x","y","side","frame","field"])
+                                    df.to_csv(outdir + "/coordinates.txt",index = False,header = df.columns, sep = " ")
+                                    for field in range(fields):
+                                        for frame in range(frames):
                                             #im0 = cv2.convertScaleAbs(images[0],alpha=(255.0/65535.0))
-                                            im = cv2.convertScaleAbs(images[frame*field],alpha=(255.0/65535.0))
+                                            im = cv2.convertScaleAbs(images[frame + frames*(field)],alpha=(255.0/65535.0))
                                             # im0 = np.asarray(im0)
                                             # im = np.asarray(im)
                                             # ct = fr.cdf(im0)
@@ -386,69 +381,60 @@ class Faster(cli.Application):
                                             blur = cv2.GaussianBlur(new,(7,7),1)
                                             ret3,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
                                             dfs, b, c = fr.fast_fronts(im)
-                                            for side in [0,1]:
-                                                df = an.necklace_points(dfs[side])
-                                                df["i"] = np.arange(len(df))
-                                                df["side"] = side
-                                                df["frame"] = frame
-                                                df["field"] = field
+                                            for i in [0,1]:
+                                                try:
+                                                    df = an.necklace_points(dfs[i])
 
-                                            print("field "+str(cont)+" ["+"#"*int(field/10)+"-"*int(20-int(field/10))+"] "+str(field/2)+"% ", end="\r")
+                                                    if i == 0:
+                                                        df["side"] = "dx"
+                                                    else: df["side"] = "sx"
+                                                    df["frame"] = frame
+                                                    df["field"] = field
+                                                    df.to_csv(outdir + "/coordinates.txt", header = None , sep = " ", mode= "a")
+                                                except: pass
+                                            print("field "+str(cont)+" ["+"#"*int(frame/frames*20)+"-"*int(20-int(frame/frames*20))+"] "+str(int(frame/frames*100))+"% ", end="\r")
                                         print("field "+str(cont)+" ["+"#"*20+"] 100%")
                                         cont = cont + 1
-                                df.to_csv(outdir + "coordinates.txt" , sep = " ")
                                 break
                             except:
                                 pass
                         print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
             else:
                 cont = 0
-                outdir = "fronts/"
-                if not os.path.exists(outdir):
-                    os.makedirs(outdir)
-                    #for value in ["003.nd2"]:
-                value = "003.nd2"
-                    #try:
+                for value in ["003.nd2","002.nd2","001.nd2"]:
+                    try:
+                        with ND2Reader(value) as images:
+                            images.iter_axes = "vt"
+                            fields = images.sizes["v"]
+                            frames = images.sizes["t"]
+                            df = pd.DataFrame(columns = ["i","x","y","side","frame","field"])
+                            df.to_csv("coordinates.txt",index = False,header = df.columns, sep = " ")
+                            for field in range(fields):
+                                for frame in range(frames):
 
-                with ND2Reader(value) as images:
-                    images.iter_axes = "vt"
-                    fields = images.sizes["v"]
-                    frames = images.sizes["t"]
-                    df = pd.DataFrame(columns = ["i","x","y","side","frame","field"])
-                    df.to_csv(outdir + "coordinates.txt",header = df.columns, sep = " ")
-                    for field in range(1,fields+1):
+                                    im = cv2.convertScaleAbs(images[frame + frames*(field)],alpha=(255.0/65535.0))
 
-                        for frame in range(frames - 90):
-                            #im0 = cv2.convertScaleAbs(images[0],alpha=(255.0/65535.0))
-                            im = cv2.convertScaleAbs(images[frame*field],alpha=(255.0/65535.0))
-                            # im0 = np.asarray(im0)
-                            # im = np.asarray(im)
-                            # ct = fr.cdf(im0)
-                            # c = fr.cdf(im)
-                            # gray = fr.hist_matching(c,ct,im)
-                            #dfs, _ , _ = fr.fast_fronts(im,size = 50, length_struct = 1,iterations = 1)
+                                    new = cl.adaptive_contrast_enhancement(im,(50,50),1)
+                                    blur = cv2.GaussianBlur(new,(7,7),1)
+                                    ret3,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+                                    dfs, b, c = fr.fast_fronts(im)
+                                    for i in [0,1]:
+                                        try:
+                                            df = an.necklace_points(dfs[i])
 
-                            new = cl.adaptive_contrast_enhancement(im,(50,50),1)
-                            blur = cv2.GaussianBlur(new,(7,7),1)
-                            ret3,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-                            dfs, b, c = fr.fast_fronts(im)
-                            for i in [0,1]:
-                                try:
-                                    df = an.necklace_points(dfs[i])
-                                    #df["i"] = np.arange(len(df))
-                                    if i == 0:
-                                        df["side"] = "dx"
-                                    else: df["side"] = "sx"
-                                    df["frame"] = frame
-                                    df["field"] = field
-                                    df.to_csv(outdir + "coordinates.txt", header = None , sep = " ", mode= "a")
-                                except: pass
-                            print("field "+str(cont)+" ["+"#"*int(frame/10)+"-"*int(20-int(frame/10))+"] "+str(frame/2)+"% ", end="\r")
-                        print("field "+str(cont)+" ["+"#"*20+"] 100%")
-                        cont = cont + 1
-                            #break
-                        #except:
-                        #    pass
+                                            if i == 0:
+                                                df["side"] = "dx"
+                                            else: df["side"] = "sx"
+                                            df["frame"] = frame
+                                            df["field"] = field
+                                            df.to_csv("coordinates.txt", header = None , sep = " ", mode= "a")
+                                        except: pass
+                                    print("field "+str(cont)+" ["+"#"*int(frame/frames*20)+"-"*int(20-int(frame/frames*20))+"] "+str(frame/frames*100)+"% ", end="\r")
+                                print("field "+str(cont)+" ["+"#"*20+"] 100%")
+                                cont = cont + 1
+                        break
+                    except:
+                        pass
                 print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
         else:
             if(value not in list(os.listdir(path))):

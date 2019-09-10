@@ -222,9 +222,10 @@ def necklace_points(df,N=100,method='quadratic'):
     curve = interpolator(alpha)
     dfx =  pd.Series(curve.T[0])
     dfy = pd.Series(curve.T[1])
-
-    return dfx , dfy
-
+    df = pd.DataFrame(columns = ["x","y"])
+    df["x"] = dfx
+    df["y"] = dfy
+    return df.astype("int32")
 
 def grid(file, N = 100, l = 1200, delimiter = " "):
     """
