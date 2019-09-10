@@ -351,7 +351,7 @@ class Faster(cli.Application):
     "Tracks the longest borders in the images and may save the coordinates in a txt file"
     all = cli.Flag(["all", "every image"], help = "If given, I will save the fronts of all the images in the current directory")
     s = cli.Flag(["s", "save"], help = "If given, I will save the image with the borders in the current directory")
-    def main(self, value : str = "", fields : int = 1):
+    def main(self, value : str = "", fields : int = 8):
         if(value == ""):
             if (self.all):
                 for direct in os.listdir("."):
@@ -367,17 +367,14 @@ class Faster(cli.Application):
                                     images.iter_axes = "vt"
                                     fields = images.sizes["v"]
                                     frames = images.sizes["t"]
-                                    for i in range(1,fields+1):
-                                        if not os.path.exists(outdir + str(i)):
-                                            os.makedirs(outdir + str(i))
-                                        #don't need all the frames
-                                        xs = pd.DataFrame()
-                                        ys = pd.DataFrame()
-                                        xr = pd.DataFrame()
-                                        yr = pd.DataFrame()
-                                        for j in range(frames - 90):
+
+                                    for field in range(1,fields+1):
+                                        if not os.path.exists(outdir + str(field)):
+                                            os.makedirs(outdir + str(field))
+
+                                        for frame in range(frames - 90):
                                             #im0 = cv2.convertScaleAbs(images[0],alpha=(255.0/65535.0))
-                                            im = cv2.convertScaleAbs(images[i*j],alpha=(255.0/65535.0))
+                                            im = cv2.convertScaleAbs(images[frame*field],alpha=(255.0/65535.0))
                                             # im0 = np.asarray(im0)
                                             # im = np.asarray(im)
                                             # ct = fr.cdf(im0)
@@ -389,22 +386,17 @@ class Faster(cli.Application):
                                             blur = cv2.GaussianBlur(new,(7,7),1)
                                             ret3,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
                                             dfs, b, c = fr.fast_fronts(im)
-                                            if len(dfs[0]["x"] != 0 ) and (len(dfs[1]["x"] != 0 )):
-                                                s = pd.Series(dfs[0]["x"],name = j)
-                                                xr[j] = s
-                                                s = pd.Series(dfs[1]["x"], name = j)
-                                                xs[j] = s
-                                                s = pd.Series(dfs[0]["y"], name = j)
-                                                yr[j] = s
-                                                s = pd.Series(dfs[1]["y"], name = j)
-                                                ys[j] = s
-                                            print("field "+str(cont)+" ["+"#"*int(j/10)+"-"*int(20-int(j/10))+"] "+str(j/2)+"% ", end="\r")
+                                            for side in [0,1]:
+                                                df = an.necklace_points(dfs[side])
+                                                df["i"] = np.arange(len(df))
+                                                df["side"] = side
+                                                df["frame"] = frame
+                                                df["field"] = field
+
+                                            print("field "+str(cont)+" ["+"#"*int(field/10)+"-"*int(20-int(field/10))+"] "+str(field/2)+"% ", end="\r")
                                         print("field "+str(cont)+" ["+"#"*20+"] 100%")
                                         cont = cont + 1
-                                        xs.to_excel(outdir + str(i) + "/xs.xlsx")
-                                        xr.to_excel(outdir + str(i) + "/xr.xlsx")
-                                        ys.to_excel(outdir + str(i) + "/ys.xlsx")
-                                        yr.to_excel(outdir + str(i) + "/yr.xlsx")
+                                df.to_csv(outdir + "coordinates.txt" , sep = " ")
                                 break
                             except:
                                 pass
@@ -414,54 +406,49 @@ class Faster(cli.Application):
                 outdir = "fronts/"
                 if not os.path.exists(outdir):
                     os.makedirs(outdir)
-                for value in ["003.nd2","002.nd2","001.nd2"]:
-                    try:
-                        with ND2Reader(value) as images:
-                            images.iter_axes = "vt"
-                            #fields = images.sizes["v"]
-                            frames = images.sizes["t"]
-                            for i in range(1,fields+1):
-                                if not os.path.exists(outdir + str(i)):
-                                    os.makedirs(outdir + str(i))
-                                #don't need all the frames
-                                xs = pd.DataFrame()
-                                ys = pd.DataFrame()
-                                xr = pd.DataFrame()
-                                yr = pd.DataFrame()
-                                for j in range(frames - 90):
-                                    #im0 = cv2.convertScaleAbs(images[0],alpha=(255.0/65535.0))
-                                    im = cv2.convertScaleAbs(images[i*j],alpha=(255.0/65535.0))
-                                    # im0 = np.asarray(im0)
-                                    # im = np.asarray(im)
-                                    # ct = fr.cdf(im0)
-                                    # c = fr.cdf(im)
-                                    # gray = fr.hist_matching(c,ct,im)
-                                    #dfs, _ , _ = fr.fast_fronts(im,size = 50, length_struct = 1,iterations = 1)
+                    #for value in ["003.nd2"]:
+                value = "003.nd2"
+                    #try:
 
-                                    new = cl.adaptive_contrast_enhancement(im,(50,50),1)
-                                    blur = cv2.GaussianBlur(new,(7,7),1)
-                                    ret3,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-                                    dfs, b, c = fr.fast_fronts(im)
-                                    if len(dfs[0]["x"] != 0 ) and (len(dfs[1]["x"] != 0 )):
-                                        s = pd.Series(dfs[0]["x"],name = j)
-                                        xr[j] = s
-                                        s = pd.Series(dfs[1]["x"], name = j)
-                                        xs[j] = s
-                                        s = pd.Series(dfs[0]["y"], name = j)
-                                        yr[j] = s
-                                        s = pd.Series(dfs[1]["y"], name = j)
-                                        ys[j] = s
-                                    print("field "+str(cont)+" ["+"#"*int(j/10)+"-"*int(20-int(j/10))+"] "+str(j/2)+"% ", end="\r")
-                                print("field "+str(cont)+" ["+"#"*20+"] 100%")
-                                cont = cont + 1
-                                xs.to_excel(outdir + str(i) + "/xs.xlsx")
-                                xr.to_excel(outdir + str(i) + "/xr.xlsx")
-                                ys.to_excel(outdir + str(i) + "/ys.xlsx")
-                                yr.to_excel(outdir + str(i) + "/yr.xlsx")
+                with ND2Reader(value) as images:
+                    images.iter_axes = "vt"
+                    fields = images.sizes["v"]
+                    frames = images.sizes["t"]
+                    df = pd.DataFrame(columns = ["i","x","y","side","frame","field"])
+                    df.to_csv(outdir + "coordinates.txt",header = df.columns, sep = " ")
+                    for field in range(1,fields+1):
 
-                        break
-                    except:
-                        pass
+                        for frame in range(frames - 90):
+                            #im0 = cv2.convertScaleAbs(images[0],alpha=(255.0/65535.0))
+                            im = cv2.convertScaleAbs(images[frame*field],alpha=(255.0/65535.0))
+                            # im0 = np.asarray(im0)
+                            # im = np.asarray(im)
+                            # ct = fr.cdf(im0)
+                            # c = fr.cdf(im)
+                            # gray = fr.hist_matching(c,ct,im)
+                            #dfs, _ , _ = fr.fast_fronts(im,size = 50, length_struct = 1,iterations = 1)
+
+                            new = cl.adaptive_contrast_enhancement(im,(50,50),1)
+                            blur = cv2.GaussianBlur(new,(7,7),1)
+                            ret3,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+                            dfs, b, c = fr.fast_fronts(im)
+                            for i in [0,1]:
+                                try:
+                                    df = an.necklace_points(dfs[i])
+                                    #df["i"] = np.arange(len(df))
+                                    if i == 0:
+                                        df["side"] = "dx"
+                                    else: df["side"] = "sx"
+                                    df["frame"] = frame
+                                    df["field"] = field
+                                    df.to_csv(outdir + "coordinates.txt", header = None , sep = " ", mode= "a")
+                                except: pass
+                            print("field "+str(cont)+" ["+"#"*int(frame/10)+"-"*int(20-int(frame/10))+"] "+str(frame/2)+"% ", end="\r")
+                        print("field "+str(cont)+" ["+"#"*20+"] 100%")
+                        cont = cont + 1
+                            #break
+                        #except:
+                        #    pass
                 print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
         else:
             if(value not in list(os.listdir(path))):
