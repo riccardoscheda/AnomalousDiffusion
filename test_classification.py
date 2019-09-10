@@ -178,18 +178,18 @@ def test_grid():
     grid = an.grid(path, N , l)
     assert isinstance(grid, pd.DataFrame) == True
     assert len(grid) == N
+
 def test_necklace_points():
     """
     Tests if:
     The output are two pandas Series
     the length of the two series are equal
     """
-    path = "Results/modified_images/fronts/"
-    fname = "m_33.png_sx.txt"
-    dfx,dfy = an.necklace_points(path + fname, sep = " " )
-    assert len(dfx) == len (dfy)
-    assert isinstance(dfx, pd.Series) == True
-    assert isinstance(dfy, pd.Series) == True
+    dfs, _, _ = fr.fast_fronts(im_gray)
+    x , y = an.necklace_points(dfs[0])
+    assert len(x) == len (y)
+    assert isinstance(x, pd.Series) == True
+    assert isinstance(y, pd.Series) == True
 
 
 def test_velocity():
@@ -208,53 +208,54 @@ def test_velocity():
     assert isinstance(vel, pd.Series) == True
     assert len(vel) == len(df0_sx)
     assert len(vel) == len(df1_sx)
-
-def test_VACF():
-    """
-    Tests:
-    if the output is a numpy array
-    if the output array elements are positive
-    """
-    path = "Results/modified_images/fronts/"
-    pre = "m_"
-    suf = ".png_sx.txt"
-    msd, x, y = an.VACF(path,nframes = 42,pre = pre, suf = suf,delimiter = " ")
-
-    assert isinstance(msd, pd.DataFrame) == True
-    assert all(msd.all() >= 0)
-    assert len(x) == len(y)
-
-
-def test_MSD():
-    """
-    Tests:
-    if the output is a numpy array
-    if the output array elements are positive
-    """
-    path = "Results/modified_images/fronts/"
-    pre = "m_"
-    suf = ".png_sx.txt"
-    msdx, msdy = an.MSD(path,nframes = 42,pre = pre, suf = suf,delimiter = " ")
-
-    assert isinstance(msdx, pd.DataFrame) == True
-    assert isinstance(msdy, pd.DataFrame) == True
-    assert all(msdx.all() >= 0)
-    assert all(msdy.all() >= 0)
-    assert len(msdx) == len(msdy)
-
-def test_MSD_Sham():
-    """
-    Tests:
-    if the output is a numpy array
-    if the output array elements are positive
-    """
-    path = "Data/data_fronts/"
-    msd, pos2, y2 = an.MSD_Sham(path,side = "sx",delimiter = "\t")
+# 
+# def test_VACF():
+#     """
+#     Tests:
+#     if the output is a numpy array
+#     if the output array elements are positive
+#     """
+#     path = "Results/modified_images/fronts/"
+#     pre = "m_"
+#     suf = ".png_sx.txt"
+#     msd, x, y = an.VACF(path,nframes = 42,pre = pre, suf = suf,delimiter = " ")
+#
+#     assert isinstance(msd, pd.DataFrame) == True
+#     assert all(msd.all() >= 0)
+#     assert len(x) == len(y)
 
 
-    assert isinstance(msd, np.ndarray) == True
-    assert np.isclose(msd[0], 0, rtol = 10e-5) == True
-    assert all(msd > 0) == True
+# def test_MSD():
+#     """
+#     Tests:
+#     if the output is a numpy array
+#     if the output array elements are positive
+#     """
+#     path = "Results/modified_images/fronts/"
+#     pre = "m_"
+#     suf = ".png_sx.txt"
+#     msdx, msdy = an.MSD(path,nframes = 42,pre = pre, suf = suf,delimiter = " ")
+#
+#     assert isinstance(msdx, pd.DataFrame) == True
+#     assert isinstance(msdy, pd.DataFrame) == True
+#     assert all(msdx.all() >= 0)
+#     assert all(msdy.all() >= 0)
+#     assert len(msdx) == len(msdy)
+
+#
+# def test_MSD_Sham():
+#     """
+#     Tests:
+#     if the output is a numpy array
+#     if the output array elements are positive
+#     """
+#     path = "Data/data_fronts/"
+#     msd, pos2, y2 = an.MSD_Sham(path,side = "sx",delimiter = "\t")
+#
+#
+#     assert isinstance(msd, np.ndarray) == True
+#     assert np.isclose(msd[0], 0, rtol = 10e-5) == True
+#     assert all(msd > 0) == True
 
 def test_fit():
     """

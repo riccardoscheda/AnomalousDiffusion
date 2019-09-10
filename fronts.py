@@ -114,7 +114,7 @@ def hist_matching(c, c_t, im):
  im = (np.reshape(new_pixels[im.ravel()], im.shape)).astype(np.uint8)
  return im
 
-def fast_fronts(path, outdir = "fronts/", size = 50, length_struct = 10,iterations = 2, save = False, fname = ""):
+def fast_fronts(im, outdir = "fronts/", size = 50, length_struct = 10,iterations = 2, save = False, fname = ""):
     """
     Takes the two longest borders inside an image and it may save in a text file
     the (x,y) coordinates.
@@ -123,7 +123,7 @@ def fast_fronts(path, outdir = "fronts/", size = 50, length_struct = 10,iteratio
     Parameters
     ---------
 
-    path : the image matrix in uint8 format
+    im : the image matrix in uint8 format
     outdir : the ouput directory where it saves the txt files
     size : the size of the window for the adaptive histogram equalization
     length_struct : the length for the kernel for the morphological transformations
@@ -156,7 +156,7 @@ def fast_fronts(path, outdir = "fronts/", size = 50, length_struct = 10,iteratio
     #gray = cl.adaptive_contrast_enhancement(gray, grid_size= grid_size)
 
     #blurring the image will give better results for the Otsu thresholding
-    blur = cv2.GaussianBlur(path,(7,7),1)
+    blur = cv2.GaussianBlur(im,(7,7),1)
     ret3, thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
     ###################
@@ -198,7 +198,7 @@ def fast_fronts(path, outdir = "fronts/", size = 50, length_struct = 10,iteratio
     coordinates.columns = ["x", "y"]
 
     #now divide the longest border in the left and right borders
-    
+
     #takes the left upper corner and keep what there is before,
     #taking only the borders which i need
     leftup = np.min(np.where(coordinates["y"] == np.max(coordinates["y"])))

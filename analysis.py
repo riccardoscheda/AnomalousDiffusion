@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib as plt
 import cv2
 import pandas as pd
-
+from scipy.interpolate import interp1d
 
 
 def area(filesx, filedx):
@@ -195,23 +195,21 @@ def error(area, area_hand):
     error = np.sqrt((area - area_hand)**2)
     return np.array(error)
 
-from scipy.interpolate import interp1d
 
-def necklace_points(file,sep = " ",N=100,method='quadratic'):
+
+def necklace_points(df,N=100,method='quadratic'):
     """
     Computes the interpolation based on the distance of x and y
 
     Parameters:
     -----------------------
-
-    file : the path of the txt file with x and y coordinates
-    sep : the delimiter
+    df: pandas dataframe which contains the x and y coordinates of a front
     N : number of intrpolation points
     method: the method for doing the interpolation
 
     Returns two pandas Series with the interpolated coordinates
     """
-    points = pd.read_csv(file, sep = sep)
+    points = df
     points = points.values
     if points.T[1][0]>points.T[1][-1]:
         points=points[::-1]
@@ -444,7 +442,92 @@ def MSD(dir, nframes,pre = "",suf = ".png_dx.txt", delimiter = " "):
     msdy = pd.DataFrame(msdy)
 
     return msdx, msdy
-
+#
+# def MSD_excel(path):
+#     """
+#     Computes the Mean Square Displacement (MSD)
+#     which is the mean squared difference between the x or y coordinates of the fronts
+#
+#     --------------------------
+#     Parameters:
+#     --------------------------
+#     path : the directory which contains the excel files (xr,yr,xs,ys) with the coordinates
+#
+#     Returns the txt file with the MSDs for each border for x and y coordinates
+#     """
+#
+#     xs = pd.read_excel( path + "/xs.xlsx")
+#     xr = pd.read_excel( path + "/xr.xlsx")
+#     ys = pd.read_excel( path + "/ys.xlsx")
+#     yr = pd.read_excel( path + "/yr.xlsx")
+#
+#     #interpolation
+#     sx, sy = necklace_points_excel(xs,ys,N=100)
+#     rx, ry = necklace_points_excel(xr,yr,N=100)
+#
+#     #scaling to micrometers
+#     sx =  sx/1600*844
+#     sy = sy/1200*633
+#     rx = rx/1600*844
+#     ry = ry/1200*633
+#
+#     msdxs = []
+#     msdys = []
+#     msdxr = []
+#     msdyr = []
+#
+#     for i in range(len(sx.T)):
+#         #computes the msd for the x and y coordinates between the different frames
+#         msdxs.append(tidynamics.msd(sx.T[i]))
+#         msdys.append(tidynamics.msd(sy.T[i]))
+#         msdxr.append(tidynamics.msd(rx.T[i]))
+#         msdyr.append(tidynamics.msd(ry.T[i]))
+#
+#     msdxs = pd.DataFrame(msdxs)
+#     msdys = pd.DataFrame(msdys)
+#     msdxr = pd.DataFrame(msdxr)
+#     msdyr = pd.DataFrame(msdyr)
+#     return msdxs, msdys , msdxr, msdyr
+#
+# def necklace_points_excel(x,y,N=100,method='quadratic'):
+#     """
+#     Computes the interpolation based on the distance of x and y
+#
+#     Parameters:
+#     -----------------------
+#
+#     x: dataframe with the x coordinates of all the frames
+#     y: dataframe with the y coordinates of all the frames
+#
+#     N : number of intrpolation points
+#     method: the method for doing the interpolation
+#
+#     Returns two pandas Dataframes with the interpolated coordinates
+#     """
+#     dfx = pd.DataFrame()
+#     dfy = pd.DataFrame()
+#
+#     for i in range(len(x.T)):
+#         points = pd.DataFrame()
+#         s = pd.Series(x[i])
+#         points[0] = s
+#         s = pd.Series(y[i])
+#         points[1] = s
+#         points = points.fillna(0)
+#         points = points.values
+#         if points.T[1][0]>points.T[1][-1]:
+#             points=points[::-1]
+#         # Linear length along the line:
+#         distance = np.cumsum( np.sqrt(np.sum( np.diff(points, axis=0)**2, axis=1 )) )
+#         distance = np.insert(distance, 0, 0)/distance[-1]
+#         # Interpolation for different methods:
+#         alpha = np.linspace(0, 1, N)
+#         interpolator =  interp1d(distance, points, kind=method, axis=0)
+#         curve = interpolator(alpha)
+#         dfx[i] =  pd.Series(curve.T[0])
+#         dfy[i] = pd.Series(curve.T[1])
+#
+#     return dfx , dfy
 
 from scipy.optimize import curve_fit
 
