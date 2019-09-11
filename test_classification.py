@@ -131,13 +131,10 @@ def test_area():
     Tests:
     if returns a type Polygon and a number
     """
-    path = "Results/modified_images/fronts/"
-    pre = "m_"
-    suf1 = ".png_sx.txt"
-    suf2 = ".png_dx.txt"
-    file1 = path+pre+"0"+suf1
-    file2 = path+pre+"0"+suf2
-    pol , area = an.area(file1,file2)
+    a,b ,c = fr.fast_fronts(im_gray)
+    sx = an.necklace_points(a[1])
+    dx = an.necklace_points(a[0])
+    pol , area = an.area(sx,dx)
     assert isinstance(pol, Polygon) == True
     assert isinstance(area, float)
     assert area > 0
@@ -186,10 +183,9 @@ def test_necklace_points():
     the length of the two series are equal
     """
     dfs, _, _ = fr.fast_fronts(im_gray)
-    x , y = an.necklace_points(dfs[0])
-    assert len(x) == len (y)
-    assert isinstance(x, pd.Series) == True
-    assert isinstance(y, pd.Series) == True
+    df = an.necklace_points(dfs[0])
+    assert isinstance(df, pd.DataFrame) == True
+
 
 
 def test_velocity():
@@ -208,7 +204,7 @@ def test_velocity():
     assert isinstance(vel, pd.Series) == True
     assert len(vel) == len(df0_sx)
     assert len(vel) == len(df1_sx)
-# 
+#
 # def test_VACF():
 #     """
 #     Tests:
