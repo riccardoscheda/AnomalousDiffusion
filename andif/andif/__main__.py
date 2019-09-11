@@ -377,10 +377,10 @@ class Faster(cli.Application):
                                             # gray = fr.hist_matching(c,ct,im)
                                             #dfs, _ , _ = fr.fast_fronts(im,size = 50, length_struct = 1,iterations = 1)
 
-                                            new = cl.adaptive_contrast_enhancement(im,(50,50),1)
-                                            blur = cv2.GaussianBlur(new,(7,7),1)
+                                            #new = cl.adaptive_contrast_enhancement(im,(50,50),1)
+                                            blur = cv2.GaussianBlur(im,(7,7),1)
                                             ret3,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-                                            dfs, b, c = fr.fast_fronts(im)
+                                            dfs, b, c = fr.fast_fronts(im,length_struct= 20)
                                             for i in [0,1]:
                                                 try:
                                                     df = an.necklace_points(dfs[i])
@@ -401,6 +401,7 @@ class Faster(cli.Application):
                         print(colors.green|"Saved the fronts in the file " + outdir + ".txt")
             else:
                 cont = 0
+                outdir = os.getcwd()
                 for value in ["003.nd2","002.nd2","001.nd2"]:
                     try:
                         with ND2Reader(value) as images:
@@ -408,16 +409,16 @@ class Faster(cli.Application):
                             fields = images.sizes["v"]
                             frames = images.sizes["t"]
                             df = pd.DataFrame(columns = ["i","x","y","side","frame","field"])
-                            df.to_csv(outdir + ".txt",index = False,header = df.columns, sep = " ")
+                            df.to_csv("coordinates.txt",index = False,header = df.columns, sep = " ")
                             for field in range(fields):
                                 for frame in range(frames):
 
                                     im = cv2.convertScaleAbs(images[frame + frames*(field)],alpha=(255.0/65535.0))
 
-                                    new = cl.adaptive_contrast_enhancement(im,(50,50),1)
-                                    blur = cv2.GaussianBlur(new,(7,7),1)
+                                    #new = cl.adaptive_contrast_enhancement(im,(50,50),1)
+                                    blur = cv2.GaussianBlur(im,(7,7),1)
                                     ret3,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-                                    dfs, b, c = fr.fast_fronts(im)
+                                    dfs, b, c = fr.fast_fronts(im,length_struct= 20)
                                     for i in [0,1]:
                                         try:
                                             df = an.necklace_points(dfs[i])
@@ -427,9 +428,9 @@ class Faster(cli.Application):
                                             else: df["side"] = "sx"
                                             df["frame"] = frame
                                             df["field"] = field
-                                            df.to_csv(outdir + ".txt", header = None , sep = " ", mode= "a")
+                                            df.to_csv("coordinates.txt", header = None , sep = " ", mode= "a")
                                         except: pass
-                                    print("field "+str(cont)+" ["+"#"*int(frame/frames*20)+"-"*int(20-int(frame/frames*20))+"] "+str(frame/frames*100)+"% ", end="\r")
+                                    print("field "+str(cont)+" ["+"#"*int(frame/frames*20)+"-"*int(20-int(frame/frames*20))+"] "+str(int(frame/frames*100))+"% ", end="\r")
                                 print("field "+str(cont)+" ["+"#"*20+"] 100%")
                                 cont = cont + 1
                         break
