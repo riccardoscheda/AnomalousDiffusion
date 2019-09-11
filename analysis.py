@@ -409,9 +409,9 @@ def MSD(df):
     """
 
     msd = []
-    for i in range(len(df.T)):
+    for i in range(len(df)):
         #computes the msd for the x or y coordinates between the different frames
-        msd.append(tidynamics.msd(df[i]))
+        msd.append(tidynamics.msd(df.T[i]))
 
     msd = pd.DataFrame(msd)
 

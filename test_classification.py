@@ -131,10 +131,11 @@ def test_area():
     Tests:
     if returns a type Polygon and a number
     """
-    a,b ,c = fr.fast_fronts(im_gray)
+    a,b,c = fr.fast_fronts(im_gray)
+
     sx = an.necklace_points(a[1])
     dx = an.necklace_points(a[0])
-    pol , area = an.area(sx,dx)
+    pol , area = an.area(dx,sx)
     assert isinstance(pol, Polygon) == True
     assert isinstance(area, float)
     assert area > 0
@@ -183,7 +184,8 @@ def test_necklace_points():
     the length of the two series are equal
     """
     dfs, _, _ = fr.fast_fronts(im_gray)
-    df = an.necklace_points(dfs[0])
+    df= an.necklace_points(dfs[0])
+
     assert isinstance(df, pd.DataFrame) == True
 
 
