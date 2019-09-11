@@ -196,9 +196,7 @@ def fast_fronts(im, outdir = "fronts/", size = 50, length_struct = 10,iterations
     maxcontours = pd.DataFrame(maxcontours)
     coordinates = maxcontours
     coordinates.columns = ["x", "y"]
-
     #now divide the longest border in the left and right borders
-
     #takes the left upper corner and keep what there is before,
     #taking only the borders which i need
     leftup = np.min(np.where(coordinates["y"] == np.max(coordinates["y"])))
@@ -207,7 +205,6 @@ def fast_fronts(im, outdir = "fronts/", size = 50, length_struct = 10,iterations
     dfs.append(dx)
     #takes the right upper corner and takes what there is after
     rightup = np.max(np.where(coordinates["y"] == np.max(coordinates["y"])))
-
     sx = coordinates.iloc[rightup: ,:]
     dfs.append(sx)
 
@@ -216,7 +213,7 @@ def fast_fronts(im, outdir = "fronts/", size = 50, length_struct = 10,iterations
         np.savetxt(outdir + fname + "_dx.txt", dx,fmt = '%d', delimiter=' ')
         np.savetxt(outdir + fname + "_sx.txt", sx,fmt = '%d', delimiter=' ')
 
-    return  dfs , maxcontours  , closing
+    return  dfs , coordinates  , closing
 
 def divide(coord):
     """

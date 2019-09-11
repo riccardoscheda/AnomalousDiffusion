@@ -365,7 +365,7 @@ class Faster(cli.Application):
                                     fields = images.sizes["v"]
                                     frames = images.sizes["t"]
                                     df = pd.DataFrame(columns = ["i","x","y","side","frame","field"])
-                                    df.to_csv(outdir + "/coordinates.txt",index = False,header = df.columns, sep = " ")
+                                    df.to_csv(outdir + "/" + outdir + ".txt",index = False,header = df.columns, sep = " ")
                                     for field in range(fields):
                                         for frame in range(frames):
                                             #im0 = cv2.convertScaleAbs(images[0],alpha=(255.0/65535.0))
@@ -390,7 +390,7 @@ class Faster(cli.Application):
                                                     else: df["side"] = "sx"
                                                     df["frame"] = frame
                                                     df["field"] = field
-                                                    df.to_csv(outdir + "/coordinates.txt", header = None , sep = " ", mode= "a")
+                                                    df.to_csv(outdir + "/" + outdir + ".txt", header = None , sep = " ", mode= "a")
                                                 except: pass
                                             print("field "+str(cont)+" ["+"#"*int(frame/frames*20)+"-"*int(20-int(frame/frames*20))+"] "+str(int(frame/frames*100))+"% ", end="\r")
                                         print("field "+str(cont)+" ["+"#"*20+"] 100%")
@@ -398,7 +398,7 @@ class Faster(cli.Application):
                                 break
                             except:
                                 pass
-                        print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
+                        print(colors.green|"Saved the fronts in the file " + outdir + ".txt")
             else:
                 cont = 0
                 for value in ["003.nd2","002.nd2","001.nd2"]:
@@ -408,7 +408,7 @@ class Faster(cli.Application):
                             fields = images.sizes["v"]
                             frames = images.sizes["t"]
                             df = pd.DataFrame(columns = ["i","x","y","side","frame","field"])
-                            df.to_csv("coordinates.txt",index = False,header = df.columns, sep = " ")
+                            df.to_csv(outdir + ".txt",index = False,header = df.columns, sep = " ")
                             for field in range(fields):
                                 for frame in range(frames):
 
@@ -427,7 +427,7 @@ class Faster(cli.Application):
                                             else: df["side"] = "sx"
                                             df["frame"] = frame
                                             df["field"] = field
-                                            df.to_csv("coordinates.txt", header = None , sep = " ", mode= "a")
+                                            df.to_csv(outdir + ".txt", header = None , sep = " ", mode= "a")
                                         except: pass
                                     print("field "+str(cont)+" ["+"#"*int(frame/frames*20)+"-"*int(20-int(frame/frames*20))+"] "+str(frame/frames*100)+"% ", end="\r")
                                 print("field "+str(cont)+" ["+"#"*20+"] 100%")
@@ -435,7 +435,7 @@ class Faster(cli.Application):
                         break
                     except:
                         pass
-                print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
+                print(colors.green|"Saved the fronts in the file " + outdir + ".txt")
         else:
             if(value not in list(os.listdir(path))):
                 print(colors.red|"this image does not exists")

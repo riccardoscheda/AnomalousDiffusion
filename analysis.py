@@ -8,15 +8,15 @@ import pandas as pd
 from scipy.interpolate import interp1d
 
 
-def area(filesx, filedx):
+def area(sx, dx):
     """
     Computes the area of the polygon formed by the two borders of the cells
 
     -----------------------------
     Parameters:
     -----------------------------
-    filesx : the path of a txt file with the left side of the fronts
-    filedx : the path of a txt file with the right side of the fronts
+    sx : pandas dataframe with the coordinates of the left border
+    dx : pandas dataframe with the coordinates of the right border
     -----------------------------
     References:
     -----------------------------
@@ -24,10 +24,10 @@ def area(filesx, filedx):
 
     Returns the area between the two fronts
     """
-    #make the polygon from the coordinates files
-    polsx = pd.DataFrame(pd.read_csv(filesx,sep =' '))
+    #make the polygon from the coordinates dataframes
+    polsx = sx
     polsx.columns = ["x","y"]
-    poldx = pd.DataFrame(pd.read_csv(filedx,sep =' '))
+    poldx = dx
     poldx.columns = ["x","y"]
     #sometimes Polygon takes the wrong order from the dataframe so i reverse it
     if poldx["y"][0]>500:
@@ -207,7 +207,7 @@ def necklace_points(df,N=100,method='quadratic'):
     N : number of intrpolation points
     method: the method for doing the interpolation
 
-    Returns two pandas Series with the interpolated coordinates
+    Returns a pandas Dataframe with the interpolated coordinates
     """
     points = df
     points = points.values
@@ -394,7 +394,7 @@ def MSD_Sham(dir, side = "dx", delimiter = "\t"):
     mean/=count
     return mean, x , y
 
-def MSD(dir, nframes,pre = "",suf = ".png_dx.txt", delimiter = " "):
+def MSD(df):
     """
     Computes the Mean Square Displacement (MSD)
     which is the mean squared difference between the x or y coordinates of the fronts
@@ -402,47 +402,20 @@ def MSD(dir, nframes,pre = "",suf = ".png_dx.txt", delimiter = " "):
     --------------------------
     Parameters:
     --------------------------
-    dir : the directory which contains the txt files with the coordinates
-    nframes: the number of the frames to take into account
-    pre: the prefix of the file name before the index
-    suf: the suffix of the file name after the index
-    delimiter : the space between the x and y coordinates in the txt file
+    df : pandas dataframe which contains x or y coordinates for different frames
 
     ----------------------------
-    Returns two dataframes with the MSD, in x and y directions separately
+    Returns a dataframe with the MSD
     """
 
-    x = pd.DataFrame()
-    y = pd.DataFrame()
+    msd = []
+    for i in range(len(df.T)):
+        #computes the msd for the x or y coordinates between the different frames
+        msd.append(tidynamics.msd(df[i]))
 
-    for i in range(nframes):
-        try:
-            file = pre + str(i) + suf
-            #old interpolation
-            #df = grid(dir + fname + str(i) + side + ".txt", delimiter = delimiter)
-            #interpolation
-            dfx, dfy = necklace_points(dir + file,N=100, sep = delimiter )
+    msd = pd.DataFrame(msd)
 
-            #scaling to micrometers
-            x[i] = dfx/1600*844
-            y[i] = dfy/1200*633
-
-        except: pass
-    count = 0
-    msdx = []
-    msdy = []
-    for i in range(len(x.T)):
-        #computes the msd for the x and y coordinates between the different frames
-        msdx.append(tidynamics.msd(x.T[i]))
-        msdy.append(tidynamics.msd(y.T[i]))
-
-        count+=1
-
-
-    msdx = pd.DataFrame(msdx)
-    msdy = pd.DataFrame(msdy)
-
-    return msdx, msdy
+    return msd
 #
 # def MSD_excel(path):
 #     """
