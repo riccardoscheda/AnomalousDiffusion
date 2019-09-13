@@ -147,19 +147,40 @@ class Fast(cli.Application):
     def main(self, value : str = ""):
         if(value == ""):
             if (self.all):
-                for direct in os.listdir("."):
-                    #Rough way to detect only the directories of the experiments
-                    if str(direct).endswith("9") or str(direct).endswith("8"):
-                        cont = 0
-                        outdir = direct + "/images/fronts/"
-                        if not os.path.exists(outdir):
-                            os.makedirs(outdir)
-                        for value in list(os.listdir(direct+"/images/")):
-                            if str(direct + "/images/" + value).endswith(".png"):
-                                fr.fast_fronts(direct + "/images/" + value,outdir = outdir,save = True,iterations = 3)
-                                print("image "+str(cont))
-                                cont = cont  + 1
-                        print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
+                df = pd.DataFrame(columns = ["i","x","y","side","frame","experiment","field"])
+                df.to_csv("coordinates.txt",index = False,header = df.columns, sep = " ")
+                for outdir in ["EF/","Sham/"]:
+                    cont = 0
+                    frames = 200
+                    for path in ["21-11-18","22-02-19","21-02-19","07-02-19","08-02-19","11-02-19"]:
+                        try:
+                            for frame in range(frames):
+                                image =  cv2.imread(outdir + path + "/images/" +str(frame)+".png")
+                                im = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+                                new = cl.adaptive_contrast_enhancement(im,(100,100))
+                                blur = cv2.GaussianBlur(new,(5,5),0)
+                                ret3,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+                                dfs, b, c = fr.fast_fronts(thresh,length_struct=5,iterations=1)
+                                for i in [0,1]:
+                                    try:
+                                        df = an.necklace_points(dfs[i], N = 1000)
+
+                                        if i == 0:
+                                            df["side"] = "dx"
+                                        else: df["side"] = "sx"
+                                        df["frame"] = frame
+                                        df["experiment"] = outdir
+                                        df["field"] = cont
+
+                                        df.to_csv("coordinates.txt", header = None , sep = " ", mode= "a")
+                                    except: pass
+                                print("field "+ path+" ["+"#"*int(frame/frames*20)+"-"*int(20-int(frame/frames*20))+"] "+str(int(frame/frames*100))+"% ", end="\r")
+                            cont = cont + 1
+                            print("field "+ path+" ["+"#"*20+"] 100%")
+
+                        except:
+                            pass
             else:
                 print(colors.red|"image not given")
         else:
@@ -369,18 +390,24 @@ class Faster(cli.Application):
                                     for field in range(fields):
                                         for frame in range(frames):
                                             #im0 = cv2.convertScaleAbs(images[0],alpha=(255.0/65535.0))
-                                            im = cv2.convertScaleAbs(images[frame + frames*(field)],alpha=(255.0/65535.0))
+                                            #im = cv2.convertScaleAbs(images[frame + frames*(field)],alpha=(255.0/65535.0))
                                             # im0 = np.asarray(im0)
                                             # im = np.asarray(im)
                                             # ct = fr.cdf(im0)
                                             # c = fr.cdf(im)
                                             # gray = fr.hist_matching(c,ct,im)
                                             #dfs, _ , _ = fr.fast_fronts(im,size = 50, length_struct = 1,iterations = 1)
-
-                                            #new = cl.adaptive_contrast_enhancement(im,(50,50),1)
-                                            blur = cv2.GaussianBlur(im,(7,7),1)
+                                            thresh = cv2.convertScaleAbs(images[frame + frames*(field)],alpha=(255.0/65535.0))
+                                            max = np.max(thresh)
+                                            thresh[0:2,] = max
+                                            thresh[len(thresh)-2:len(thresh)-1,:] = max
+                                            thresh[:,0:400] = max
+                                            thresh[:,-400:] = max
+                                            thresh[:,775:825 ] = 0
+                                            new = cl.adaptive_contrast_enhancement(thresh,(100,100))
+                                            blur = cv2.GaussianBlur(new,(5,5),0)
                                             ret3,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-                                            dfs, b, c = fr.fast_fronts(im,length_struct= 20)
+                                            dfs, b, c = fr.fast_fronts(thresh,length_struct=10,iterations=1)
                                             for i in [0,1]:
                                                 try:
                                                     df = an.necklace_points(dfs[i])
@@ -390,7 +417,7 @@ class Faster(cli.Application):
                                                     else: df["side"] = "sx"
                                                     df["frame"] = frame
                                                     df["field"] = field
-                                                    df.to_csv(outdir + "/" + outdir + ".txt", header = None , sep = " ", mode= "a")
+                                                    df.to_csv(outdir + "/" + outdir +".txt", header = None , sep = " ", mode= "a")
                                                 except: pass
                                             print("field "+str(cont)+" ["+"#"*int(frame/frames*20)+"-"*int(20-int(frame/frames*20))+"] "+str(int(frame/frames*100))+"% ", end="\r")
                                         print("field "+str(cont)+" ["+"#"*20+"] 100%")
@@ -413,12 +440,19 @@ class Faster(cli.Application):
                             for field in range(fields):
                                 for frame in range(frames):
 
-                                    im = cv2.convertScaleAbs(images[frame + frames*(field)],alpha=(255.0/65535.0))
+                                    thresh = cv2.convertScaleAbs(images[frame + frames*(field)],alpha=(255.0/65535.0))
+                                    max = np.max(thresh)
+                                    thresh[0:2,] = max
+                                    thresh[len(thresh)-2:len(thresh)-1,:] = max
+                                    thresh[:,0:400] = max
+                                    thresh[:,-400:] = max
+                                    thresh[:,775:825 ] = 0
+                                    new = cl.adaptive_contrast_enhancement(thresh,(100,100))
 
-                                    #new = cl.adaptive_contrast_enhancement(im,(50,50),1)
-                                    blur = cv2.GaussianBlur(im,(7,7),1)
-                                    ret3,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-                                    dfs, b, c = fr.fast_fronts(im,length_struct= 20)
+                                    blur = cv2.GaussianBlur(new,(9,9),1)
+                                    ret3,thresh = cv2.threshold(new,0,255,cv2.THRESH_OTSU+cv2.THRESH_BINARY)
+
+                                    dfs,b,c = fr.fast_fronts(thresh,length_struct=7,iterations=2)
                                     for i in [0,1]:
                                         try:
                                             df = an.necklace_points(dfs[i])
