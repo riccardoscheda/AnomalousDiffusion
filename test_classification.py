@@ -215,21 +215,26 @@ def test_velocity():
     assert isinstance(vel, pd.Series) == True
     assert len(vel) == len(df0_sx)
     assert len(vel) == len(df1_sx)
-#
-# def test_VACF():
-#     """
-#     Tests:
-#     if the output is a numpy array
-#     if the output array elements are positive
-#     """
-#     path = "Results/modified_images/fronts/"
-#     pre = "m_"
-#     suf = ".png_sx.txt"
-#     msd, x, y = an.VACF(path,nframes = 42,pre = pre, suf = suf,delimiter = " ")
-#
-#     assert isinstance(msd, pd.DataFrame) == True
-#     assert all(msd.all() >= 0)
-#     assert len(x) == len(y)
+
+@given(df0 = enp.arrays(int,(1,100)),df1 = enp.arrays(int,(1,100)),df2 = enp.arrays(int,(1,100)))
+def test_VACF(df0,df1,df2):
+    """
+    Tests:
+    if the output is a numpy array
+    if the output array elements are positive
+    """
+    df = pd.DataFrame()
+    if (a == b for (a,b) in zip(df0,df1)):
+        pass
+    else:
+        pass
+        df[0] = pd.DataFrame(df0)
+        df[1] = pd.DataFrame(df1)
+        df[2] = pd.DataFrame(df2)
+
+        msd = an.VACF(df)
+        assert isinstance(msd, pd.DataFrame) == True
+        assert all(msd.all() >= 0)
 
 @given(df = enp.arrays(int,(0,1000)))
 def test_MSD(df):

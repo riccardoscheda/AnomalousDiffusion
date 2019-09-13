@@ -306,7 +306,7 @@ def velocity(df0, df1):
 import tidynamics
 
 
-def VACF(dir, nframes,pre = "",suf = ".png_dx.txt", delimiter = " "):
+def VACF(df):
     """
     Computes the Velocity Autocorrelation Fuction (VACF)
     which is the correlation  between the velocities of the fronts
@@ -314,45 +314,25 @@ def VACF(dir, nframes,pre = "",suf = ".png_dx.txt", delimiter = " "):
     --------------------------
     Parameters:
     --------------------------
-    dir : the directory which contains the txt files with the coordinates
-    nframes: the number of the frames to take into account
-    pre: the prefix of the file name before the index
-    suf: the suffix of the file name after the index
-    delimiter : the space between the x and y coordinates in the txt file
-
+    df : pandas dataframe with the coordinates
     ----------------------------
-    Returns a numpy array with the VACF
+    Returns a pandas dataframe with the VACF
     """
 
-    x = pd.DataFrame()
-    y = pd.DataFrame()
-    dif = pd.DataFrame()
-    for i in range(nframes):
-            file = pre + str(i) + suf
-            #df = grid(dir + fname + str(i) + side + ".txt", delimiter = delimiter)
-            dfx, dfy = necklace_points(dir + file,N=200, sep = delimiter )
 
-            #scaling to mum
-            x[i] = dfx/1600*844
-            y[i] = dfy/1200*633
+    for i in range(len(df)):
+
+            dif = pd.DataFrame()
             if i> 0 :
-                try:
-                    dif[i] = velocity(x[i-1],x[i])
-                    if np.any(abs(dif)>200):
-                        del dif[i]
-                except: pass
+                dif[i] = velocity(df[i-1],df[i])
 
     count = 0
-    #mean = np.zeros(len(x.T))
     vel = []
     for i in range(len(dif.T)):
-        #mean = mean + tidynamics.msd(x.T[i])
         vel.append(tidynamics.acf(dif.T[i]))
-        count+=1
 
-    #mean/=count
     vel = pd.DataFrame(vel)
-    return vel, x , y
+    return vel
 
 import re
 
