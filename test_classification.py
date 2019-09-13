@@ -4,7 +4,9 @@ import matplotlib as plt
 import cv2
 import pandas as pd
 from hypothesis import given
+from hypothesis import strategies as st
 
+from hypothesis.extra import numpy as enp
 
 import classification as cl
 import fronts as fr
@@ -125,20 +127,23 @@ def test_divide():
 from shapely.affinity import rotate,scale
 from shapely.geometry import Polygon
 
-
-def test_area():
+@given(dx = enp.arrays(int,(1,100)),sx = enp.arrays(int,(1,100)))
+def test_area(dx,sx):
     """
     Tests:
-    if returns a type Polygon and a number
+    if returns a type Polygon and a nonnegative number
     """
-    a,b,c = fr.fast_fronts(im_gray)
+    #they have to be different points in space to make a polygon!!!!
+    if (a == b for (a,b) in zip(dx,sx)):
+        pass
+    else:
+        dx = pd.DataFrame(dx)
+        sx = pd.DataFrame(sx)
 
-    sx = an.necklace_points(a[1])
-    dx = an.necklace_points(a[0])
-    pol , area = an.area(dx,sx)
-    assert isinstance(pol, Polygon) == True
-    assert isinstance(area, float)
-    assert area > 0
+        pol , area = an.area(dx,sx)
+        assert isinstance(pol, Polygon) == True
+        assert isinstance(area, float)
+        assert area >=0
 
 
 def test_comparison():
@@ -177,16 +182,20 @@ def test_grid():
     assert isinstance(grid, pd.DataFrame) == True
     assert len(grid) == N
 
-def test_necklace_points():
+@given(df = enp.arrays(int,(1,100)))
+def test_necklace_points(df):
     """
     Tests if:
-    The output are two pandas Series
-    the length of the two series are equal
+    The output is a dataframe and if  the values are int
     """
-    dfs, _, _ = fr.fast_fronts(im_gray)
-    df= an.necklace_points(dfs[0])
 
-    assert isinstance(df, pd.DataFrame) == True
+    #they have to be different points in space
+    df = pd.DataFrame(df)
+    if (a == b for (a,b) in zip(df,df)):
+        pass
+    else:
+        assert isinstance(df, pd.DataFrame) == True
+        assert isinstance(df.values, "uint32") == True
 
 
 
@@ -222,23 +231,19 @@ def test_velocity():
 #     assert all(msd.all() >= 0)
 #     assert len(x) == len(y)
 
+@given(df = enp.arrays(int,(0,1000)))
+def test_MSD(df):
+    """
+    Tests:
+    if the output is a pandas dataframe
+    if all of the output elements are positive
+    """
+    df = pd.DataFrame(df)
+    msd = an.MSD(df)
 
-# def test_MSD():
-#     """
-#     Tests:
-#     if the output is a numpy array
-#     if the output array elements are positive
-#     """
-#     path = "Results/modified_images/fronts/"
-#     pre = "m_"
-#     suf = ".png_sx.txt"
-#     msdx, msdy = an.MSD(path,nframes = 42,pre = pre, suf = suf,delimiter = " ")
-#
-#     assert isinstance(msdx, pd.DataFrame) == True
-#     assert isinstance(msdy, pd.DataFrame) == True
-#     assert all(msdx.all() >= 0)
-#     assert all(msdy.all() >= 0)
-#     assert len(msdx) == len(msdy)
+    assert isinstance(msd, pd.DataFrame) == True
+    assert all(msd.all() >= 0)
+
 
 #
 # def test_MSD_Sham():
