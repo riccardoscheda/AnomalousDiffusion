@@ -1,3 +1,4 @@
+
 import cv2
 import pandas as pd
 import numpy as np
@@ -156,7 +157,7 @@ def fast_fronts(im, outdir = "fronts/", size = 50, length_struct = 10,iterations
     #gray = cl.adaptive_contrast_enhancement(gray, grid_size= grid_size)
 
     #blurring the image will give better results for the Otsu thresholding
-    blur = cv2.GaussianBlur(im,(7,7),1)
+    blur = cv2.GaussianBlur(im,(5,5),0)
     ret3, thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
     ###################

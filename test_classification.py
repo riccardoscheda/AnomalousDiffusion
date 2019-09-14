@@ -103,22 +103,26 @@ def test_fast_fronts():
     assert isinstance(df, list) == True
     assert len(df) == 2 or len(df) == 0
 
-def test_divide():
+@given(df = enp.arrays(int,(1,100)))
+def test_divide(df):
     """
     Tests:
     if return two pandas Dataframes
     if the two output dataframes are different
     """
-    coord = pd.DataFrame(pd.read_csv("Results/labelled_images1216/fronts/fronts_labelled_m_1.png.txt" , delimiter=' '))
-    coord.columns = ["x","y"]
-    sx , dx = fr.divide(coord)
-    assert len(sx) != 0
-    assert len(dx) != 0
-    assert isinstance(sx, pd.DataFrame) == True
-    assert isinstance(dx, pd.DataFrame) == True
-    assert all(sx["x"] == 0) == False
-    assert all(dx["x"] == 0) == False
-    assert sx.equals(dx) == False
+    if (a == b for (a,b) in zip(df,df)):
+        pass
+    else:
+        coord = pd.DataFrame(df)
+        coord.columns = ["x","y"]
+        sx , dx = fr.divide(coord)
+        assert len(sx) != 0
+        assert len(dx) != 0
+        assert isinstance(sx, pd.DataFrame) == True
+        assert isinstance(dx, pd.DataFrame) == True
+        assert all(sx["x"] == 0) == False
+        assert all(dx["x"] == 0) == False
+        assert sx.equals(dx) == False
 
 ##############################################################################
 ## TESTS FOR analysis.py
@@ -198,23 +202,25 @@ def test_necklace_points(df):
         assert isinstance(df.values, "uint32") == True
 
 
-
-def test_velocity():
+@given(df0 = enp.arrays(int,(1,100)),df1 = enp.arrays(int,(1,100)))
+def test_velocity(df0,df1):
     """
     Tests:
     if the velocity is a DataFrame
     if the length of the velocity dataframe is equal to the length of the
     input DataFrames
     """
-    path = "Results/labelled_images1010/fronts/divided_fronts/"
-    fname0 = "fronts_labelled.m.10.png.txt"
-    df0_sx = an.grid(path+fname0+"dx.txt")
-    fname1 = "fronts_labelled.m.11.png.txt"
-    df1_sx = an.grid(path+fname1+"dx.txt")
-    vel = an.velocity(df0_sx[0],df1_sx[0])
-    assert isinstance(vel, pd.Series) == True
-    assert len(vel) == len(df0_sx)
-    assert len(vel) == len(df1_sx)
+    df = pd.DataFrame()
+    if (a == b for (a,b) in zip(df0,df1)):
+        pass
+    else:
+        df[0] = pd.DataFrame(df0)
+        df[1] = pd.DataFrame(df1)
+
+        vel = an.velocity(df0,df1)
+        assert isinstance(vel, pd.Series) == True
+        assert len(vel) == len(df0)
+        assert len(vel) == len(df1)
 
 @given(df0 = enp.arrays(int,(1,100)),df1 = enp.arrays(int,(1,100)),df2 = enp.arrays(int,(1,100)))
 def test_VACF(df0,df1,df2):
@@ -227,7 +233,6 @@ def test_VACF(df0,df1,df2):
     if (a == b for (a,b) in zip(df0,df1)):
         pass
     else:
-        pass
         df[0] = pd.DataFrame(df0)
         df[1] = pd.DataFrame(df1)
         df[2] = pd.DataFrame(df2)
@@ -236,18 +241,23 @@ def test_VACF(df0,df1,df2):
         assert isinstance(msd, pd.DataFrame) == True
         assert all(msd.all() >= 0)
 
-@given(df = enp.arrays(int,(0,1000)))
+@given(df = enp.arrays(int,(1,1000)))
 def test_MSD(df):
     """
     Tests:
     if the output is a pandas dataframe
     if all of the output elements are positive
     """
-    df = pd.DataFrame(df)
-    msd = an.MSD(df)
+    x = pd.DataFrame
+    if (a == b for (a,b) in zip(df,df)):
+        pass
+    else:
+        for i in range(10):
+            x[i] = pd.DataFrame(df)
+            msd = an.MSD(x)
 
-    assert isinstance(msd, pd.DataFrame) == True
-    assert all(msd.all() >= 0)
+        assert isinstance(msd, pd.DataFrame) == True
+        assert all(msd.all() >= 0)
 
 
 #
