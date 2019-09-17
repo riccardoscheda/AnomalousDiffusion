@@ -10,10 +10,10 @@ The equalization is adaptive because is not a global histogram equalization,
 but the equalization is divided for different windows, where you can decide the size with the tuple `giride_size`. The reuslt changes with the size of the window.
 
 <p align="center">
-  <img src="https://github.com/riccardoscheda/AnomalousDiffusion/blob/master/docs/images/8.png" >
+  <img src="https://github.com/riccardoscheda/AnomalousDiffusion/blob/master/docs/images/8.png" width = "200" >
 </p>
 <p align="center">
-  <img src="https://github.com/riccardoscheda/AnomalousDiffusion/blob/master/docs/images/m_8.png">
+  <img src="https://github.com/riccardoscheda/AnomalousDiffusion/blob/master/docs/images/m_8.png" width = "200">
 </p>
 *Fig.1: original image (left) and the modified image with adaptive histogram equalization (right)*
 
