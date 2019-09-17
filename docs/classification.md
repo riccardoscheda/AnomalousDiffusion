@@ -18,12 +18,21 @@ image: the image in matrix format
 
 grid_size : a tuple with two integer which are the width and height of the subimages
 
+Example:
+----------------
+```
+import classification as cl
+import cv2
+
+im = cv2.imread("docs/images/lena.png")
+imgray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+new = cl.adaptive_contrast_enhancement(imgray,grid_size=(100,100))
+```
+And we obtain:
 
 <p align="center">
-  <img src="https://github.com/riccardoscheda/AnomalousDiffusion/blob/master/docs/images/8.png" width = "200" >
-</p>
-<p align="center">
-  <img src="https://github.com/riccardoscheda/AnomalousDiffusion/blob/master/docs/images/m_8.png" width = "200">
+  <img src="https://github.com/riccardoscheda/AnomalousDiffusion/blob/master/docs/images/lena.png" width = "200" >
+  <img src="https://github.com/riccardoscheda/AnomalousDiffusion/blob/master/docs/images/equalizedlena.png" width = "200">
 </p>
 Fig.1: original image (left) and the modified image with adaptive histogram equalization (right)
 
@@ -51,8 +60,6 @@ lbp , hist = cl.LBP(imgray)
 
 <p align="center">
   <img src="https://github.com/riccardoscheda/AnomalousDiffusion/blob/master/docs/images/lena.png" width = "150" >
-</p>
-<p align="center">
   <img src="https://github.com/riccardoscheda/AnomalousDiffusion/blob/master/docs/images/lbplena.png" width = "150">
 </p>
 Fig.2: original image (left) and the modified image with locally binary pattern with the method 'uniform' (right)
@@ -124,8 +131,6 @@ labelled_image = cl.classification(imgray, dataframe, window_sizeX = 8, window_s
 And we obtain is something like this:
 <p align="center">
   <img src="https://github.com/riccardoscheda/AnomalousDiffusion/blob/master/docs/images/lena.png" width = "150" >
-</p>
-<p align="center">
   <img src="https://github.com/riccardoscheda/AnomalousDiffusion/blob/master/docs/images/labelledlena.png" width = "150">
 </p>
 Fig.3: original image (left) and the binary image using PCA and GaussianMixture algorithms. (right)
