@@ -66,7 +66,9 @@ def create_modified_images(path , grid_size = (100,100)):
 def LBP(image):
     """
     Computes the local binary pattern of an image
-    Returns the normalized histogram of the local binary pattern image.
+    Returns:
+    the lbp image;
+    the normalized histogram of the local binary pattern image.
 
     Parameters
     --------------------------------
@@ -89,7 +91,7 @@ def LBP(image):
     hist = hist.astype("float")
     # Normalize the histogram
     hist /= (hist.sum() + 1e-7)
-    return hist
+    return lbp , hist
 
 
 def Principal_components_analysis(image , window_sizeX = 12, window_sizeY = 16):
@@ -118,7 +120,8 @@ def Principal_components_analysis(image , window_sizeX = 12, window_sizeY = 16):
     #The LBP histogram for each subimage is appended in a dataframe
     for element in itertools.product(range(rows),range(cols)):
         subimage = image[element[0]*window_sizeX:(element[0]+1)*window_sizeX,element[1]*window_sizeY:(element[1]+1)*window_sizeY]
-        series = pd.Series(LBP(subimage))
+        _, hist = LBP(subimage)
+        series = pd.Series(hist)
         testdf[cont] = series
         cont = cont + 1
 

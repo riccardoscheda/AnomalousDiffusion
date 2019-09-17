@@ -11,9 +11,6 @@ from hypothesis.extra import pandas as epd
 import classification as cl
 import fronts as fr
 import analysis as an
-#
-# test_image =  cv2.imread( filepath + "images/1.png")
-# im_gray = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
 
 #######################################################
 ##TESTS FOR classification.py
@@ -39,10 +36,12 @@ def test_LBP(dim):
     if the output is a np.ndarray
     """
     im_gray = np.random.randint(0,255,dtype="uint8",size =(dim,dim))
-    assert isinstance(cl.LBP(im_gray), np.ndarray) == True
-    assert sum(cl.LBP(im_gray)) <= 1.0
-    assert sum(cl.LBP(im_gray)) >= 0.999
-    assert len(cl.LBP(im_gray)) == 10
+    lbp, hist = cl.LBP(im_gray)
+    assert isinstance(hist, np.ndarray) == True
+    assert isinstance(lbp, np.ndarray) == True
+    assert sum(hist) <= 1.0
+    assert sum(hist) >= 0.999
+    assert len(hist) == 10
 
 @given(dim = st.integers(min_value=100,max_value=200))
 @settings(max_examples = 50)
