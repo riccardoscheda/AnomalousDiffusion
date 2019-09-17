@@ -1,16 +1,27 @@
-import cv2
+import cv2 #for applications to images
 import os # To perform path manipulations
 from skimage.feature import local_binary_pattern # Local Binary Pattern function
 import matplotlib.pyplot as plt # For plotting
 import numpy as np
-from nd2reader import ND2Reader
+from nd2reader import ND2Reader #to read from nd2 files
 import pandas as pd
-from sklearn.decomposition import PCA
+from sklearn.decomposition import PCA #for principal components analysis
 from sklearn.cluster import KMeans
 from sklearn.mixture import GaussianMixture
 import itertools
 
 def create_set( n_images , field ,path = "../data_prova/Sham_8_2_18_Field_5.nd2"):
+    """
+    Reads the images from the nd2 file and saves them in the directory 'images/'
+
+    Paramters:
+    -----------------------
+
+    n_images : number of images to read from the nd2 file
+    field : the field of view in the nd2 file
+    path : the path of the nd2 file
+
+    """
     #creating output directories
     outfolder = "images/"
     name = path.split("/")[0]
@@ -21,6 +32,7 @@ def create_set( n_images , field ,path = "../data_prova/Sham_8_2_18_Field_5.nd2"
     #creating the set of images i will modify
 
     with ND2Reader(path) as images:
+        #choosing the indexing of the images in the nd2 file
         images.iter_axes = "vt"
         fields = images.sizes["v"]
         frames = images.sizes["t"]
@@ -36,7 +48,6 @@ def adaptive_contrast_enhancement(image,grid_size = (50,50)):
     to enhance fronts of the cells. Returns the modified image.
     Parameters
     -----------------------
-    Parameters
 
     image : image in matrix format
     grid_size : tuple with the size of the grid
@@ -52,9 +63,20 @@ def adaptive_contrast_enhancement(image,grid_size = (50,50)):
 
 
 def create_modified_images(path , grid_size = (100,100)):
+    """
+    Reads the images from the directory 'images/'and modify them with adaptive histogram
+    equalization and then saves them in the directory 'modified_images/''
+    Parameters
+    -----------------------
+
+    path : the path of the image in png
+    grid_size : tuple with the size of the grid
+
+    """
     modified_images = "modified_images/"
     if not os.path.exists(modified_images):
         os.makedirs(modified_images)
+    #reading the image
     image =  cv2.imread(path)
     #make it gray
     imgray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -106,14 +128,15 @@ def Principal_components_analysis(image , window_sizeX = 12, window_sizeY = 16):
     Parameters:
     ----------------------------------
     image : image in matrix format
-    window_sizeX : the size of the width of the subimages
-    window_sizeY : the size of the height of the subimages
+    window_sizeX : the size of the width of the subimages, IMPORTANT: depends on the image size
+    window_sizeY : the size of the height of the subimages, IMPORTANT: depends on the image size
 
     Returns a dataframe with the first 5 principal components
     """
     #divides the image in many subimages, and for these the LBP histogram is computed
     rows = int(len(image)/window_sizeX)
     cols = int(len(image.T)/window_sizeY)
+
     labels = np.empty((rows,cols))
     testdf = pd.DataFrame()
     cont = 0
@@ -136,9 +159,9 @@ def Principal_components_analysis(image , window_sizeX = 12, window_sizeY = 16):
     #return the dataframe of the first 5 principal components
     return principalDF
 
-def classification(image, data, window_sizeX = 12, window_sizeY = 16):
+def classification(image, data, window_sizeX = 12, window_sizeY = 16, model = "gaussianmixture"):
     """
-    Computes the classification of the subimages of the total image through the K-means algorithm.
+    Computes the classification of the subimages of the total image through the GaussianMixture algorithm.
     Returns the binary image, where a label corresponds to the cells and one
     label corresponds to the background.
 
@@ -146,8 +169,9 @@ def classification(image, data, window_sizeX = 12, window_sizeY = 16):
     -----------------------------
     image : image in matrix format
     data : pandas dataframe
-    window_sizeX : the size of the width of the subimages
-    window_sizeY : the size of the height of the subimages
+    window_sizeX : the size of the width of the subimages, IMPORTANT: depends on the image size
+    window_sizeY : the size of the height of the subimages, IMPORTANT: depends on the image size
+    model : the model used to cluster the data; it can be "gaussianmixture" (default) or "kmeans"
 
     Returns the labelled image in uint8
 
@@ -155,17 +179,24 @@ def classification(image, data, window_sizeX = 12, window_sizeY = 16):
     ----------------------
     [1] https://jakevdp.github.io/PythonDataScienceHandbook/05.11-k-means.html
     """
+
     rows = int(len(image)/window_sizeX)
     cols = int(len(image.T)/window_sizeY)
 
-    #using the K-means algorithm to classify the 2 clusters given by the principal components
-    # kmeans = KMeans(2)
-    # kmeans.fit(data)
-    # labels = kmeans.predict(data)
+    if model == "kmeans":
+        #using the K-means algorithm to classify the 2 clusters given by the principal components
+        kmeans = KMeans(2)
+        kmeans.fit(data)
+        labels = kmeans.predict(data)
+        labels = labels.reshape(rows,cols)
+    else:
+        if model == "gaussianmixture":
+            #Using Gaussian Mixture instead of K-means gives a better result
+            labels = GaussianMixture(2).fit_predict(data)
+            labels = labels.reshape(rows,cols)
+        else:
+            raise ValueError("model can be only kmeans or gaussianmixture")
 
-    #Using Gaussian Mixture instead of K-means gives a better result
-    labels = GaussianMixture(2).fit_predict(data)
-    labels = labels.reshape(rows,cols)
     #sometimes Kmeans predict inverted labels, so i make all the images with the same ordered labels
     if (labels[0][0] == 1):
         labels = abs(1-labels)
