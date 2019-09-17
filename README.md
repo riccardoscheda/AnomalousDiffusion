@@ -44,11 +44,12 @@ to install the application clone the repository [AnomalousDiffusion](https://git
 ```
 git clone https://github.com/riccardoscheda/AnomalousDiffusion
 cd AnomalousDiffusion
+pip install -r requirements.txt
 pip install --editable andif
 ```
 You have to change the sys path in line 19 in the file `__main__.py` with the current path of the directory andif:
 ```
-sys.path.insert(0, `path`/AnomalousDiffusion')
+sys.path.insert(0, <path>/AnomalousDiffusion')
 ```
 ## Usage
 When installed you can use it from command line using `andif  <subcommand>`. The main commands are:
