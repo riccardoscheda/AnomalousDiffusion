@@ -47,7 +47,7 @@ cd AnomalousDiffusion
 pip install -r requirements.txt
 pip install --editable andif
 ```
-You have to change the sys path in line 19 in the file `__main__.py` with the current path of the directory andif:
+You have to change the sys path in line 15 in the file `__main__.py` with the current path of the directory andif:
 ```
 sys.path.insert(0, <path>/AnomalousDiffusion')
 ```
