@@ -10,7 +10,7 @@ from sklearn.cluster import KMeans
 from sklearn.mixture import GaussianMixture
 import itertools
 
-def create_set( n_images , path = "../data_prova/Sham_8_2_18_Field_5.nd2"):
+def create_set( n_images , field ,path = "../data_prova/Sham_8_2_18_Field_5.nd2"):
     #creating output directories
     outfolder = "images/"
     name = path.split("/")[0]
@@ -21,9 +21,12 @@ def create_set( n_images , path = "../data_prova/Sham_8_2_18_Field_5.nd2"):
     #creating the set of images i will modify
 
     with ND2Reader(path) as images:
+        images.iter_axes = "vt"
+        fields = images.sizes["v"]
+        frames = images.sizes["t"]
         for i in range(n_images):
             print("reading image "+str(i))
-            image = np.asmatrix(images[i]).astype('uint16')
+            image = np.asmatrix(images[i + i*(field)]).astype('uint16')
             plt.imsave(name + "/" + outfolder+str(i)+".png",image,cmap="gray")
 
 

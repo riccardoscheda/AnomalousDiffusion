@@ -1,0 +1,11 @@
+plumbum
+nd2reader
+opencv-python
+matplotlib
+pandas
+numpy
+shapely
+hypothesis
+pytest
+scipy
+tidynamics

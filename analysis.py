@@ -6,7 +6,8 @@ import matplotlib as plt
 import cv2
 import pandas as pd
 from scipy.interpolate import interp1d
-
+import tidynamics
+from scipy.optimize import curve_fit
 
 def area(sx, dx):
     """
@@ -303,7 +304,6 @@ def velocity(df0, df1):
     velocity = df1 - df0
     return velocity
 
-import tidynamics
 
 
 def VACF(df,conversion = "x"):
@@ -341,7 +341,6 @@ def VACF(df,conversion = "x"):
     #vel = pd.DataFrame(vel)
     return vel
 
-import re
 
 ## MSD for the old images, now useless
 def MSD_Sham(dir, side = "dx", delimiter = "\t"):
@@ -408,7 +407,6 @@ def MSD(df, conversion = "x"):
 
     return msd
 
-from scipy.optimize import curve_fit
 
 def func(x,D,a):
     """

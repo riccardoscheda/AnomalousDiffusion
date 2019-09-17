@@ -3,59 +3,56 @@ import numpy as np
 import matplotlib as plt
 import cv2
 import pandas as pd
-from hypothesis import given
+from hypothesis import given,settings
 from hypothesis import strategies as st
 
 from hypothesis.extra import numpy as enp
-
+from hypothesis.extra import pandas as epd
 import classification as cl
 import fronts as fr
 import analysis as an
-filepath = "Data/"
-test_image =  cv2.imread( filepath + "images/1.png")
-im_gray = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
+#
+# test_image =  cv2.imread( filepath + "images/1.png")
+# im_gray = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
 
 #######################################################
 ##TESTS FOR classification.py
 
 
 
-def test_create_set():
-    """
-    Tests if the number of images in the set is correct
-    """
-    assert len(os.listdir(filepath + "images/")) == 60
-
-def test_create_modified_images():
-    """
-    Tests if the number of images in the set is correct
-    """
-    assert len(os.listdir("Results/modified_images/")) == 59
-
-def test_adaptive_contrast_enhancement():
+@given(dim = st.integers(min_value=1000,max_value=1600))
+@settings(max_examples = 50)
+def test_adaptive_contrast_enhancement(dim):
     """
     Tests if the function returns a np.ndarray
     """
+    im_gray = np.random.randint(0,255,dtype="uint8",size =(dim,dim))
     assert isinstance(cl.adaptive_contrast_enhancement(im_gray,(10,10)), np.ndarray) == True
 
-def test_LBP():
+@given(dim = st.integers(min_value=100,max_value=200))
+@settings(max_examples = 50)
+def test_LBP(dim):
     """
     Tests:
     if the output histogram is normalized
     if the length of the histogram is 10
     if the output is a np.ndarray
     """
+    im_gray = np.random.randint(0,255,dtype="uint8",size =(dim,dim))
     assert isinstance(cl.LBP(im_gray), np.ndarray) == True
     assert sum(cl.LBP(im_gray)) <= 1.0
     assert sum(cl.LBP(im_gray)) >= 0.999
     assert len(cl.LBP(im_gray)) == 10
 
-def test_Principal_components_analysis():
+@given(dim = st.integers(min_value=100,max_value=200))
+@settings(max_examples = 50)
+def test_Principal_components_analysis(dim):
     """
     Tests:
     if the function returns a dataframe
     if does not return Nan values
     """
+    im_gray = np.random.randint(0,255,dtype="uint8",size =(dim,dim))
     assert isinstance(cl.Principal_components_analysis(im_gray), pd.DataFrame) == True
     assert any(np.where(np.isnan(cl.Principal_components_analysis(im_gray)))) == False
 
@@ -65,6 +62,7 @@ def test_classification():
     if the output is numpy array
     if the output image is binary (there are only 0s and 1s)
     """
+    im_gray = np.random.randint(0,255,dtype="uint8",size =(1200,1600))
     binary = cl.classification(im_gray, cl.Principal_components_analysis(im_gray))
     assert isinstance(binary,np.ndarray) == True
     assert len(np.where(binary == 0 )[1]) + len(np.where(binary == 1)[1]) == len(binary)*len(binary.T)
@@ -72,57 +70,65 @@ def test_classification():
 ###############################################################################
 #TESTS FOR fronts.py
 
-
-def test_fronts():
+@given(im = st.lists(min_size=1,elements = st.integers(min_value=0,max_value=255)))
+def test_fronts(im):
     """
     Tests:
     if the output is a pandas DataFrame
     """
-    fronts, _ = fr.fronts(filepath + "images/1.png")
+
+    im_gray = np.asmatrix(im)
+    fronts, _ = fr.fronts(im_gray)
     assert isinstance(fronts, pd.DataFrame) == True
 
 
-
-def test_make_kernel():
+@given(struct = st.lists(min_size=1,elements = st.integers(min_value=0,max_value=1)))
+def test_make_kernel(struct):
     """
     Tests:
     if the output of make_kernel is a numpy matrix of 0s and 1s
     """
-    struct = [0,0,0,1,0,0,0]
+
     binary = fr.make_kernel(struct, 1)
     assert isinstance(binary, np.matrix) == True
     assert len(np.where(binary == 0 )[1]) + len(np.where(binary == 1)[1]) == len(binary)*len(binary.T)
 
-def test_fast_fronts():
+@given(dim = st.integers(min_value=1000,max_value=1600))
+@settings(max_examples = 50)
+def test_fast_fronts(dim):
     """
     Tests :
     if the output is a list of two pandas dataframes
     if it saves two txt file for each input image
     """
+    im_gray = np.random.randint(0,255,dtype="uint8",size =(dim,dim))
     df, im, im2 = fr.fast_fronts(im_gray, outdir = "")
     assert isinstance(df, list) == True
     assert len(df) == 2 or len(df) == 0
 
-@given(df = enp.arrays(int,(1,100)))
-def test_divide(df):
+@given(dim = st.integers(min_value = 2,max_value=100))
+@settings(max_examples = 50)
+def test_divide(dim):
     """
     Tests:
     if return two pandas Dataframes
     if the two output dataframes are different
     """
-    if (a == b for (a,b) in zip(df,df)):
-        pass
-    else:
-        coord = pd.DataFrame(df)
-        coord.columns = ["x","y"]
-        sx , dx = fr.divide(coord)
-        assert len(sx) != 0
-        assert len(dx) != 0
-        assert isinstance(sx, pd.DataFrame) == True
-        assert isinstance(dx, pd.DataFrame) == True
-        assert all(sx["x"] == 0) == False
-        assert all(dx["x"] == 0) == False
-        assert sx.equals(dx) == False
+    #we want only two columns that refer to x and y coordinates
+    x =  np.random.randint(600,800,dtype="uint16",size =(dim))
+    y =  np.linspace(0,1200,num=dim)
+    coord = pd.DataFrame()
+    coord[0] = x
+    coord[1] = y
+    sx , dx = fr.divide(coord)
+    assert len(sx) != 0
+    assert len(dx) != 0
+    assert isinstance(sx, pd.DataFrame) == True
+    assert isinstance(dx, pd.DataFrame) == True
+    assert all(sx["x"] == 0) == False
+    assert all(dx["x"] == 0) == False
+    assert sx.equals(dx) == False
+
 
 ##############################################################################
 ## TESTS FOR analysis.py
@@ -160,7 +166,6 @@ def test_comparison():
     assert all(areas >=0 ) == True
     assert all(areas_hand >=0 ) == True
 
-import math
 
 def test_error():
     """
@@ -168,7 +173,6 @@ def test_error():
     if returns an array of  positive numbers
     if it's commutative
     """
-
 
     #it shall be commutative ?
     a , b = an.comparison()
@@ -186,20 +190,23 @@ def test_grid():
     assert isinstance(grid, pd.DataFrame) == True
     assert len(grid) == N
 
-@given(df = enp.arrays(int,(1,100)))
-def test_necklace_points(df):
+@given(dim = st.integers(min_value = 10,max_value=100),N = st.integers(min_value = 10,max_value=100))
+@settings(max_examples = 50)
+def test_necklace_points(dim,N):
     """
     Tests if:
-    The output is a dataframe and if  the values are int
+    The output is a dataframe and if the values are int
     """
-
-    #they have to be different points in space
-    df = pd.DataFrame(df)
-    if (a == b for (a,b) in zip(df,df)):
-        pass
-    else:
-        assert isinstance(df, pd.DataFrame) == True
-        assert isinstance(df.values, "uint32") == True
+    #we want only two columns that refer to x and y coordinates
+    x =  np.random.randint(600,800,dtype="uint16",size =(dim))
+    y =  np.linspace(0,1200,num=dim)
+    coord = pd.DataFrame()
+    coord[0] = x
+    coord[1] = y
+    df = an.necklace_points(coord,N)
+    assert isinstance(df, pd.DataFrame) == True
+    assert isinstance(df.values[0][0], np.int32)
+    assert len(df) == N
 
 
 @given(df0 = enp.arrays(int,(1,100)),df1 = enp.arrays(int,(1,100)))
@@ -241,23 +248,23 @@ def test_VACF(df0,df1,df2):
         assert isinstance(msd, pd.DataFrame) == True
         assert all(msd.all() >= 0)
 
-@given(df = enp.arrays(int,(1,1000)))
-def test_MSD(df):
+@given(dim = st.integers(min_value = 2,max_value=100))
+@settings(max_examples = 50)
+def test_MSD(dim):
     """
     Tests:
     if the output is a pandas dataframe
     if all of the output elements are positive
     """
-    x = pd.DataFrame
-    if (a == b for (a,b) in zip(df,df)):
-        pass
-    else:
-        for i in range(10):
-            x[i] = pd.DataFrame(df)
-            msd = an.MSD(x)
+    #we want only two columns that refer to x and y coordinates
+    x = pd.DataFrame()
+    for i in range(4):
+        x[i] =  np.random.randint(600,800,dtype="uint16",size =(dim))
 
-        assert isinstance(msd, pd.DataFrame) == True
-        assert all(msd.all() >= 0)
+    msd = an.MSD(x)
+
+    assert isinstance(msd, pd.DataFrame) == True
+    assert all(msd.all() >= 0)
 
 
 #
@@ -275,34 +282,43 @@ def test_MSD(df):
 #     assert np.isclose(msd[0], 0, rtol = 10e-5) == True
 #     assert all(msd > 0) == True
 
-def test_fit():
+@given(dim = st.integers(min_value = 10,max_value=100))
+@settings(max_examples = 50)
+def test_fit(dim):
     """
     Tests
     if return an array of the parameters
     """
-    x = np.arange(0,100)
+    x = np.linspace(0,2*np.pi,num = dim)
     fit = an.fit(x)
     assert isinstance(fit, np.ndarray) == True
 
-def test_cdf():
+@given(dim = st.integers(min_value = 2,max_value=100))
+@settings(max_examples = 50)
+def test_cdf(dim):
     """
     Tests
     if return a numpy array
     if the last element of the output array is 1.0
 
     """
+    im_gray = np.random.randint(0,255,dtype="uint8",size =(dim,dim))
     c = fr.cdf(im_gray)
     assert isinstance(c, np.ndarray)
     assert np.isclose(c[-1],1) == True
 
-def test_hist_matching():
+@given(dim = st.integers(min_value = 2,max_value=100))
+@settings(max_examples = 50)
+def test_hist_matching(dim):
     """
     Tests
     if return an image of the same shape
 
     """
+
+    im_gray = np.random.randint(0,255,dtype="uint8",size =(dim,dim))
     ct=fr.cdf(im_gray)
     c=fr.cdf(im_gray)
     im=fr.hist_matching(c,ct,im_gray)
 
-    assert im_gray.shape == im.shape
+    assert im_gray.shape == im_gray.shape
