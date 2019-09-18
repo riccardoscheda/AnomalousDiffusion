@@ -2,8 +2,8 @@
 
 Classification library is a library that makes binary grayscale images using PCA algorithm and GaussianMixture algorithm.
 
-### Adaptive Histogram Equalization
-#### `adaptive_contrast_enhancement(image,grid_size = (50,50))`
+## Adaptive Histogram Equalization
+## `adaptive_contrast_enhancement(image,grid_size = (50,50))`
 
 The function uses [Adaptive
 Histogram Equalization](https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_histograms/py_histogram_equalization/py_histogram_equalization.html
@@ -14,9 +14,9 @@ but the equalization is divided for different windows, where you can decide the 
 Parameters
 -------------------------
 
-image: the image in matrix format
+-image: the image in matrix format
 
-grid_size : a tuple with two integer which are the width and height of the subimages
+-grid_size : a tuple with two integer which are the width and height of the subimages
 
 Example:
 ----------------
@@ -37,7 +37,7 @@ And we obtain:
 Fig.1: original image (left) and the modified image with adaptive histogram equalization (right)
 
 ### Locally Binary pattern
-#### `LBP(image)`
+## `LBP(image)`
 
 Computes the [Locally Binary Pattern](https://scikit-image.org/docs/dev/auto_examples/features_detection/plot_local_binary_pattern.html) of an image and
 returns the normalized histogram of the local binary pattern image.
@@ -45,7 +45,7 @@ In this function we used the method 'uniform' to have always 10 bins for the his
 
 Parameters
 ----------------
-image : the image in matrix format
+-image : the image in matrix format
 
 
 Example:
@@ -64,18 +64,18 @@ lbp , hist = cl.LBP(imgray)
 </p>
 Fig.2: original image (left) and the modified image with locally binary pattern with the method 'uniform' (right)
 
-### PCA
-### `Principal_components_analysis(image,window_sizeX = 12, window_sizeY = 16)`
+## PCA
+## `Principal_components_analysis(image,window_sizeX = 12, window_sizeY = 16)`
 
 This function computes the PCA algorithm for the locally binary pattern subimages of the original image, and then takes in a dataframe the first 5 principal components components.
 
 Parameters:
 ----------------------------------
-image : image in matrix format
+-image : image in matrix format
 
-window_sizeX : the size of the width of the subimages
+-window_sizeX : the size of the width of the subimages
 
-window_sizeY : the size of the height of the subimages
+-window_sizeY : the size of the height of the subimages
 
 
 Example:
@@ -98,8 +98,8 @@ x|y|z|u|w
 0.08312408370945534|-0.03549650246107342|0.003607495986024477|-0.0025576345014921794|-0.00247981733049018
 ...|...|...|...|...
 
-### Binarization
-### `classification(image, data, window_sizeX = 12, window_sizeY = 16)`
+## Binarization
+## `classification(image, data, window_sizeX = 12, window_sizeY = 16)`
 
 Computes the classification of the subimages of the total image through the GaussianMixture algorithm.
 Returns the binary image, where a label corresponds to the cells and one

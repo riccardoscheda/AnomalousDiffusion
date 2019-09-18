@@ -1,12 +1,12 @@
 ## Fronts.py
 
-This library have tools to track the longest border inside an image and save them in a csv file.
+This library has tools to track the longest border inside an image and save them in a csv file.
 There are three main functions : `fronts`,`divide` and `fast_fronts`.
 The last one is more or less the union of the first two, because `fronts` only track one longest border, which can be divided in two by the function `divide`.
-`fast_fronts` instead return immediately two borders in two different dataframes.
+`fast_fronts` instead returns immediately two borders in two different dataframes.
 
 
-#### `fronts(im)`
+## `fronts(im)`
 
 Takes the longest border inside an image.
 The input image is modified by morphological transformation in order
@@ -15,13 +15,17 @@ to have a smoother border.
 Parameters
 ---------------
 
-im : the image in matrix format
-threshold : integer for the threshold to make the image binary
-iterations : integer for the number of iterations for the erosion
+-im : the image in matrix format
+
+-threshold : integer for the threshold to make the image binary
+
+-iterations : integer for the number of iterations for the erosion
 
 Returns:
-a dataframe with the x and y coordinates of the longest border;
-the image with the drawn found front.
+
+-a dataframe with the x and y coordinates of the longest border;
+
+-the image with the drawn found front.
 
 Example:
 ----------------
@@ -52,14 +56,14 @@ x|y
 424|16
 ...|...
 
-#### `divide(coordinates)`
+## `divide(coordinates)`
 
 Divides the found border in two different borders: the left one and the
 right one.
 
 Parameters
 ------------
-coord : pandas Dataframe which contains the coordinates of the border
+-coord : pandas Dataframe which contains the coordinates of the border
 
 Returns (first sx and second dx) two pandas dataframes one for the left border and one for the right
 border.
@@ -84,15 +88,16 @@ sx, dx = fr.divide(data)
 </p>
 Fig.2: unique longest border (left) and the border divided in left one and right one (right)
 
-#### `make_kernel(struct,length)`
+## `make_kernel(struct,length)`
 
 Makes the Structuring Element for the morphological operations
 
 Parameters:
 -------------------------
 
-struct : list of 0s and 1s ex. ([0,1,1,1,0])
-length : integer for the dimension of the matrix
+-struct : list of 0s and 1s ex. ([0,1,1,1,0])
+
+-length : integer for the dimension of the matrix
 
 Returns a binary numpy matrix
 
@@ -113,18 +118,18 @@ kernel
             [0, 1, 1, 1, 0, 0],
             [0, 1, 1, 1, 0, 0]])
 ```
-#### `cdf(im)`
+## `cdf(im)`
 
 Computes the Cumulative Distribution Function  (CDF) of an image as 2D numpy ndarray
 
 Parameters:
 ---------------------
 
-im : image in matrix format
+-im : image in matrix format
 
 Returns a numpy array with the cumulative distribution function
 
-#### `hist_matching(c, c_t, im)`:
+## `hist_matching(c, c_t, im)`:
 
  Returns the image with the histogram similar to the sample image, using operations on the cumulative distributions
  of the two images.
@@ -132,9 +137,11 @@ Returns a numpy array with the cumulative distribution function
  Parameters:
  -------------------------
 
- c: CDF of input image computed with the function cdf()
- c_t: CDF of template image computed with the function cdf()
- im: input image as 2D numpy ndarray
+ -c: CDF of input image computed with the function cdf()
+
+ -c_t: CDF of template image computed with the function cdf()
+
+ -im: input image as 2D numpy ndarray
 
  Returns the modified pixel values
 
@@ -165,7 +172,7 @@ And we obtain:
 Fig.3:  coin (left), lena (center) and the new coin with histogram similar to the lena's histogram (right).
 
 
-#### `fast_fronts(im, outdir = "fronts/", size = 50, length_struct = 10,iterations = 2, save = False, fname = "")`
+## `fast_fronts(im, outdir = "fronts/", size = 50, length_struct = 10,iterations = 2, save = False, fname = "")`
 
   Takes the two longest borders inside an image and it may save in a text file
   the (x,y) coordinates.
@@ -174,20 +181,28 @@ Fig.3:  coin (left), lena (center) and the new coin with histogram similar to th
   Parameters
   ---------
 
-  im : the image matrix in uint8 format
-  outdir : string for the ouput directory where it saves the txt files
-  size : integer for the size of the window for the adaptive histogram equalization
-  length_struct : integer for the length for the kernel for the morphological transformations
-  iterations : integer for the number of times the dilation is applied
-  bands : boolean var for adding two white bands on the left and on the right in the image
-  save : boolean var for saving the coordinates in a txt file
+  -im : the image matrix in uint8 format
+
+  -outdir : string for the ouput directory where it saves the txt files
+
+  -size : integer for the size of the window for the adaptive histogram equalization
+
+  -length_struct : integer for the length for the kernel for the morphological transformations
+
+  -iterations : integer for the number of times the dilation is applied
+
+  -bands : boolean var for adding two white bands on the left and on the right in the image
+
+  -save : boolean var for saving the coordinates in a txt file
   fname : string for the name of the output files
 
   Returns:
   --------
-  a list with the two dataframes with the coordinates of the two longest borders
-  the maxcontours computed by openCV
-  the final binary image after the morphological transformations
+  -a list with the two dataframes with the coordinates of the two longest borders
+
+  -the maxcontours computed by openCV
+
+  -the final binary image after the morphological transformations
 
   References
   --------------------------------------
