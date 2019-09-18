@@ -9,3 +9,4 @@ hypothesis
 pytest
 scipy
 tidynamics
+scikit-image
