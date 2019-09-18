@@ -13,7 +13,6 @@ def area(sx, dx):
     """
     Computes the area of the polygon formed by the two borders of the cells
 
-    -----------------------------
     Parameters:
     -----------------------------
     sx : pandas dataframe with the coordinates of the left border
@@ -27,8 +26,10 @@ def area(sx, dx):
     """
     #make the polygon from the coordinates dataframes
     polsx = sx
+    polsx = polsx.reset_index(drop = True)
     polsx.columns = ["x","y"]
     poldx = dx
+    poldx = poldx.reset_index(drop = True)
     poldx.columns = ["x","y"]
     #sometimes Polygon takes the wrong order from the dataframe so i reverse it
     if poldx["y"][0]>500:
@@ -181,14 +182,13 @@ def fast_comparison(path = "Data/data_fronts/",path1 = "Results/modified_images/
 
 def error(area, area_hand):
     """
-    Computes the error between the areas (between the borders) with the fronts founded with
-    pca and the fronts drawn by hand
+    Computes the error between two arrays of areas in L^2
 
-    ------------------------------------
+
     Parameters:
     ------------------------------------
-    area : array of floats with the areas found with the borders found with PCA
-    area_hand : array with the areas found by the union of the hand drawn borders of the cells
+    area : array of floats
+    area_hand : array of floats
 
     Returns an array with errors for each frame
     """

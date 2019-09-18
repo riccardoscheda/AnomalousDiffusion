@@ -11,15 +11,15 @@ Histogram Equalization](https://opencv-python-tutroals.readthedocs.io/en/latest/
 The equalization is adaptive because is not a global histogram equalization,
 but the equalization is divided for different windows, where you can decide the size with the tuple `giride_size`. The reuslt changes with the size of the window.
 
-Parameters
--------------------------
+#### Parameters
+
 
 -image: the image in matrix format
 
 -grid_size : a tuple with two integer which are the width and height of the subimages
 
-Example:
-----------------
+#### Example:
+
 ```
 import classification as cl
 import cv2
@@ -43,12 +43,12 @@ Computes the [Locally Binary Pattern](https://scikit-image.org/docs/dev/auto_exa
 returns the normalized histogram of the local binary pattern image.
 In this function we used the method 'uniform' to have always 10 bins for the histograms, which are the bins that refers to the uniform patterns in the image. We need 10 bins because they are used as features for the PCA algrorithm in the function `Principal_components_analysis` (below).
 
-Parameters
-----------------
+#### Parameters
+
 -image : the image in matrix format
 
 
-Example:
+#### Example:
 ```
 import classification as cl
 import cv2
@@ -69,8 +69,8 @@ Fig.2: original image (left) and the modified image with locally binary pattern 
 
 This function computes the PCA algorithm for the locally binary pattern subimages of the original image, and then takes in a dataframe the first 5 principal components components.
 
-Parameters:
-----------------------------------
+#### Parameters:
+
 -image : image in matrix format
 
 -window_sizeX : the size of the width of the subimages
@@ -78,8 +78,7 @@ Parameters:
 -window_sizeY : the size of the height of the subimages
 
 
-Example:
------------------
+#### Example:
 ```
 import classification as cl
 import cv2
@@ -105,8 +104,8 @@ Computes the classification of the subimages of the total image through the Gaus
 Returns the binary image, where a label corresponds to the cells and one
 label corresponds to the background.
 
-Parameters:
-----------------------
+#### Parameters:
+
 
 image : the image in matrix format
 
@@ -116,8 +115,8 @@ window_sizeX : the size of the width of the subimages
 
 window_sizeY : the size of the height of the subimages
 
-Example:
------------------
+#### Example:
+
 ```
 import classification as cl
 import cv2
@@ -134,3 +133,13 @@ And we obtain is something like this:
   <img src="https://github.com/riccardoscheda/AnomalousDiffusion/blob/master/docs/images/labelledlena.png" width = "200">
 </p>
 Fig.3: original image (left) and the binary image using PCA and GaussianMixture algorithms. (right)
+
+
+References:
+------------------
+
+[1] [Adaptive
+Histogram Equalization](https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_histograms/py_histogram_equalization/py_histogram_equalization.html
+)
+
+[2] [Locally Binary Pattern](https://scikit-image.org/docs/dev/auto_examples/features_detection/plot_local_binary_pattern.html)

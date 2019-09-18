@@ -12,8 +12,8 @@ Takes the longest border inside an image.
 The input image is modified by morphological transformation in order
 to have a smoother border.
 
-Parameters
----------------
+#### Parameters
+
 
 -im : the image in matrix format
 
@@ -27,8 +27,8 @@ Returns:
 
 -the image with the drawn found front.
 
-Example:
-----------------
+#### Example:
+
 ```
 import fronts as fr
 import cv2
@@ -61,15 +61,14 @@ x|y
 Divides the found border in two different borders: the left one and the
 right one.
 
-Parameters
-------------
+#### Parameters
 -coord : pandas Dataframe which contains the coordinates of the border
 
 Returns (first sx and second dx) two pandas dataframes one for the left border and one for the right
 border.
 
-Example:
----------
+#### Example:
+
 ```
 import fronts as fr
 import cv2
@@ -92,8 +91,8 @@ Fig.2: unique longest border (left) and the border divided in left one and right
 
 Makes the Structuring Element for the morphological operations
 
-Parameters:
--------------------------
+#### Parameters:
+
 
 -struct : list of 0s and 1s ex. ([0,1,1,1,0])
 
@@ -101,8 +100,7 @@ Parameters:
 
 Returns a binary numpy matrix
 
-Example:
--------------------------
+#### Example:
 
 ```
 import fronts as fr
@@ -122,8 +120,7 @@ kernel
 
 Computes the Cumulative Distribution Function  (CDF) of an image as 2D numpy ndarray
 
-Parameters:
----------------------
+#### Parameters:
 
 -im : image in matrix format
 
@@ -134,8 +131,8 @@ Returns a numpy array with the cumulative distribution function
  Returns the image with the histogram similar to the sample image, using operations on the cumulative distributions
  of the two images.
 
- Parameters:
- -------------------------
+#### Parameters:
+
 
  -c: CDF of input image computed with the function cdf()
 
@@ -145,8 +142,8 @@ Returns a numpy array with the cumulative distribution function
 
  Returns the modified pixel values
 
-Example:
-------------------------------
+#### Example:
+
 
 ```
 import fronts as fr
@@ -178,8 +175,8 @@ Fig.3:  coin (left), lena (center) and the new coin with histogram similar to th
   the (x,y) coordinates.
   The input image is binarized with Otsu thresholding and modified by morphological transformation in order to have a smoother border
 
-  Parameters
-  ---------
+####  Parameters
+
 
   -im : the image matrix in uint8 format
 
@@ -196,25 +193,16 @@ Fig.3:  coin (left), lena (center) and the new coin with histogram similar to th
   -save : boolean var for saving the coordinates in a txt file
   fname : string for the name of the output files
 
-  Returns:
-  --------
+####   Returns:
+
   -a list with the two dataframes with the coordinates of the two longest borders
 
   -the maxcontours computed by openCV
 
   -the final binary image after the morphological transformations
 
-  References
-  --------------------------------------
+#### Example:
 
-  [1] [Contours](https://docs.opencv.org/3.1.0/d4/d73/tutorial_py_contours_begin.html)
-
-  [2] [Morphological transformations](https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_morphological_ops/py_morphological_ops.html)
-
-  [3] [Otsu thresholding](https://docs.opencv.org/3.4.0/d7/d4d/tutorial_py_thresholding.html)
-
-Example:
---------------------
 ```
 import fronts as fr
 import cv2
@@ -230,3 +218,12 @@ And we obtain:
   <img src="https://github.com/riccardoscheda/AnomalousDiffusion/blob/master/docs/images/fastcoin.png" width = "200">
 </p>
 Fig.4: divided borders (left) and the binary image obtained with Otsu threshold and morphological operations (right)
+
+References
+--------------------------------------
+
+[1] [Contours](https://docs.opencv.org/3.1.0/d4/d73/tutorial_py_contours_begin.html)
+
+[2] [Morphological transformations](https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_morphological_ops/py_morphological_ops.html)
+
+[3] [Otsu thresholding](https://docs.opencv.org/3.4.0/d7/d4d/tutorial_py_thresholding.html)
