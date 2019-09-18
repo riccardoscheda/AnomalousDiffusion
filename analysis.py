@@ -233,10 +233,9 @@ def grid(file, N = 100, l = 1200, delimiter = " "):
     Makes an approximation of the fronts dividing the range in subintervals and for
     each subinterval takes the max value in that interval.
 
-    --------------------------------------------
     Parameters:
     --------------------------------------------
-    file: path of a txt file with x and y coordinates of the fronts
+    file : path of a txt file with x and y coordinates of the fronts
     N : number of subinterval to build the grid
     l : the length of the total interval
 
@@ -311,14 +310,18 @@ def VACF(df,conversion = "x"):
     Computes the Velocity Autocorrelation Fuction (VACF)
     which is the correlation  between the velocities of the fronts
 
-    --------------------------
+
     Parameters:
     --------------------------
     df : pandas dataframe with the coordinates
     conversion : string variable to convert pixels in micrometers, because the conversion is different for
     the x and y axes
-    ----------------------------
-    Returns a pandas dataframe with the VACF
+
+    Returns a numpy array with the VACF
+
+    References:
+    -----------------
+    [1] http://lab.pdebuyl.be/tidynamics/
     """
 
     if conversion == "y":
@@ -338,8 +341,8 @@ def VACF(df,conversion = "x"):
     for i in range(len(dif)):
         vel.append(tidynamics.acf(dif.T[i]))
 
-    #vel = pd.DataFrame(vel)
-    return vel
+
+    return np.array(vel)
 
 
 ## MSD for the old images, now useless
@@ -393,6 +396,10 @@ def MSD(df, conversion = "x"):
     the x and y axes
     ----------------------------
     Returns a dataframe with the MSD
+
+    References:
+    -----------------
+    [1]http://lab.pdebuyl.be/tidynamics/
     """
     if conversion == "y":
         df = df/1200*633
@@ -410,7 +417,8 @@ def MSD(df, conversion = "x"):
 
 def func(x,D,a):
     """
-    The function for the fit of the Mean Squared Displacement
+    The function for the fit of the Mean Squared Displacement (MSD)
+    and the Valocity Autocorrelation Function (VACF)
     """
     return D*x**a
 
