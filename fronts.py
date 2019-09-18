@@ -4,24 +4,29 @@ import numpy as np
 import pylab as plt
 from scipy import stats
 import itertools as it
-
+from skimage.exposure import cumulative_distribution
 
 import classification as cl
 
-def fronts(im):
+def fronts(im, threshold = 127, iterations = 1):
     """
-    Takes the longest border inside an image and saves in a text file
-    the (x,y) coordinates.
-    Return also the dataframe of the coordinates
-    The input image is modified by morphological transformation in order to have a smoother border
 
-    --------
+    Takes the longest border inside an image.
+    The input image is modified by morphological transformation in order
+    to have a smoother border.
+
 
     Parameters
-    im : the image in matrix format
+    --------------------
 
-    Returns a dataframe with the x and y coordinates of the longest border
-    and the image with the drawn found front
+    im : the image in matrix format
+    threshold : integer for the threshold to make the image binary
+    iterations : integer for the number of iterations for the erosion
+
+    Returns:
+
+    a dataframe with the x and y coordinates of the longest border;
+    the image with the drawn found front.
 
     References
     ------------
@@ -34,7 +39,7 @@ def fronts(im):
     #apply adaptive histogram histogram_equalization
     imgray = cl.adaptive_contrast_enhancement(imgray)
     #make it binary
-    ret, thresh = cv2.threshold(imgray, 100, 255, 0)
+    ret, thresh = cv2.threshold(imgray, threshold, 255, 0)
 
     #create the kernel for the morphological transformations
     struct = [0,0,0,1,1,1,1,1,1,1,0,0,0]
@@ -42,10 +47,10 @@ def fronts(im):
     kernel = np.array(kernel,np.uint8)
 
     #using erosion to enhance the fronts
-    erode = cv2.erode(thresh,kernel,iterations = 1)
+    erode = cv2.erode(thresh,kernel,iterations = iterations)
 
     #finding all the contours and select the longest one
-    contours, hierarchy = cv2.findContours(erode, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     lencontours = np.array([len(x) for x in contours])
     sel = [x in np.sort(lencontours)[-1:] for x in lencontours]
     maxcontours = np.array(contours)
@@ -63,11 +68,40 @@ def fronts(im):
 
     return coordinates, image_with_fronts
 
+def divide(coordinates):
+    """
+    Divides the found border in two different borders: the left one and the
+    right one.
+
+    Parameters
+    ------------
+    coord : pandas Dataframe which contains the coordinates of the border
+
+    Returns (first sx and second dx) two pandas dataframes one for the left border and one for the right
+    border.
+    """
+    coordinates.columns = ["x", "y"]
+    #takes the left upper corner and keep what there is before
+    leftup = np.min(np.where(coordinates["y"] == np.max(coordinates["y"])))
+    leftdown = np.max(np.where(coordinates["y"]== np.min(coordinates["y"])))
+    dx = coordinates.iloc[leftdown:leftup , :]
+    #takes the right upper corner and takes what there is after
+    rightup = np.max(np.where(coordinates["y"] == np.max(coordinates["y"])))
+    sx = coordinates.iloc[rightup: ,:]
+
+    return sx, dx
+
+
 def make_kernel(struct,length):
     """
     Makes the Structuring Element for the morphological operations
 
-    Returns a numpy matrix
+    Parameters:
+    -------------------------
+
+    struct : list of 0s and 1s ex. ([0,1,1,1,0])
+
+    Returns a binary numpy matrix
     """
     kernel = []
     #making a matrix with rows all equal to the struct
@@ -77,11 +111,17 @@ def make_kernel(struct,length):
 
 
 
-from skimage.exposure import cumulative_distribution
-
 def cdf(im):
  '''
- computes the CDF of an image as 2D numpy ndarray
+ computes the Cumulative distribution function of an image as 2D numpy ndarray
+
+ Parameters:
+ ---------------------
+
+ im : image in matrix format
+
+ Returns a numpy array with the cumulative distribution function
+
  '''
  c, b = cumulative_distribution(im)
  # pad the beginning and ending pixels and their CDF values
@@ -100,7 +140,9 @@ def hist_matching(c, c_t, im):
  c: CDF of input image computed with the function cdf()
  c_t: CDF of template image computed with the function cdf()
  im: input image as 2D numpy ndarray
- returns the modified pixel values
+
+ Returns the modified pixel values
+
  '''
  pixels = np.arange(256)
  # find closest pixel-matches corresponding to the CDF of the input image, given the value of the CDF H of
@@ -109,23 +151,24 @@ def hist_matching(c, c_t, im):
  im = (np.reshape(new_pixels[im.ravel()], im.shape)).astype(np.uint8)
  return im
 
-def fast_fronts(im, outdir = "fronts/", size = 50, length_struct = 10,iterations = 2, save = False, fname = ""):
+def fast_fronts(im, outdir = "fronts/", size = 50, length_struct = 10,iterations = 2, bands = True, save = False, fname = ""):
     """
     Takes the two longest borders inside an image and it may save in a text file
     the (x,y) coordinates.
-    The input image is modified by morphological transformation in order to have a smoother border
+    The input image is binarized with Otsu thresholding and modified by morphological transformation in order to have a smoother border
 
     Parameters
     ---------
 
     im : the image matrix in uint8 format
-    outdir : the ouput directory where it saves the txt files
-    size : the size of the window for the adaptive histogram equalization
-    length_struct : the length for the kernel for the morphological transformations
-    iterations : the number of times the dilation is applied
+    outdir : string for the ouput directory where it saves the txt files
+    size : integer for the size of the window for the adaptive histogram equalization
+    length_struct : integer for the length for the kernel for the morphological transformations
+    iterations : integer for the number of times the dilation is applied
+    bands : boolean var for adding two white bands on the left and on the right in the image
     save : boolean var for saving the coordinates in a txt file
-    fname : the name of the output files
-    ------------
+    fname : string for the name of the output files
+
     Returns:
     --------
     a list with the two dataframes with the coordinates of the longest borders
@@ -135,8 +178,8 @@ def fast_fronts(im, outdir = "fronts/", size = 50, length_struct = 10,iterations
     References
     --------------------------------------
 
-    [1] contours: https://docs.opencv.org/3.1.0/d4/d73/tutorial_py_contours_begin.html
-    [2] morphological transformations: https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_morphological_ops/py_morphological_ops.html
+    [1] Contours: https://docs.opencv.org/3.1.0/d4/d73/tutorial_py_contours_begin.html
+    [2] Morphological transformations: https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_morphological_ops/py_morphological_ops.html
     [3] Otsu thresholding : https://docs.opencv.org/3.4.0/d7/d4d/tutorial_py_thresholding.html
     """
 
@@ -157,10 +200,11 @@ def fast_fronts(im, outdir = "fronts/", size = 50, length_struct = 10,iterations
     ###################
     #In order to track the right central border, i give to the image a border for each
     #side, so opencv doesn't consider the border of the image as a contour
-    thresh[0:2,] = 255
-    thresh[len(thresh)-2:len(thresh)-1,:] = 255
-    thresh[:,0:400] = 255
-    thresh[:,-400:] = 255
+    if bands:
+        thresh[0:2,] = 255
+        thresh[len(thresh)-2:len(thresh)-1,:] = 255
+        thresh[:,0:400] = 255
+        thresh[:,-400:] = 255
 
     #now i try using dilate, opening and closing to make the cells more uniform
     cstruct = np.ones(length_struct)
@@ -209,25 +253,3 @@ def fast_fronts(im, outdir = "fronts/", size = 50, length_struct = 10,iterations
         np.savetxt(outdir + fname + "_sx.txt", sx,fmt = '%d', delimiter=' ')
 
     return  dfs , coordinates  , closing
-
-def divide(coordinates):
-    """
-    Divides the found border in two different borders: the left one and the
-    right one.
-    Parameters
-    ------------
-    coord : pandas Dataframe which contains the coordinates of the border
-
-    Returns (first sx and second dx) two pandas dataframes one for the left border and one for the right
-    border.
-    """
-    coordinates.columns = ["x", "y"]
-    #takes the left upper corner and keep what there is before
-    leftup = np.min(np.where(coordinates["y"] == np.max(coordinates["y"])))
-    leftdown = np.max(np.where(coordinates["y"]== np.min(coordinates["y"])))
-    dx = coordinates.iloc[leftdown:leftup , :]
-    #takes the right upper corner and takes what there is after
-    rightup = np.max(np.where(coordinates["y"] == np.max(coordinates["y"])))
-    sx = coordinates.iloc[rightup: ,:]
-
-    return sx, dx
