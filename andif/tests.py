@@ -8,6 +8,8 @@ from hypothesis import strategies as st
 
 from hypothesis.extra import numpy as enp
 from hypothesis.extra import pandas as epd
+
+
 import classification as cl
 import fronts as fr
 import analysis as an
@@ -154,19 +156,9 @@ def test_area(dx,sx):
         assert isinstance(area, float)
         assert area >=0
 
-
-def test_comparison():
-    """
-    Tests:
-    if returns two np.ndarrays
-    if returns arrays with positive numbers
-    """
-    areas, areas_hand = an.comparison()
-    assert all(areas >=0 ) == True
-    assert all(areas_hand >=0 ) == True
-
-
-def test_error():
+@given(dim = st.integers(min_value = 10,max_value=100))
+@settings(max_examples = 50)
+def test_error(dim):
     """
     Tests:
     if returns an array of  positive numbers
@@ -174,12 +166,12 @@ def test_error():
     """
 
     #it shall be commutative ?
-    a , b = an.comparison()
+    a =  np.random.randint(600,800,dtype="uint16",size =(dim))
+    b =  np.random.randint(600,800,dtype="uint16",size =(dim))
     error1 = an.error(a, b)
     error2 = an.error(b, a)
     assert all(error1 - error2 < 1e-5) == True
     assert isinstance(error1, np.ndarray) == True
-    assert all(error1 > 0) == True
 
 @given(dim = st.integers(min_value = 10,max_value=100),N = st.integers(min_value = 10,max_value=100),l = st.integers(min_value = 10,max_value=100))
 @settings(max_examples = 50)
@@ -192,7 +184,7 @@ def test_grid(dim,N,l):
     df[0] = x
     df[1] = y
     grid = an.grid(df, N , l)
-    
+
     assert isinstance(grid, pd.DataFrame) == True
     assert len(grid) == N
 

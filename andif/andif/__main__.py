@@ -11,8 +11,6 @@ import numpy as np
 from shapely.geometry import Polygon
 
 #####################################################
-#import sys
-#sys.path.insert(0, '/home/riccardo/git/AnomalousDiffusion')
 import classification as cl
 import fronts as fr
 import analysis as an
