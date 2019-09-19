@@ -8,7 +8,6 @@ import cv2
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-import os
 from shapely.geometry import Polygon
 
 #####################################################
@@ -37,7 +36,7 @@ class Read(cli.Application):
     "Reads the nd2 file and create a new folder with the images in png format"
     all = cli.Flag(["all", "every image"], help = "If given, I will save the fronts of all the images in the current directory")
 
-    def main( self,n_images : int  , value : str = ""):
+    def main( self,n_images : int  , value : str = "",field : int = 1):
         if self.all:
             for direct in os.listdir("."):
                 #Rough way to detect only the directories of the experiments
@@ -46,7 +45,7 @@ class Read(cli.Application):
                     ## The files in the directories have the same images so i take the last one first
                     for value in ["003.nd2","002.nd2","001.nd2"]:
                         try:
-                            cl.create_set(n_images, path = direct + "/" + value)
+                            cl.create_set(n_images, field ,path = direct + "/" + value)
                             break
                         except: pass
         print(colors.green|"Saved the images in dir 'images/")
@@ -66,8 +65,11 @@ class Modify(cli.Application):
                                 cl.create_modified_images(path = value)
                         print(colors.green|"Saved the modified images in dir 'modified_images/'")
                 else:
+                    try:
                         cl.create_modified_images(path = value)
                         print(colors.green|"Saved the image in dir 'modified_images/")
+                    except:
+                        print(colors.red|"this image does not exists")
 
 @AnomalousDiffusion.subcommand("label")
 class Label(cli.Application):
@@ -122,7 +124,9 @@ class Fronts(cli.Application):
                 cont = 0
                 for value in list(os.listdir(".")):
                     if str(value).endswith(".png"):
-                        coord, im = fr.fronts(value)
+                        test_image =  cv2.imread(value)
+                        im_gray = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
+                        coord, im = fr.fronts(im_gray)
                         np.savetxt("fronts/fronts_"+ value + ".txt", coord,fmt = '%d', delimiter=' ')
                         cont = cont + 1
                 print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
@@ -133,64 +137,13 @@ class Fronts(cli.Application):
                 print(colors.red|"this image does not exists")
             else:
                 print("image taken")
-                coord, im = fr.fronts(value)
+                test_image =  cv2.imread(value)
+                im_gray = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
+                coord, im = fr.fronts(im_gray)
                 if (self.s):
                     plt.imsave("front_"+ value, im)
                 np.savetxt("fronts/fronts_"+ value +".txt", coord,fmt = '%d', delimiter=' ')
                 print(colors.green|"Saved the fronts of the image in dir 'fronts/'")
-
-@AnomalousDiffusion.subcommand("fast")
-class Fast(cli.Application):
-    "Tracks the longest borders in the images and saves the coordinates in a txt file"
-    all = cli.Flag(["all", "every image"], help = "If given, I will save the fronts of all the images in the current directory")
-    s = cli.Flag(["s", "save"], help = "If given, I will save the image with the borders in the current directory")
-    def main(self, value : str = ""):
-        if(value == ""):
-            if (self.all):
-                df = pd.DataFrame(columns = ["i","x","y","side","frame","experiment","field"])
-                df.to_csv("coordinates.txt",index = False,header = df.columns, sep = " ")
-                for outdir in ["EF/","Sham/"]:
-                    cont = 0
-                    frames = 200
-                    for path in ["21-11-18","22-02-19","21-02-19","07-02-19","08-02-19","11-02-19"]:
-                        try:
-                            for frame in range(frames):
-                                image =  cv2.imread(outdir + path + "/images/" +str(frame)+".png")
-                                im = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-                                new = cl.adaptive_contrast_enhancement(im,(100,100))
-                                blur = cv2.GaussianBlur(new,(5,5),0)
-                                ret3,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-                                dfs, b, c = fr.fast_fronts(thresh,length_struct=5,iterations=1)
-                                for i in [0,1]:
-                                    try:
-                                        df = an.necklace_points(dfs[i], N = 1000)
-
-                                        if i == 0:
-                                            df["side"] = "dx"
-                                        else: df["side"] = "sx"
-                                        df["frame"] = frame
-                                        df["experiment"] = outdir
-                                        df["field"] = cont
-
-                                        df.to_csv("coordinates.txt", header = None , sep = " ", mode= "a")
-                                    except: pass
-                                print("field "+ path+" ["+"#"*int(frame/frames*20)+"-"*int(20-int(frame/frames*20))+"] "+str(int(frame/frames*100))+"% ", end="\r")
-                            cont = cont + 1
-                            print("field "+ path+" ["+"#"*20+"] 100%")
-
-                        except:
-                            pass
-            else:
-                print(colors.red|"image not given")
-        else:
-            if(value not in list(os.listdir(path))):
-                print(colors.red|"this image does not exists")
-            else:
-                print("image taken")
-                fr.fast_fronts(value)
-                print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
-
 
 @AnomalousDiffusion.subcommand("divide")
 class Divide(cli.Application):
@@ -226,145 +179,62 @@ class Divide(cli.Application):
                 np.savetxt("divided_fronts/"+ value +"sx.txt", sx.values, fmt='%d')
                 print(colors.green|"Divided the fronts and saved in dir 'divided_fronts/'")
 
-@AnomalousDiffusion.subcommand("areas")
-class Area(cli.Application):
-    "Computes the areas for all the directories with the images!"
-
-    def main(self):
-        df = pd.DataFrame()
-        j = 0
-        d = []
-        for direct in os.listdir("."):
-            #Rough way to detect only the directories of the experiments
-            if str(direct).endswith("9") or str(direct).endswith("8"):
-                if not os.path.exists(direct + "/images"):
-                    print(colors.yellow|"images/ doesn't exist in directory " +str(direct))
-                    pass
-                else:
-                    print("reading images in directory: "+ str(direct))
-                    d.append(direct)
-                    areas = []
-
-                    for i in range(0,300):
-                        try:
 
 
-                            filesx = direct+ "/images/fronts/"+ str(i)+".png_sx.txt"
-                            filedx = direct+ "/images/fronts/"+ str(i)+".png_dx.txt"
-                            pol, area = an.area(filesx,filedx)
-                            areas.append(area)
-                        except:pass
-                    areas = np.array(areas)/areas[0]
-                    areas = areas[areas<1.2]
-                    #areas = areas[areas>0.1]
-                    areas = pd.Series(areas)
-                    df[j] = areas
-                    j = j+1
-
-            df.columns = d
-            plt.figure(dpi = 200)
-            for i in list(df.columns):
-                plt.plot(df[i])
-                plt.legend()
-            plt.savefig("aree.png")
-
-            df.to_csv("aree.txt", sep=' ')
-        if j > 0:
-            print(colors.green|"areas saved in file 'areas.txt'")
-        else:
-            print(colors.red|"areas don't saved. There was a problem, maybe wrong directory")
-
-
-
-@AnomalousDiffusion.subcommand("error")
-class Error(cli.Application):
-    "Computes the error between two areas between the fronts"
+@AnomalousDiffusion.subcommand("fast")
+class Fast(cli.Application):
+    "Tracks the longest borders in the images and saves the coordinates in a txt file"
+    all = cli.Flag(["all", "every image"], help = "If given, I will save the fronts of all the images in the current directory")
+    s = cli.Flag(["s", "save"], help = "If given, I will save the image with the borders in the current directory")
     def main(self, value : str = ""):
-
         if(value == ""):
-                errors = []
-                i = 0
-                areas = pd.DataFrame(pd.read_csv("Areas.txt"))
-                areas_hand = pd.DataFrame(pd.read_csv("Areas_hand.txt"))
-                print(colors.green|"errors saved in file 'error.txt'")
+            if (self.all):
+                df = pd.DataFrame(columns = ["i","x","y","side","frame","experiment","field"])
+                df.to_csv("coordinates.txt",index = False,header = df.columns, sep = " ")
+                for outdir in ["EF/","Sham/"]:
+                    cont = 0
+                    frames = 100
+                    for path in ["22-11-18","14-02-19","21-11-18","22-02-19","21-02-19","16-11-18","20-11-18","07-02-19","08-02-19","11-02-19"]:
+                        try:
+                            for frame in range(frames):
+                                image =  cv2.imread(outdir + path + "/images/" +str(frame)+".png")
+                                im = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-@AnomalousDiffusion.subcommand("msd")
-class MSD(cli.Application):
-    "Computes the Mean Squared Displacement (MSD) for all the directories with the images!"
+                                new = cl.adaptive_contrast_enhancement(im,(100,100))
+                                blur = cv2.GaussianBlur(new,(5,5),0)
+                                ret3,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+                                dfs, b, c = fr.fast_fronts(thresh,length_struct=5,iterations=1)
 
-    def main(self):
-        MSDX = []
-        MSDY = []
-        mean = []
-        for direct in os.listdir("."):
-            d = []
-            #Rough way to detect only the directories of the experiments
-            if str(direct).endswith("9") or str(direct).endswith("8"):
-                if not os.path.exists(direct + "/images/fronts"):
-                    print(colors.yellow|"fronts/ doesn't exist in directory " +str(direct))
-                    pass
-                else:
-                    print("reading files in directory: "+ str(direct))
-                    d.append(direct)
+                                for i in [0,1]:
+                                    try:
+                                        df = an.necklace_points(dfs[i], N = 1000)
 
-                    msdx , msdy = an.MSD(direct+"/images/fronts/", nframes = 97,delimiter = " ")
-                    msdx = pd.DataFrame(msdx)
-                    msdy = pd.DataFrame(msdy)
-                    msdx.to_csv(direct + "/msdx.txt", sep=' ')
-                    msdy.to_csv(direct + "/msdy.txt", sep=' ')
-                    print(colors.green|"msd saved in files 'msdx.txt' and 'msdy.txt'")
-                    MSDX.append(np.mean(msdx))
-                    plt.plot(np.mean(msdx),label = direct)
-                    #plt.plot(np.mean(msdy),label = direct)
-                    plt.legend()
-                    mean.append(np.mean(msdx))
+                                        if i == 0:
+                                            df["side"] = "dx"
+                                        else: df["side"] = "sx"
+                                        df["frame"] = frame
+                                        df["experiment"] = outdir
+                                        df["field"] = cont
 
-        plt.savefig("MSD.png")
-        plt.figure()
-        plt.plot(np.mean(pd.DataFrame(mean)))
-        plt.savefig("mean.png")
-        MSDX = pd.DataFrame(MSDX)
-        MSDX.to_csv("MSDX.txt", sep=' ')
+                                        df.to_csv("coordinates.txt", header = None , sep = " ", mode= "a")
+                                    except: pass
+                                print("field "+ path+" ["+"#"*int(frame/frames*20)+"-"*int(20-int(frame/frames*20))+"] "+str(int(frame/frames*100))+"% ", end="\r")
+                            cont = cont + 1
+                            print("field "+ path+" ["+"#"*20+"] 100%")
+
+                        except:
+                            pass
+            else:
+                print(colors.red|"image not given")
+        else:
+            if(value not in list(os.listdir(path))):
+                print(colors.red|"this image does not exists")
+            else:
+                print("image taken")
+                fr.fast_fronts(value)
+                print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
 
 
-
-
-@AnomalousDiffusion.subcommand("fit")
-class FIT(cli.Application):
-    """Computes the fit parameters (D,a) for the Mean Squared Displacement for all the directories and saves
-    in a txt file
-    """
-
-    def main(self):
-        D = []
-        alpha = []
-        cont = 0
-        for direct in os.listdir("."):
-            #Rough way to detect only the directories of the experiments
-            if str(direct).endswith("9") or str(direct).endswith("8"):
-                if not os.path.exists(direct + "/msd.txt"):
-                    print(colors.yellow|"file 'msd.txt' doesn't exist in directory " +str(direct))
-                    pass
-                else:
-                    path = direct+ "/msd.txt"
-                    df = pd.DataFrame(pd.read_csv(path,sep = " "))
-                    #del df[0]
-                    msd = np.mean(df)
-                    popt, popcv = an.fit(msd)
-                    D.append(popt[0])
-                    alpha.append(popt[1])
-                    cont += 1
-
-        D = pd.Series(D)
-        alpha = pd.Series(alpha)
-        fit = pd.DataFrame(columns = ["D","alpha"])
-        fit["D"] = D
-        fit["alpha"] = alpha
-
-        fit.to_csv("fit.txt",sep = " ")
-        if cont > 0 :
-            print(colors.green | "fit parameters saved in file fit.txt")
-        else : print(colors.red| "probably the file fit.txt is empty")
 
 
 @AnomalousDiffusion.subcommand("faster")
@@ -382,6 +252,7 @@ class Faster(cli.Application):
                         for value in ["003.nd2","002.nd2","001.nd2"]:
                             try:
                                 with ND2Reader(outdir + "/" + value) as images:
+                                    print("directory " + outdir)
                                     images.iter_axes = "vt"
                                     fields = images.sizes["v"]
                                     frames = images.sizes["t"]
@@ -389,6 +260,8 @@ class Faster(cli.Application):
                                     df.to_csv(outdir + "/" + outdir + ".txt",index = False,header = df.columns, sep = " ")
                                     for field in range(fields):
                                         for frame in range(frames):
+                                            #histogram matching maybe is not necessary
+
                                             #im0 = cv2.convertScaleAbs(images[0],alpha=(255.0/65535.0))
                                             #im = cv2.convertScaleAbs(images[frame + frames*(field)],alpha=(255.0/65535.0))
                                             # im0 = np.asarray(im0)
@@ -403,7 +276,6 @@ class Faster(cli.Application):
                                             thresh[len(thresh)-2:len(thresh)-1,:] = max
                                             thresh[:,0:400] = max
                                             thresh[:,-400:] = max
-                                            thresh[:,775:825 ] = 0
                                             new = cl.adaptive_contrast_enhancement(thresh,(100,100))
                                             blur = cv2.GaussianBlur(new,(5,5),0)
                                             ret3,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
@@ -446,7 +318,7 @@ class Faster(cli.Application):
                                     thresh[len(thresh)-2:len(thresh)-1,:] = max
                                     thresh[:,0:400] = max
                                     thresh[:,-400:] = max
-                                    thresh[:,775:825 ] = 0
+
                                     new = cl.adaptive_contrast_enhancement(thresh,(100,100))
 
                                     blur = cv2.GaussianBlur(new,(9,9),1)
@@ -478,6 +350,150 @@ class Faster(cli.Application):
                 print("image taken")
                 fr.fast_fronts(value)
                 print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
+
+
+
+@AnomalousDiffusion.subcommand("areas")
+class Area(cli.Application):
+    "Computes the areas for all the directories with the images!"
+
+    def main(self):
+        df = pd.DataFrame()
+        j = 0
+        d = []
+        for direct in os.listdir("."):
+            #Rough way to detect only the directories of the experiments
+            if str(direct).endswith("9") or str(direct).endswith("8"):
+                if not os.path.exists(direct + "/images"):
+                    print(colors.yellow|"images/ doesn't exist in directory " +str(direct))
+                    pass
+                else:
+                    print("reading images in directory: "+ str(direct))
+                    d.append(direct)
+                    areas = []
+
+                    for i in range(0,300):
+                        try:
+
+                            filesx = direct+ "/images/fronts/"+ str(i)+".png_sx.txt"
+                            filedx = direct+ "/images/fronts/"+ str(i)+".png_dx.txt"
+                            sx = pd.read_csv(filesx, sep = " ")
+                            dx = pd.read_csv(filedx, sep = " ")
+                            pol, area = an.area(sx,dx)
+                            areas.append(area)
+                        except:pass
+                    areas = np.array(areas)/areas[0]
+                    areas = areas[areas<1.2]
+                    #areas = areas[areas>0.1]
+                    areas = pd.Series(areas)
+                    df[j] = areas
+                    j = j+1
+
+            df.columns = d
+            plt.figure(dpi = 200)
+            for i in list(df.columns):
+                plt.plot(df[i])
+                plt.legend()
+            plt.savefig("aree.png")
+
+            df.to_csv("aree.txt", sep=' ')
+        if j > 0:
+            print(colors.green|"areas saved in file 'areas.txt'")
+        else:
+            print(colors.red|"areas don't saved. There was a problem, maybe wrong directory")
+
+
+
+@AnomalousDiffusion.subcommand("error")
+class Error(cli.Application):
+    "Computes the error between two areas between the fronts"
+    def main(self, value : str = ""):
+
+        if(value == ""):
+                errors = []
+                i = 0
+                areas = pd.DataFrame(pd.read_csv("Areas.txt"))
+                areas_hand = pd.DataFrame(pd.read_csv("Areas_hand.txt"))
+                print(colors.green|"errors saved in file 'error.txt'")
+
+@AnomalousDiffusion.subcommand("msd")
+class MSD(cli.Application):
+    "Computes the Mean Squared Displacement (MSD) for all the directories with the images!"
+
+    def main(self):
+        MSD = []
+        mean = []
+        for direct in os.listdir("."):
+            d = []
+            #Rough way to detect only the directories of the experiments
+            if str(direct).endswith("9") or str(direct).endswith("8"):
+                if not os.path.exists(direct + "/images/fronts"):
+                    print(colors.yellow|"fronts/ doesn't exist in directory " +str(direct))
+                    pass
+                else:
+                    print("reading files in directory: "+ str(direct))
+                    x = pd.DataFrame()
+                    d.append(direct)
+                    for i in range(len(os.listdir(direct))//2):
+                        s = pd.read_csv(direct + "/images/fronts/"+str(i)+".png_sx.txt", sep = " ")
+                        s.columns = [0,1]
+                        x[i] = s[0]
+                    msd = an.MSD(x)
+                    msd = pd.DataFrame(msd)
+                    msd.to_csv(direct + "/msd.txt", sep=' ')
+                    print(colors.green|"msd saved in files 'msd.txt'")
+                    MSD.append(np.mean(msd))
+                    plt.plot(np.mean(msd),label = direct)
+                    #plt.plot(np.mean(msdy),label = direct)
+                    plt.legend()
+                    mean.append(np.mean(msd))
+
+        plt.savefig("MSD.png")
+        plt.figure()
+        plt.plot(np.mean(pd.DataFrame(mean)))
+        plt.savefig("mean.png")
+        MSD = pd.DataFrame(MSD)
+        MSD.to_csv("MSD.txt", sep=' ')
+
+
+
+
+@AnomalousDiffusion.subcommand("fit")
+class FIT(cli.Application):
+    """Computes the fit parameters (D,a) for the Mean Squared Displacement for all the directories and saves
+    in a txt file
+    """
+
+    def main(self):
+        D = []
+        alpha = []
+        cont = 0
+        for direct in os.listdir("."):
+            #Rough way to detect only the directories of the experiments
+            if str(direct).endswith("9") or str(direct).endswith("8"):
+                if not os.path.exists(direct + "/msd.txt"):
+                    print(colors.yellow|"file 'msd.txt' doesn't exist in directory " +str(direct))
+                    pass
+                else:
+                    path = direct+ "/msd.txt"
+                    df = pd.DataFrame(pd.read_csv(path,sep = " "))
+                    #del df[0]
+                    msd = np.mean(df)
+                    popt, popcv = an.fit(msd)
+                    D.append(popt[0])
+                    alpha.append(popt[1])
+                    cont += 1
+
+        D = pd.Series(D)
+        alpha = pd.Series(alpha)
+        fit = pd.DataFrame(columns = ["D","alpha"])
+        fit["D"] = D
+        fit["alpha"] = alpha
+
+        fit.to_csv("fit.txt",sep = " ")
+        if cont > 0 :
+            print(colors.green | "fit parameters saved in file fit.txt")
+        else : print(colors.red| "probably the file fit.txt is empty")
 
 
 if __name__ == "__main__":
