@@ -47,10 +47,8 @@ cd AnomalousDiffusion
 pip install -r requirements.txt
 pip install --editable andif
 ```
-You have to change the sys path in line 15 in the file `__main__.py` with the current path of the directory andif:
-```
-sys.path.insert(0, <path>/AnomalousDiffusion')
-```
+
+
 ## Usage
 When installed you can use it from command line using `andif  <subcommand>`. The main commands are:
 
@@ -84,7 +82,7 @@ To divide the front found with the command `fronts`, you can use the command `an
 To do this for all the fronts use `andif divide --all`.
 
 ###### All in one
-If you don't need intermediate steps and you want immediately the fronts you can use `andif fast` which use the second method to binarize the images.
+If you don't need intermediate steps and you want immediately the fronts you can use `andif fast` which uses the second method to binarize the images.
 if you want to use the command for all the directories you have to use `andif fast --all` in the parent directory
 
 Since in some nd2 files there are more than one field of view, saving all the images in png format is slow and inefficient. So there is the command `andif faster "" <N>` which takes the data directly from the nd2 files and will track the borders for the first fields of view you choose (<N>).
