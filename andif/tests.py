@@ -23,10 +23,20 @@ import analysis as an
 @settings(max_examples = 50)
 def test_adaptive_contrast_enhancement(dim):
     """
-    Tests if the function returns a np.ndarray
+    Tests:
+    if the function returns a np.ndarray
+    if the function returns an image different from the original one
     """
     im_gray = np.random.randint(0,255,dtype="uint8",size =(dim,dim))
-    assert isinstance(cl.adaptive_contrast_enhancement(im_gray,(10,10)), np.ndarray) == True
+    new_im = cl.adaptive_contrast_enhancement(im_gray,(10,10))
+
+
+    assert isinstance(new_im, np.ndarray) == True
+
+    #making a boolean array True or False if each pixel of the original image
+    #is different from the pixels of the new image
+    a = np.array([a!=b for (a,b) in zip(im_gray,new_im)])
+    assert a.any() == True
 
 @given(dim = st.integers(min_value=100,max_value=200))
 @settings(max_examples = 50)
@@ -36,14 +46,20 @@ def test_LBP(dim):
     if the output histogram is normalized
     if the length of the histogram is 10
     if the output is a np.ndarray
+    if the function returns an image different from the original one
     """
     im_gray = np.random.randint(0,255,dtype="uint8",size =(dim,dim))
-    lbp, hist = cl.LBP(im_gray)
+    new_im, hist = cl.LBP(im_gray)
     assert isinstance(hist, np.ndarray) == True
-    assert isinstance(lbp, np.ndarray) == True
+    assert isinstance(new_im, np.ndarray) == True
     assert sum(hist) <= 1.0
     assert sum(hist) >= 0.999
     assert len(hist) == 10
+    #making a boolean array True or False if each pixel of the original image
+    #is different from the pixels of the new image
+    a = np.array([a!=b for (a,b) in zip(im_gray,new_im)])
+    assert a.any() == True
+
 
 @given(dim = st.integers(min_value=100,max_value=200))
 @settings(max_examples = 50)
@@ -52,10 +68,21 @@ def test_Principal_components_analysis(dim):
     Tests:
     if the function returns a dataframe
     if does not return Nan values
+    If the length of the Dataframe is always 10
+    If the number of columns of the dataframe is equal to the ratio between the length of the image
+    and the windowsize
     """
+    #dimension has to be an even number
+
+    windowsize = dim
+    dim = 4*dim
+
+
     im_gray = np.random.randint(0,255,dtype="uint8",size =(dim,dim))
-    assert isinstance(cl.Principal_components_analysis(im_gray), pd.DataFrame) == True
-    assert any(np.where(np.isnan(cl.Principal_components_analysis(im_gray)))) == False
+    df = cl.Principal_components_analysis(im_gray, window_sizeX = windowsize, window_sizeY = windowsize)
+    assert isinstance(df, pd.DataFrame) == True
+    assert any(np.where(np.isnan(df))) == False
+    #assert len(df) == 10
 
 def test_classification():
     """
