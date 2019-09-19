@@ -181,11 +181,18 @@ def test_error():
     assert isinstance(error1, np.ndarray) == True
     assert all(error1 > 0) == True
 
-def test_grid():
-    path = "Results/labelled_images1010/fronts/divided_fronts/fronts_labelled.m.2.png.txtsx.txt"
-    N = 100
-    l = 1200
-    grid = an.grid(path, N , l)
+@given(dim = st.integers(min_value = 10,max_value=100),N = st.integers(min_value = 10,max_value=100),l = st.integers(min_value = 10,max_value=100))
+@settings(max_examples = 50)
+def test_grid(dim,N,l):
+
+    x =  np.random.randint(600,800,dtype="uint16",size =(dim))
+    y =  np.random.randint(600,800,dtype="uint16",size =(dim))
+
+    df = pd.DataFrame()
+    df[0] = x
+    df[1] = y
+    grid = an.grid(df, N , l)
+    
     assert isinstance(grid, pd.DataFrame) == True
     assert len(grid) == N
 

@@ -228,16 +228,17 @@ def necklace_points(df,N=100,method='quadratic'):
     df["y"] = dfy
     return df.astype("int32")
 
-def grid(file, N = 100, l = 1200, delimiter = " "):
+def grid(df, N = 100, l = 1200, side = "sx"):
     """
     Makes an approximation of the fronts dividing the range in subintervals and for
     each subinterval takes the max value in that interval.
 
     Parameters:
     --------------------------------------------
-    file : path of a txt file with x and y coordinates of the fronts
+    df : pandas dataframe with x and y coordinates of the fronts
     N : number of subinterval to build the grid
     l : the length of the total interval
+    side : string for the left or right front
 
     Returns a pandas dataframe with the coordinates of the smoothed borders
     """
@@ -245,9 +246,7 @@ def grid(file, N = 100, l = 1200, delimiter = " "):
     min_x = 0
     max_x = l
     delta = l/float(N)
-
-    #reads the file with the coordinates of the fronts
-    grid = pd.DataFrame(pd.read_csv(file,delimiter = delimiter ))
+    grid = df
     grid.columns = [0,1]
     grid = grid.sort_values(by = 1)
     #makes a new aray where will be the smoothed fronts
@@ -260,7 +259,7 @@ def grid(file, N = 100, l = 1200, delimiter = " "):
         bin_M = min_x +(i+1)*delta
         #difference from sx front and dx front: in one case i take the max, in the
         #other i take the min
-        if file.endswith("sx.txt"):
+        if side == "sx":
             grid_smooth[1,i]=min_x +(i+1/2.)*delta
             #takes the max value only if in the interval there are values
             if len(grid[(grid[1]>bin_m) & (grid[1]<bin_M)][0]) != 0:
