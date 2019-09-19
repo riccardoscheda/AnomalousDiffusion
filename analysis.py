@@ -322,25 +322,25 @@ def VACF(df,conversion = "x"):
     -----------------
     [1] http://lab.pdebuyl.be/tidynamics/
     """
-
+    #conversion from pixels to micrometers
     if conversion == "y":
 
         df = df/1200*633
     else:
         df =  df/1600*844
 
+    #computes the velocity in one direction between the frames
     for i in range(len(df.T)):
 
             dif = pd.DataFrame()
             if i> 0 :
                 dif[i] = velocity(df[i-1],df[i])
 
-    count = 0
     vel = []
     for i in range(len(dif)):
         vel.append(tidynamics.acf(dif.T[i]))
 
-
+        #return the velocities in array
     return np.array(vel)
 
 
@@ -400,6 +400,7 @@ def MSD(df, conversion = "x"):
     -----------------
     [1]http://lab.pdebuyl.be/tidynamics/
     """
+    #conversion from pixels to micrometers
     if conversion == "y":
         df = df/1200*633
     else:
@@ -429,4 +430,5 @@ def fit(ydata):
     """
     xdata = np.linspace(0,len(ydata),num = len(ydata))
     popt, pcov = curve_fit(func, xdata, ydata)
+    #returns the parameters of the fitting
     return popt
