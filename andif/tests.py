@@ -199,23 +199,48 @@ def test_divide(dim,max):
 ## TESTS FOR analysis.py
 
 
-@given(dx = enp.arrays(int,(1,100)),sx = enp.arrays(int,(1,100)))
-def test_area(dx,sx):
+@given(dim = st.integers(min_value = 2, max_value = 10))
+def test_area(dim):
     """
     Tests:
-    if returns a type Polygon and a nonnegative number
+    if returns a type Polygon
+    if returns a nonnegative number
+    if it's commutative with respect the two parameters
+    if the area of a square is dim*dim
     """
-    #they have to be different points in space to make a polygon!!!!
-    if (a == b for (a,b) in zip(dx,sx)):
-        pass
-    else:
-        dx = pd.DataFrame(dx)
-        sx = pd.DataFrame(sx)
+    #simulating left front and right front
+    x1 = np.random.randint(1000,1200,size =(dim))
+    x2 = np.random.randint(600,800,size =(dim))
+    y = np.linspace(0,dim,num = dim)
+    dx = pd.DataFrame()
+    dx[0] = pd.Series(x1)
+    dx[1] = y
+    sx = pd.DataFrame()
+    sx[0] = pd.Series(x2)
+    sx[1] = y
 
-        pol , area = an.area(dx,sx)
-        assert isinstance(pol, Polygon) == True
-        assert isinstance(area, float)
-        assert area >=0
+    #they have to be different points in space to make a polygon!!!!
+    assert sx.equals(dx) == False
+
+    pol , area = an.area(dx,sx)
+    assert isinstance(pol, Polygon) == True
+    assert isinstance(area, float)
+    assert area >=0
+
+    #should be commutive with respect the order of the two parameters
+    pol2, area2 = an.area(sx,dx)
+    assert int(area) == int(area2)
+
+    #now make sure that the area of a square is dim*dim
+    quadsx = pd.DataFrame()
+    quaddx = pd.DataFrame()
+    quadsx[0] = pd.Series([0,0])
+    quadsx[1] = pd.Series([0,dim])
+    quaddx[0] = pd.Series([dim,dim])
+    quaddx[1] = pd.Series([0,dim])
+    pol, area = an.area(quadsx, quaddx)
+    assert int(area) == dim*dim
+
 
 @given(dim = st.integers(min_value = 10,max_value=100))
 @settings(max_examples = 50)
@@ -234,10 +259,15 @@ def test_error(dim):
     assert all(error1 - error2 < 1e-5) == True
     assert isinstance(error1, np.ndarray) == True
 
-@given(dim = st.integers(min_value = 10,max_value=100),N = st.integers(min_value = 10,max_value=100),l = st.integers(min_value = 10,max_value=100))
+@given(dim = st.integers(min_value = 10,max_value=100),N = st.integers(min_value = 10,max_value=100),l = st.integers(min_value = 1000,max_value=1200))
 @settings(max_examples = 50)
 def test_grid(dim,N,l):
-
+    """
+    Tests:
+    if returns a DataFrame with two columns
+    if the length of the grid is equal to the parameter N
+    if the maximum value on the y is always less than the parameter l
+    """
     x =  np.random.randint(600,800,dtype="uint16",size =(dim))
     y =  np.random.randint(600,800,dtype="uint16",size =(dim))
 
@@ -247,46 +277,60 @@ def test_grid(dim,N,l):
     grid = an.grid(df, N , l)
 
     assert isinstance(grid, pd.DataFrame) == True
+    assert len(grid.T) == 2
     assert len(grid) == N
+    assert max(grid[0]) < l
 
-@given(dim = st.integers(min_value = 10,max_value=100),N = st.integers(min_value = 10,max_value=100))
+@given(dim = st.integers(min_value = 10,max_value=100),N = st.integers(min_value = 10,max_value=100),l = st.integers(min_value = 1000,max_value=1200))
 @settings(max_examples = 50)
-def test_necklace_points(dim,N):
+def test_necklace_points(dim,N, l):
     """
     Tests if:
-    The output is a dataframe and if the values are int
+    The output is a dataframe with two columns
+    if the values are int32
+    if the length of the DataFrame is equal to the parameter N
+    if the output is different from the output of the function grid but have the same length
+
     """
     #we want only two columns that refer to x and y coordinates
     x =  np.random.randint(600,800,dtype="uint16",size =(dim))
-    y =  np.linspace(0,1200,num=dim)
+    y =  np.linspace(0,l,num=dim)
     coord = pd.DataFrame()
     coord[0] = x
     coord[1] = y
+
     df = an.necklace_points(coord,N)
+
     assert isinstance(df, pd.DataFrame) == True
+    assert len(df.T) == 2
     assert isinstance(df.values[0][0], np.int32)
     assert len(df) == N
 
+    #now interpolation with function grid
+    grid = an.grid(coord, N , l)
+    assert grid.equals(df) == False
+    assert len(grid) == len(df)
 
-@given(df0 = enp.arrays(int,(1,100)),df1 = enp.arrays(int,(1,100)))
-def test_velocity(df0,df1):
+
+@given(dim = st.integers(min_value = 10,max_value=100))
+def test_velocity(dim):
     """
     Tests:
     if the velocity is a DataFrame
     if the length of the velocity dataframe is equal to the length of the
     input DataFrames
     """
+    x1 =  np.random.randint(600,800,dtype="uint16",size =(dim))
+    x2 = np.random.randint(600,800,dtype="uint16",size =(dim))
     df = pd.DataFrame()
-    if (a == b for (a,b) in zip(df0,df1)):
-        pass
-    else:
-        df[0] = pd.DataFrame(df0)
-        df[1] = pd.DataFrame(df1)
 
-        vel = an.velocity(df0,df1)
-        assert isinstance(vel, pd.Series) == True
-        assert len(vel) == len(df0)
-        assert len(vel) == len(df1)
+    df[0] = x1
+    df[1] = x2
+
+    vel = an.velocity(df[0],df[1])
+    assert isinstance(vel, pd.Series) == True
+    assert len(vel) == len(x1)
+    assert len(vel) == len(x2)
 
 @given(df0 = enp.arrays(int,(1,100)),df1 = enp.arrays(int,(1,100)),df2 = enp.arrays(int,(1,100)))
 def test_VACF(df0,df1,df2):
