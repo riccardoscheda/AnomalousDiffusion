@@ -87,16 +87,25 @@ def test_Principal_components_analysis(dim):
     a = np.array([a!=b for (a,b) in zip(df["x"],df2["x"])])
     assert a.any() == True
 
+
 def test_classification():
     """
     Tests:
     if the output is numpy array
     if the output image is binary (there are only 0s and 1s)
+    if the output for the same image is equal
     """
     im_gray = np.random.randint(0,255,dtype="uint8",size =(1200,1600))
     binary = cl.classification(im_gray, cl.Principal_components_analysis(im_gray))
+
+    binary2 = cl.classification(im_gray, cl.Principal_components_analysis(im_gray))
+
     assert isinstance(binary,np.ndarray) == True
     assert len(np.where(binary == 0 )[1]) + len(np.where(binary == 1)[1]) == len(binary)*len(binary.T)
+    
+    a = np.array([a!=b for (a,b) in zip(binary,binary2)])
+    assert a.any() == True
+
 
 ###############################################################################
 #TESTS FOR fronts.py
