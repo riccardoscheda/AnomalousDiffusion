@@ -3,9 +3,12 @@ import numpy as np
 import matplotlib as plt
 import cv2
 import pandas as pd
+from shapely.affinity import rotate,scale
+from shapely.geometry import Polygon
+
+
 from hypothesis import given,settings
 from hypothesis import strategies as st
-
 from hypothesis.extra import numpy as enp
 from hypothesis.extra import pandas as epd
 
@@ -83,9 +86,9 @@ def test_Principal_components_analysis(dim):
     assert len(df.T) == 5
     #the length of a column is the number of the pixels inside a window
     assert len(df) == dim*dim
-    #at least one column for an image is different from the column for a second image
-    a = np.array([a!=b for (a,b) in zip(df["x"],df2["x"])])
-    assert a.any() == True
+    #the two dataframes for two different images are different
+    assert df.equals(df2) == False
+
 
 
 def test_classification():
@@ -97,40 +100,48 @@ def test_classification():
     """
     im_gray = np.random.randint(0,255,dtype="uint8",size =(1200,1600))
     binary = cl.classification(im_gray, cl.Principal_components_analysis(im_gray))
-
+    #doing the same function a second time
     binary2 = cl.classification(im_gray, cl.Principal_components_analysis(im_gray))
 
     assert isinstance(binary,np.ndarray) == True
     assert len(np.where(binary == 0 )[1]) + len(np.where(binary == 1)[1]) == len(binary)*len(binary.T)
-    
+    #if the two images are equal
     a = np.array([a!=b for (a,b) in zip(binary,binary2)])
-    assert a.any() == True
+    assert a.all() == False
 
 
 ###############################################################################
 #TESTS FOR fronts.py
 
-@given(im = st.lists(min_size=1,elements = st.integers(min_value=0,max_value=255)))
+@given(im = st.lists(min_size=10, max_size = 100,elements = st.integers(min_value=0,max_value=255)))
 def test_fronts(im):
     """
     Tests:
-    if the output is a pandas DataFrame
+    if the output is a pandas DataFrame and a numpy array
+    If the length of the dataframe is bigger than 2
+    If the length of the new image is equal to the length of the original image
     """
 
     im_gray = np.asmatrix(im)
-    fronts, _ = fr.fronts(im_gray)
+    fronts, image_with_fronts = fr.fronts(im_gray)
+
     assert isinstance(fronts, pd.DataFrame) == True
+    assert isinstance(image_with_fronts, np.ndarray) == True
+    assert len(fronts) >=  2
+    assert len(image_with_fronts) == len(im_gray)
 
 
-@given(struct = st.lists(min_size=1,elements = st.integers(min_value=0,max_value=1)))
-def test_make_kernel(struct):
+@given(struct = st.lists(min_size=1, elements = st.integers(min_value=0,max_value=1)),length = st.integers(min_value = 1, max_value=5))
+def test_make_kernel(struct,length):
     """
     Tests:
     if the output of make_kernel is a numpy matrix of 0s and 1s
     """
 
-    binary = fr.make_kernel(struct, 1)
+    binary = fr.make_kernel(struct, length)
+
     assert isinstance(binary, np.matrix) == True
+    #the sum of 0s and 1s gives the total number of the elements of the matrix
     assert len(np.where(binary == 0 )[1]) + len(np.where(binary == 1)[1]) == len(binary)*len(binary.T)
 
 @given(dim = st.integers(min_value=1000,max_value=1600))
@@ -139,43 +150,54 @@ def test_fast_fronts(dim):
     """
     Tests :
     if the output is a list of two pandas dataframes
-    if it saves two txt file for each input image
+    if the len of the binary image is equal to the length of the original image
+    if the two dataframes with the coordinates are different
     """
-    im_gray = np.random.randint(0,255,dtype="uint8",size =(dim,dim))
-    df, im, im2 = fr.fast_fronts(im_gray, outdir = "")
-    assert isinstance(df, list) == True
-    assert len(df) == 2 or len(df) == 0
 
-@given(dim = st.integers(min_value = 2,max_value=100))
+    im_gray = np.random.randint(0,255,dtype="uint8",size =(dim,dim))
+    df, im, im2 = fr.fast_fronts(im_gray)
+    dx = df[0]
+    sx = df[1]
+
+    assert isinstance(df, list) == True
+    assert len(df) == 2
+    assert len(im2) == len(im_gray)
+    assert sx.equals(dx) == False
+
+
+@given(dim = st.integers(min_value = 2,max_value=100),max = st.integers(min_value = 500,max_value=1000))
 @settings(max_examples = 50)
-def test_divide(dim):
+def test_divide(dim,max):
     """
     Tests:
-    if return two pandas Dataframes
+    if returns two pandas Dataframes
     if the two output dataframes are different
+    if the x coordinates are always different from 0
+    if the y coordinates are always less than the max
     """
     #we want only two columns that refer to x and y coordinates
-    x =  np.random.randint(600,800,dtype="uint16",size =(dim))
-    y =  np.linspace(0,1200,num=dim)
+    y =  np.linspace(0,max,num=dim)
+    x = y + np.random.randint(600,800,dtype="uint16",size =(dim))
     coord = pd.DataFrame()
     coord[0] = x
     coord[1] = y
     sx , dx = fr.divide(coord)
+
     assert len(sx) != 0
     assert len(dx) != 0
     assert isinstance(sx, pd.DataFrame) == True
     assert isinstance(dx, pd.DataFrame) == True
+
     assert all(sx["x"] == 0) == False
     assert all(dx["x"] == 0) == False
+    assert all(sx["y"] <= max) == True
+    assert all(dx["y"] <= max) == True
     assert sx.equals(dx) == False
 
 
 ##############################################################################
 ## TESTS FOR analysis.py
 
-
-from shapely.affinity import rotate,scale
-from shapely.geometry import Polygon
 
 @given(dx = enp.arrays(int,(1,100)),sx = enp.arrays(int,(1,100)))
 def test_area(dx,sx):
