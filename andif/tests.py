@@ -17,8 +17,6 @@ import analysis as an
 #######################################################
 ##TESTS FOR classification.py
 
-
-
 @given(dim = st.integers(min_value=1000,max_value=1600))
 @settings(max_examples = 50)
 def test_adaptive_contrast_enhancement(dim):
@@ -61,28 +59,33 @@ def test_LBP(dim):
     assert a.any() == True
 
 
-@given(dim = st.integers(min_value=100,max_value=200))
+@given(dim = st.integers(min_value=5,max_value=10))
 @settings(max_examples = 50)
 def test_Principal_components_analysis(dim):
     """
     Tests:
     if the function returns a dataframe
     if does not return Nan values
-    If the length of the Dataframe is always 10
-    If the number of columns of the dataframe is equal to the ratio between the length of the image
-    and the windowsize
+    If the number of the columns is always 5
+    If the length of a column is the number of the pixels inside a window
+    If the pca for different images gives different results
     """
-    #dimension has to be an even number
 
-    windowsize = dim
-    dim = 4*dim
+    im_gray = np.random.randint(0,255,dtype="uint8",size =(dim*10,dim*10))
+    df = cl.Principal_components_analysis(im_gray, window_sizeX = 10, window_sizeY = 10)
 
+    im_gray2 = np.random.randint(0,255,dtype="uint8",size =(dim*10,dim*10))
+    df2 = cl.Principal_components_analysis(im_gray2, window_sizeX = 10, window_sizeY = 10)
 
-    im_gray = np.random.randint(0,255,dtype="uint8",size =(dim,dim))
-    df = cl.Principal_components_analysis(im_gray, window_sizeX = windowsize, window_sizeY = windowsize)
     assert isinstance(df, pd.DataFrame) == True
     assert any(np.where(np.isnan(df))) == False
-    #assert len(df) == 10
+    #has the firste 5 principal components
+    assert len(df.T) == 5
+    #the length of a column is the number of the pixels inside a window
+    assert len(df) == dim*dim
+    #at least one column for an image is different from the column for a second image
+    a = np.array([a!=b for (a,b) in zip(df["x"],df2["x"])])
+    assert a.any() == True
 
 def test_classification():
     """
