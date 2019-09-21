@@ -16,7 +16,7 @@ import fronts as fr
 import analysis as an
 ######################################################
 
-path = "."
+#path = "."
 
 class AnomalousDiffusion(cli.Application):
     """Application for Cell migration
@@ -32,22 +32,30 @@ class AnomalousDiffusion(cli.Application):
 @AnomalousDiffusion.subcommand("read")
 class Read(cli.Application):
     "Reads the nd2 file and create a new folder with the images in png format"
-    all = cli.Flag(["all", "every image"], help = "If given, I will save the fronts of all the images in the current directory")
+    all = cli.Flag(["all", "every image"], help = "If given, I will read the first nd2 file in the direcories and save all the images in the directory 'images/'")
 
-    def main( self,n_images : int  , value : str = "",field : int = 1):
-        if self.all:
-            for direct in os.listdir("."):
-                #Rough way to detect only the directories of the experiments
-                if str(direct).endswith("9") or str(direct).endswith("8"):
-                    print("reading images in directory: "+ str(direct))
-                    ## The files in the same directories have the same images so i take the last one first
-                    for value in ["003.nd2","002.nd2","001.nd2"]:
-                        try:
-                            #saves the images taken from the nd2 file
-                            cl.create_set(n_images, field ,path = direct + "/" + value)
-                            break
-                        except: pass
-        print(colors.green|"Saved the images in dir 'images/")
+    def main( self, value : str, n_images : int = 100   , field : int = 1):
+        if value.endswith(".nd2"):
+            if self.all:
+                dirs = [x[0] for x in os.walk(".")]
+                for direct in dirs:
+                    try:
+                        Read.read(n_images, value, direct, field)
+                    except : pass
+            else:
+                try:
+                    Read.read(n_images, value, ".", field)
+                except:
+                    print(colors.red|"File not found")
+
+        else: print(colors.red|"Wrong name, i need nd2 format file")
+
+    def read(n_images, value, direct, field):
+            #saves the images taken from the nd2 file
+            cl.create_set(n_images, field ,path = direct + "/" + value)
+            print(colors.green|"Saved the images in dir '"+ direct+"/images/")
+
+
 
 @AnomalousDiffusion.subcommand("modify")
 class Modify(cli.Application):

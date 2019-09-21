@@ -10,14 +10,14 @@ from sklearn.cluster import KMeans
 from sklearn.mixture import GaussianMixture
 import itertools
 
-def create_set( n_images , field ,path = "../data_prova/Sham_8_2_18_Field_5.nd2"):
+def create_set( frames , field ,path = "../data_prova/Sham_8_2_18_Field_5.nd2"):
     """
     Reads the images from the nd2 file and saves them in the directory 'images/'
 
     Paramters:
     -----------------------
 
-    n_images : number of images to read from the nd2 file
+    frames : number of images to read from the nd2 file
     field : the field of view in the nd2 file
     path : the path of the nd2 file
 
@@ -35,12 +35,13 @@ def create_set( n_images , field ,path = "../data_prova/Sham_8_2_18_Field_5.nd2"
         #choosing the indexing of the images in the nd2 file
         images.iter_axes = "vt"
         fields = images.sizes["v"]
-        frames = images.sizes["t"]
-        for i in range(n_images):
-            print("reading image "+str(i))
-            image = np.asmatrix(images[i + i*(field)]).astype('uint16')
-            plt.imsave(name + "/" + outfolder+str(i)+".png",image,cmap="gray")
-
+        #frames = images.sizes["t"]
+        for frame in range(frames):
+            #status bar
+            print("image "+str(frame+1)+"/"+str(frames)+" ["+"#"*int(frame/frames*20)+"-"*int(20-int(frame/frames*20))+"] "+str(int(frame/frames*100))+"% ", end="\r")
+            image = np.asmatrix(images[frame + frame*(field)]).astype('uint16')
+            plt.imsave(name + "/" + outfolder+str(frame)+".png",image,cmap="gray")
+        print("images "+str(frame+1)+"/"+str(frames)+" ["+"#"*20+"] 100%")
 
 def adaptive_contrast_enhancement(image,grid_size = (50,50)):
     """
