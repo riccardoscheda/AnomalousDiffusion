@@ -293,8 +293,8 @@ def velocity(df0, df1):
     --------------------------
     Parameters:
     --------------------------
-    df0 : pandas dataframe which contains the x coordinates of the front of the initial frame
-    df1 : pandas dataframe which contains the x coordinates of the front of the final frame
+    df0 : pandas dataframe which contains the x and y coordinates of the front of the initial frame
+    df1 : pandas dataframe which contains the x and y coordinates of the front of the final frame
 
     ----------------------------
     Returns a dataframe with the velocity
@@ -324,14 +324,18 @@ def VACF(df,conversion = "x"):
     """
     #conversion from pixels to micrometers
     if conversion == "y":
+
         df = df/1200*633
     else:
         df =  df/1600*844
-    #computes the velocity in one direction between the frames
-    dif = pd.DataFrame()
 
-    for i in range(1,len(df.T)):
-            dif[i-1] = velocity(df[i-1],df[i])
+    #computes the velocity in one direction between the frames
+    for i in range(len(df.T)):
+
+            dif = pd.DataFrame()
+            if i> 0 :
+                dif[i] = velocity(df[i-1],df[i])
+
     vel = []
     for i in range(len(dif)):
         vel.append(tidynamics.acf(dif.T[i]))

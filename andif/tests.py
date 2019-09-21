@@ -313,43 +313,85 @@ def test_necklace_points(dim,N, l):
 
 
 @given(dim = st.integers(min_value = 10,max_value=100))
+@settings(max_examples = 50)
 def test_velocity(dim):
     """
     Tests:
     if the velocity is a DataFrame
     if the length of the velocity dataframe is equal to the length of the
     input DataFrames
+    if given two constant dataframes, the velocity is the same for all the rows
+    if given two dataframes with constant slope, the velocity is the same for all the rows
     """
     x1 =  np.random.randint(600,800,dtype="uint16",size =(dim))
     x2 = np.random.randint(600,800,dtype="uint16",size =(dim))
-    df = pd.DataFrame()
+    x1 = pd.DataFrame(x1)
+    x2 = pd.DataFrame(x2)
 
-    df[0] = x1
-    df[1] = x2
-
-    vel = an.velocity(df[0],df[1])
-    assert isinstance(vel, pd.Series) == True
+    vel = an.velocity(x1,x2)
+    assert isinstance(vel, pd.DataFrame) == True
     assert len(vel) == len(x1)
     assert len(vel) == len(x2)
 
-@given(df0 = enp.arrays(int,(1,100)),df1 = enp.arrays(int,(1,100)),df2 = enp.arrays(int,(1,100)))
-def test_VACF(df0,df1,df2):
+    #if given two constant dataframes, the velocity is the same for all the rows
+    x1 = dim*np.ones(dim)
+    x2 = (dim)*np.ones(dim) + dim
+
+    x1 = pd.DataFrame(x1)
+    x2 = pd.DataFrame(x2)
+    vel = an.velocity(x1,x2)
+    assert all(vel.values == dim) == True
+
+    #if given two dataframes with constant slope, the velocity is the same for all the rows
+    x1 = np.arange(dim)
+    x2 = np.arange(dim) + dim
+
+    x1 = pd.DataFrame(x1)
+    x2 = pd.DataFrame(x2)
+    vel = an.velocity(x1,x2)
+    assert all(vel.values == dim) == True
+
+
+@given(dim = st.integers(min_value = 10,max_value=20),length = st.integers(min_value = 10,max_value=20))
+@settings(max_examples = 10)
+def test_VACF(dim,length):
     """
     Tests:
     if the output is a numpy array
+    if the length of the array is the number of columns of the dataframe -1, because the
+    function computes the velocity of the dataframe
     if the output array elements are positive
+    if given a dataframe with constant values, the vacf is always zero
+    if given a dataframe with linearlly increasing values, the vacf is constant
     """
-    df = pd.DataFrame()
-    if (a == b for (a,b) in zip(df0,df1)):
-        pass
-    else:
-        df[0] = pd.DataFrame(df0)
-        df[1] = pd.DataFrame(df1)
-        df[2] = pd.DataFrame(df2)
 
-        msd = an.VACF(df)
-        assert isinstance(msd, pd.DataFrame) == True
-        assert all(msd.all() >= 0)
+    df = pd.DataFrame()
+    for i in range(length):
+        df[i] = np.random.randint(1,100,size = dim)
+    vacf = an.VACF(df)
+
+    assert isinstance(vacf, np.ndarray) == True
+    assert len(vacf) == dim
+
+    #if given a dataframe with constant values, the vacf is always zero
+    x = np.ones(length)
+    df= pd.DataFrame()
+    #dataframe with constant values
+    for i in range(dim):
+        df[i] = x*dim
+
+    vacf = an.VACF(df)
+    assert np.all(vacf == 0) == True
+
+    #if given a dataframe with linear values, the vacf is constant
+    x = np.ones(length)
+    df= pd.DataFrame()
+    #dataframe with constant values
+    for i in range(dim):
+        df[i] = x*i
+
+    vacf = an.VACF(df)
+    assert np.all(vacf == vacf[0]) == True
 
 @given(dim = st.integers(min_value = 2,max_value=100))
 @settings(max_examples = 50)
@@ -369,21 +411,6 @@ def test_MSD(dim):
     assert isinstance(msd, pd.DataFrame) == True
     assert all(msd.all() >= 0)
 
-
-#
-# def test_MSD_Sham():
-#     """
-#     Tests:
-#     if the output is a numpy array
-#     if the output array elements are positive
-#     """
-#     path = "Data/data_fronts/"
-#     msd, pos2, y2 = an.MSD_Sham(path,side = "sx",delimiter = "\t")
-#
-#
-#     assert isinstance(msd, np.ndarray) == True
-#     assert np.isclose(msd[0], 0, rtol = 10e-5) == True
-#     assert all(msd > 0) == True
 
 @given(dim = st.integers(min_value = 10,max_value=100))
 @settings(max_examples = 50)
