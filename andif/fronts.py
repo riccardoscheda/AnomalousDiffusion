@@ -122,6 +122,10 @@ def cdf(im):
 
  Returns a numpy array with the cumulative distribution function
 
+ References:
+ -----------------------------
+
+ [1] https://stackoverflow.com/questions/32655686/histogram-matching-of-two-images-in-python-2-x
  '''
  c, b = cumulative_distribution(im)
  # pad the beginning and ending pixels and their CDF values
@@ -143,6 +147,10 @@ def hist_matching(c, c_t, im):
 
  Returns the modified pixel values
 
+ References:
+ -----------------------------
+
+ [1] https://stackoverflow.com/questions/32655686/histogram-matching-of-two-images-in-python-2-x
  '''
  pixels = np.arange(256)
  # find closest pixel-matches corresponding to the CDF of the input image, given the value of the CDF H of

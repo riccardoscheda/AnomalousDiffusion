@@ -393,23 +393,45 @@ def test_VACF(dim,length):
     vacf = an.VACF(df)
     assert np.all(vacf == vacf[0]) == True
 
-@given(dim = st.integers(min_value = 2,max_value=100))
+@given(dim = st.integers(min_value = 2,max_value=100),length = st.integers(min_value = 10,max_value=20))
 @settings(max_examples = 50)
-def test_MSD(dim):
+def test_MSD(dim,length):
     """
     Tests:
     if the output is a pandas dataframe
     if all of the output elements are positive
     """
-    #we want only two columns that refer to x and y coordinates
+    #we want only columns that refer to x or y coordinates
     x = pd.DataFrame()
-    for i in range(4):
-        x[i] =  np.random.randint(600,800,dtype="uint16",size =(dim))
+    for i in range(dim):
+        x[i] =  np.random.randint(600,1000,dtype="uint16",size =(dim))
 
     msd = an.MSD(x)
 
     assert isinstance(msd, pd.DataFrame) == True
-    assert all(msd.all() >= 0)
+    assert len(msd) == len(x)
+
+    #if given a dataframe with constant values, the msd is always zero
+    x = np.ones(length)
+    df = pd.DataFrame()
+    #dataframe with constant values
+    for i in range(dim):
+        df[i] = x*dim
+
+    msd = an.MSD(df)
+    assert np.all(np.isclose(msd,np.zeros(dim))) == True
+
+    #if given a dataframe with linear values, the msd is quadratic
+    x = np.ones(length)
+    df= pd.DataFrame()
+    #dataframe with constant values
+    for i in range(length):
+        df[i] = x*i
+
+    msd = an.MSD(df)
+    fit = an.fit(np.mean(msd))
+    assert np.isclose(fit[1], 2) == True
+
 
 
 @given(dim = st.integers(min_value = 10,max_value=100))
