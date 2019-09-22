@@ -68,7 +68,7 @@ class Modify(cli.Application):
     "Modify an image with histogram equalization and saves it in a new folder with the images in png format"
 
     def main( self, value : str ):
-
+                #if value is . will modify all the images in the current directory
                 if(value == "."):
 
                     for image in list(os.listdir(value)):
@@ -86,94 +86,76 @@ class Modify(cli.Application):
 @AnomalousDiffusion.subcommand("label")
 class Label(cli.Application):
     "Saves the binary image using pca and Gaussian-mixture algorithms"
-    all = cli.Flag(["all", "every image"], help = "If given, I will label all the images in the current directory")
-    def main(self, value : str = ""):
+
+    def label(value):
+        #reading the image
+        test_image =  cv2.imread(value)
+        #make it gray
+        im_gray = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
+
+        #labels the images using PCA and GaussianMixture algorithms
+        pca = cl.Principal_components_analysis(im_gray,window_sizeX=10,window_sizeY=10)
+        labelled_image = cl.classification(im_gray, pca,window_sizeX=10,window_sizeY=10)
+        #saves them
+        plt.imsave("labelled_images/labelled_" + value, labelled_image)
+
+    def main(self, value : str ):
         if not os.path.exists("labelled_images"):
             os.makedirs("labelled_images")
 
-        if(value == ""):
-            if (self.all):
-                #idex for the images name
-                cont = 0
-                for value in list(os.listdir(".")):
-                    if str(value).endswith(".png"):
-                        #reading the image
-                        test_image =  cv2.imread(value)
-                        #make it gray
-                        im_gray = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
-
-                        print("analyzing image " +str(cont+1)+"/"+str(len(os.listdir("."))))
-                        #labels the images using PCA and GaussianMixture algorithms
-                        pca = cl.Principal_components_analysis(im_gray,window_sizeX=10,window_sizeY=10)
-                        labelled_image = cl.classification(im_gray, pca,window_sizeX=10,window_sizeY=10)
-                        #saves them
-                        plt.imsave("labelled_images/labelled_"+value,labelled_image)
-                        cont = cont + 1
-                print(colors.green|"Saved the binary images in dir 'labelled_images/'")
-            else:
-                print(colors.red|"image not given")
+        if (value == "."):
+            #idex for the images name
+            cont = 0
+            for image in list(os.listdir(value)):
+                if str(image).endswith(".png"):
+                    print("analyzing image " +str(cont+1)+"/"+str(len(os.listdir(value))-1))
+                    Label.label(image)
+                    cont = cont + 1
+            print(colors.green|"Saved the binary images in dir 'labelled_images/'")
         else:
-            if(value not in list(os.listdir(path))):
-                print(colors.red|"this image does not exists")
-            else:
-                #reading the image
-                test_image =  cv2.imread(value)
-                #make it gray
-                im_gray = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
-                print("image taken")
-                print("i'm doing PCA on the LBP image")
-                #labels the images using PCA and GaussianMixture algorithms
-                pca = cl.Principal_components_analysis(im_gray,window_sizeX=10,window_sizeY=10)
-                print("PCA finished")
-                print("Now i'm using Gaussian-mixture to classify the subimages")
-                labelled_image = cl.classification(im_gray, pca,window_sizeX=10,window_sizeY=10)
-                print("finished")
-                #saves them
-                plt.imsave("labelled_images/labelled_"+value,labelled_image)
+            try:
+                Label.label(value)
                 print(colors.green|"Saved the labelled image in dir 'labelled_images/'")
+            except:
+                print(colors.red|"this image does not exists")
 
 @AnomalousDiffusion.subcommand("fronts")
 class Fronts(cli.Application):
     "Tracks the longest borders in the images and saves the coordinates in a txt file"
-    all = cli.Flag(["all", "every image"], help = "If given, I will save the fronts of all the images in the current directory")
     s = cli.Flag(["s", "save"], help = "If given, I will save the image with the borders in the current directory")
+
+    def fronts(value):
+            #reading the image
+            test_image =  cv2.imread(value)
+            #make it gray
+            im_gray = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
+            #finds the coordinates of the longest border in the image
+            coord, im = fr.fronts(im_gray)
+            np.savetxt("fronts/fronts_"+ value +".txt", coord,fmt = '%d', delimiter=' ')
+            return im
+
     def main(self, value : str = ""):
         if not os.path.exists("fronts"):
             os.makedirs("fronts")
 
-        if(value == ""):
-            if (self.all):
-                #index for the images name
-                cont = 0
-                for value in list(os.listdir(".")):
-                    if str(value).endswith(".png"):
-                        #reading the image
-                        test_image =  cv2.imread(value)
-                        #make it gray
-                        im_gray = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
-                        #finds the coordinates of the longest border in the image
-                        coord, im = fr.fronts(im_gray)
-                        #saves it
-                        np.savetxt("fronts/fronts_"+ value + ".txt", coord,fmt = '%d', delimiter=' ')
-                        cont = cont + 1
-                print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
-            else:
-                print(colors.red|"image not given")
+        if(value == "."):
+            #index for the images name
+            cont = 0
+            for value in list(os.listdir(".")):
+                if str(value).endswith(".png"):
+                    im = Fronts.fronts(value)
+                    if (self.s):
+                        plt.imsave("front_"+ value, im)
+                    cont = cont + 1
+            print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
         else:
-            if(value not in list(os.listdir(path))):
-                print(colors.red|"this image does not exists")
-            else:
-                print("image taken")
-                #reading the image
-                test_image =  cv2.imread(value)
-                #make it gray
-                im_gray = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
-                #finds the coordinates of the longest border in the image
-                coord, im = fr.fronts(im_gray)
+            try:
+                im = Fronts.fronts(value)
                 if (self.s):
                     plt.imsave("front_"+ value, im)
-                np.savetxt("fronts/fronts_"+ value +".txt", coord,fmt = '%d', delimiter=' ')
                 print(colors.green|"Saved the fronts of the image in dir 'fronts/'")
+            except:
+                print(colors.red|"this image does not exists")
 
 @AnomalousDiffusion.subcommand("divide")
 class Divide(cli.Application):
