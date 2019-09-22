@@ -92,7 +92,6 @@ class Label(cli.Application):
         test_image =  cv2.imread(value)
         #make it gray
         im_gray = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
-
         #labels the images using PCA and GaussianMixture algorithms
         pca = cl.Principal_components_analysis(im_gray,window_sizeX=10,window_sizeY=10)
         labelled_image = cl.classification(im_gray, pca,window_sizeX=10,window_sizeY=10)
@@ -124,7 +123,7 @@ class Fronts(cli.Application):
     "Tracks the longest borders in the images and saves the coordinates in a txt file"
     s = cli.Flag(["s", "save"], help = "If given, I will save the image with the borders in the current directory")
 
-    def fronts(value):
+    def fronts(self, value):
             #reading the image
             test_image =  cv2.imread(value)
             #make it gray
@@ -132,137 +131,105 @@ class Fronts(cli.Application):
             #finds the coordinates of the longest border in the image
             coord, im = fr.fronts(im_gray)
             np.savetxt("fronts/fronts_"+ value +".txt", coord,fmt = '%d', delimiter=' ')
-            return im
+            if (self.s):
+                plt.imsave("front_"+ value, im)
 
-    def main(self, value : str = ""):
+    def main(self, value : str):
         if not os.path.exists("fronts"):
             os.makedirs("fronts")
 
         if(value == "."):
-            #index for the images name
-            cont = 0
             for value in list(os.listdir(".")):
                 if str(value).endswith(".png"):
-                    im = Fronts.fronts(value)
-                    if (self.s):
-                        plt.imsave("front_"+ value, im)
-                    cont = cont + 1
+                    Fronts.fronts(value)
             print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
         else:
             try:
-                im = Fronts.fronts(value)
-                if (self.s):
-                    plt.imsave("front_"+ value, im)
+                Fronts.fronts(value)
                 print(colors.green|"Saved the fronts of the image in dir 'fronts/'")
             except:
                 print(colors.red|"this image does not exists")
 
+
 @AnomalousDiffusion.subcommand("divide")
 class Divide(cli.Application):
     "Divides the front in two piecies, one left and one right and save them in two txt files"
-    all = cli.Flag(["all", "every text file"], help = "If given, I will save the dx and sx fronts of all the images in the current directory")
-    def main(self, value : str = ""):
+
+    def divide(value):
+        #reading the file with the coordinates of the longest border
+        df = pd.DataFrame(pd.read_csv(value , delimiter=' '))
+        df.columns = ["x","y"]
+        #divide the longest border in two, the left one and the right one
+        sx, dx = fr.divide(df)
+        np.savetxt("divided_fronts/"+ value+"dx.txt" , dx.values, fmt='%d')
+        np.savetxt("divided_fronts/"+ value+"sx.txt" , sx.values, fmt='%d')
+
+    def main(self, value : str ):
         if not os.path.exists("divided_fronts"):
             os.makedirs("divided_fronts")
 
-        if(value == ""):
-            if (self.all):
-
-                for value in list(os.listdir(".")):
-                    if str(value).endswith(".txt"):
-                        #reading the file with the coordinates of the longest border
-                        df = pd.DataFrame(pd.read_csv(value , delimiter=' '))
-                        df.columns = ["x","y"]
-                        #divide the longest border in two, the left one and the right one
-                        sx, dx = fr.divide(df)
-                        np.savetxt("divided_fronts/"+ value+"dx.txt" , dx.values, fmt='%d')
-                        np.savetxt("divided_fronts/"+ value+"sx.txt" , sx.values, fmt='%d')
-
-                print(colors.green|"Divided the fronts of the images in dir 'divided_fronts/'")
-            else:
-                print(colors.red|"file not given")
+        if(value == "."):
+            for value in list(os.listdir(".")):
+                if str(value).endswith(".txt"):
+                    Divide.divide(value)
+            print(colors.green|"Divided the fronts and saved in dir 'divided_fronts/'")
         else:
-            if(value not in list(os.listdir(path))):
-                print(colors.red|"this file does not exists")
-            else:
-                print("image taken")
-                #reading the file with the coordinates of the longest border
-                df = pd.DataFrame(pd.read_csv(value , delimiter=' '))
-                df.columns = ["x","y"]
-                #divide the longest border in two, the left one and the right one
-                sx, dx = fr.divide(df)
-                np.savetxt("divided_fronts/"+ value +"dx.txt" , dx.values, fmt='%d')
-                np.savetxt("divided_fronts/"+ value +"sx.txt", sx.values, fmt='%d')
+            try:
+                Divide.divide(value)
                 print(colors.green|"Divided the fronts and saved in dir 'divided_fronts/'")
+            except:
+                print(colors.red|"File does not exists")
 
-
-##This command takes the images from the directories 'images/' while command 'faster' Takes
+##This command takes the images from the directories 'images/' while command 'faster' takes
 ## the images directly from the nd2 file
 @AnomalousDiffusion.subcommand("fast")
 class Fast(cli.Application):
     "Tracks the longest borders in the images and saves the coordinates in a txt file"
-    all = cli.Flag(["all", "every image"], help = "If given, I will save the fronts of all the images in the current directory")
-    s = cli.Flag(["s", "save"], help = "If given, I will save the image with the borders in the current directory")
-    def main(self, value : str = ""):
-        if(value == ""):
-            if (self.all):
-                #make the dataframe which will be saved with all the coordinates for all the experiment
-                df = pd.DataFrame(columns = ["i","x","y","side","frame","experiment","field"])
-                df.to_csv("coordinates.txt",index = False,header = df.columns, sep = " ")
-                #two directories for the two experiments
-                for outdir in ["EF/","Sham/"]:
-                    #index for the field of view
-                    cont = 0
-                    #number of frames to analyze
-                    frames = 100
-                    for path in ["22-11-18","14-02-19","21-11-18","22-02-19","21-02-19","16-11-18","20-11-18","07-02-19","08-02-19","11-02-19"]:
-                        try:
-                            for frame in range(frames):
-                                #reading the image from the directory
-                                image =  cv2.imread(outdir + path + "/images/" +str(frame)+".png")
-                                #make it grays
-                                im = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-                                #modify the image with adaptive histogram equalization
-                                new = cl.adaptive_contrast_enhancement(im,(100,100))
-                                #blurring the image with gaussian filter
-                                blur = cv2.GaussianBlur(new,(5,5),0)
-                                #Otsu Threshold to binarize it
-                                ret3,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-                                #finds the two longest borders inside the image
-                                dfs, b, c = fr.fast_fronts(thresh,length_struct=5,iterations=1)
+    #all = cli.Flag(["all", "every image"], help = "If given, I will save the fronts of all the images in the current directory")
+    #s = cli.Flag(["s", "save"], help = "If given, I will save the image with the borders in the current directory")
 
-                                for i in [0,1]:
-                                    try:
-                                        #interpolation of the two borders
-                                        df = an.necklace_points(dfs[i], N = 1000)
+    def fast(path, frame):
+        #reading the image from the directory
+        image =  cv2.imread( path +str(frame)+".png")
+        #make it grays
+        imgray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        #finds the two longest borders inside the image
+        dfs, b, c = fr.fast_fronts(imgray,length_struct=5,iterations=1)
+        #interpolation of the two borders
+        dx = an.necklace_points(dfs[0], N = 1000)
+        sx = an.necklace_points(dfs[1], N = 1000)
 
-                                        #making the dataframe which will be saved in txt file
-                                        if i == 0:
-                                            df["side"] = "dx"
-                                        else: df["side"] = "sx"
-                                        df["frame"] = frame
-                                        df["experiment"] = outdir
-                                        df["field"] = cont
+        return sx, dx
 
-                                        #saving the dataframe with the coordinates
-                                        df.to_csv("coordinates.txt", header = None , sep = " ", mode= "a")
-                                    except: pass
-                                #status bar
-                                print("field "+ path+" ["+"#"*int(frame/frames*20)+"-"*int(20-int(frame/frames*20))+"] "+str(int(frame/frames*100))+"% ", end="\r")
-                            cont = cont + 1
-                            print("field "+ path+" ["+"#"*20+"] 100%")
+    def main(self, directory : str ):
+            path = directory + "/images/"
+            #number of frames to analyze
+            frames = 100
+            df = pd.DataFrame(columns = ["i","x","y","side","frame"])
+            df.to_csv(directory + "/" + directory + ".txt",index = False,header = df.columns, sep = " ")
 
-                        except:
-                            pass
-            else:
-                print(colors.red|"image not given")
-        else:
-            if(value not in list(os.listdir(path))):
-                print(colors.red|"this image does not exists")
-            else:
-                print("image taken")
-                fr.fast_fronts(value)
-                print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
+            for frame in range(frames):
+                sx, dx = Fast.fast(path, frame)
+                dx["side"] = "dx"
+                sx["side"] = "sx"
+                df = pd.concat([dx,sx])
+                df["frame"] = frame
+
+                df.to_csv(directory + "/" + directory + ".txt",index = True,header = None, sep = " ", mode = "a")
+                #status bar
+                print(directory +" ["+"#"*int(frame/frames*20)+"-"*int(20-int(frame/frames*20))+"] "+str(int(frame/frames*100))+"% ", end="\r")
+            print(directory + " ["+"#"*20+"] 100%")
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -397,7 +364,7 @@ class Faster(cli.Application):
                         pass
                 print(colors.green|"Saved the fronts in the file " + outdir + ".txt")
         else:
-            if(value not in list(os.listdir(path))):
+            if(value not in list(os.listdir("."))):
                 print(colors.red|"this image does not exists")
             else:
                 print("image taken")
