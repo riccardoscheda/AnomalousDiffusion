@@ -34,15 +34,25 @@ class Read(cli.Application):
     "Reads the nd2 file and create a new folder with the images in png format"
     all = cli.Flag(["all", "every image"], help = "If given, I will read the first nd2 file in the direcories and save all the images in the directory 'images/'")
 
+    def read(n_images, value, direct, field):
+            #saves the images taken from the nd2 file
+            cl.create_set(n_images, field ,path = direct + "/" + value)
+            print(colors.green|"Saved the images in dir '"+ direct+"/images/")
+
     def main( self, value : str, n_images : int = 100   , field : int = 1):
+
+        #if not given a nd2 file, prints error
         if value.endswith(".nd2"):
             if self.all:
+                #searching only the directories in the current directory
                 dirs = [x[0] for x in os.walk(".")]
+                #try to read the nd2 file given; if doesn't find it, passes
                 for direct in dirs:
                     try:
                         Read.read(n_images, value, direct, field)
                     except : pass
             else:
+                #if not Flag, search only in the current directory
                 try:
                     Read.read(n_images, value, ".", field)
                 except:
@@ -50,29 +60,22 @@ class Read(cli.Application):
 
         else: print(colors.red|"Wrong name, i need nd2 format file")
 
-    def read(n_images, value, direct, field):
-            #saves the images taken from the nd2 file
-            cl.create_set(n_images, field ,path = direct + "/" + value)
-            print(colors.green|"Saved the images in dir '"+ direct+"/images/")
 
 
 
 @AnomalousDiffusion.subcommand("modify")
 class Modify(cli.Application):
     "Modify an image with histogram equalization and saves it in a new folder with the images in png format"
-    all = cli.Flag(["all", "every image"], help = "If given, I will save the modified images in the directory modified_images/")
 
-    def main( self, value : str = ""):
+    def main( self, value : str ):
 
-                if(value == ""):
-                    if (self.all):
-                        #idex for the images name
-                        cont = 0
-                        for value in list(os.listdir(".")):
-                            #modifies every png image in the directory and saves them in png format
-                            if str(value).endswith(".png"):
-                                cl.create_modified_images(path = value)
-                        print(colors.green|"Saved the modified images in dir 'modified_images/'")
+                if(value == "."):
+
+                    for image in list(os.listdir(value)):
+                        #modifies every png image in the directory and saves them in png format
+                        if str(image).endswith(".png"):
+                            cl.create_modified_images(path = image)
+                    print(colors.green|"Saved the modified images in dir 'modified_images/'")
                 else:
                     try:
                         cl.create_modified_images(path = value)
