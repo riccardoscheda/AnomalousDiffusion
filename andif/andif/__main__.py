@@ -186,7 +186,7 @@ class Divide(cli.Application):
 class Fast(cli.Application):
     "Tracks the longest borders in the images and saves the coordinates in a txt file"
     #all = cli.Flag(["all", "every image"], help = "If given, I will save the fronts of all the images in the current directory")
-    #s = cli.Flag(["s", "save"], help = "If given, I will save the image with the borders in the current directory")
+
 
     def fast(path, frame):
         #reading the image from the directory
@@ -201,35 +201,37 @@ class Fast(cli.Application):
 
         return sx, dx
 
+    def to_dataframe(directory,frames,field):
+        path = directory + "images/"
+        for frame in range(frames):
+            sx, dx = Fast.fast(path, frame)
+            dx["side"] = "dx"
+            sx["side"] = "sx"
+            df = pd.concat([dx,sx])
+            df["frame"] = frame
+            df["field"] = field
+            df["experiment"] = directory
+            df.to_csv(directory + "/" + "coordinates.txt",index = True,header = None, sep = " ", mode = "a")
+            #status bar
+            print("directory " + directory +": ["+"#"*int(frame/frames*20)+"-"*int(20-int(frame/frames*20))+"] "+str(int(frame/frames*100))+"% ", end="\r")
+
+
     def main(self, directory : str ):
-            path = directory + "/images/"
-            #number of frames to analyze
-            frames = 100
-            df = pd.DataFrame(columns = ["i","x","y","side","frame"])
-            df.to_csv(directory + "/" + directory + ".txt",index = False,header = df.columns, sep = " ")
 
-            for frame in range(frames):
-                sx, dx = Fast.fast(path, frame)
-                dx["side"] = "dx"
-                sx["side"] = "sx"
-                df = pd.concat([dx,sx])
-                df["frame"] = frame
-
-                df.to_csv(directory + "/" + directory + ".txt",index = True,header = None, sep = " ", mode = "a")
-                #status bar
-                print(directory +" ["+"#"*int(frame/frames*20)+"-"*int(20-int(frame/frames*20))+"] "+str(int(frame/frames*100))+"% ", end="\r")
-            print(directory + " ["+"#"*20+"] 100%")
-
-
-
-
-
-
-
-
-
-
-
+        #number of frames to analyze
+        frames = 100
+        df = pd.DataFrame(columns = ["i","x","y","side","frame","field","experiment"])
+        df.to_csv(directory + "coordinates.txt",index = False,header = df.columns, sep = " ")
+        if (directory == "."):
+            for value in os.listdir(directory):
+                Fast.to_dataframe(value +"/",frames,0)
+                print(value + " ["+"#"*20+"] 100%")
+        else:
+            try:
+                Fast.to_dataframe(directory, frames,0)
+                print(directory + " ["+"#"*20+"] 100%")
+            except:
+                print(colors.red|"File does not exists")
 
 
 
@@ -238,139 +240,30 @@ class Fast(cli.Application):
 @AnomalousDiffusion.subcommand("faster")
 class Faster(cli.Application):
     "Tracks the longest borders in the images and may save the coordinates in a txt file"
-    all = cli.Flag(["all", "every image"], help = "If given, I will save the fronts of all the images in the current directory")
-    s = cli.Flag(["s", "save"], help = "If given, I will save the image with the borders in the current directory")
-    def main(self, value : str = "", fields : int = 8):
-        if(value == ""):
-            if (self.all):
-                for outdir in os.listdir("."):
-                    #Rough way to detect only the directories of the experiments
-                    if str(outdir).endswith("9") or str(outdir).endswith("8"):
-                        #index for the field of view
-                        cont = 0
-                        ## The files in the same directories have the same images so i take the last one first
-                        for value in ["003.nd2","002.nd2","001.nd2"]:
-                            try:
-                                with ND2Reader(outdir + "/" + value) as images:
-                                    print("directory " + outdir)
-                                    #iterations of the images in the nd2 file
-                                    images.iter_axes = "vt"
-                                    fields = images.sizes["v"]
-                                    frames = images.sizes["t"]
-                                    #making the dataframe which contain all the coordinates for all the experiments will be saved in txt file
-                                    df = pd.DataFrame(columns = ["i","x","y","side","frame","field"])
-                                    df.to_csv(outdir + "/" + outdir + ".txt",index = False,header = df.columns, sep = " ")
-                                    for field in range(fields):
-                                        for frame in range(frames):
-                                            #histogram matching maybe is not necessary
 
-                                            #im0 = cv2.convertScaleAbs(images[0],alpha=(255.0/65535.0))
-                                            #im = cv2.convertScaleAbs(images[frame + frames*(field)],alpha=(255.0/65535.0))
-                                            # im0 = np.asarray(im0)
-                                            # im = np.asarray(im)
-                                            # ct = fr.cdf(im0)
-                                            # c = fr.cdf(im)
-                                            # gray = fr.hist_matching(c,ct,im)
-                                            #dfs, _ , _ = fr.fast_fronts(im,size = 50, length_struct = 1,iterations = 1)
-
-                                            #converts the image in uint8
-                                            thresh = cv2.convertScaleAbs(images[frame + frames*(field)],alpha=(255.0/65535.0))
-                                            max = np.max(thresh)
-                                            thresh[0:2,] = max
-                                            thresh[len(thresh)-2:len(thresh)-1,:] = max
-                                            #add two white bands in the image to make sure opencv recognisez the right fronts
-                                            thresh[:,0:400] = max
-                                            thresh[:,-400:] = max
-                                            #modifying the image with adaptive histogram equalization
-                                            new = cl.adaptive_contrast_enhancement(thresh,(100,100))
-                                            #blurring the image
-                                            blur = cv2.GaussianBlur(new,(5,5),0)
-                                            #binarize the image with Otsu thresholding
-                                            ret3,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-
-                                            #finding the two longest borders in the image
-
-                                            dfs, b, c = fr.fast_fronts(thresh,length_struct=10,iterations=1)
-                                            for i in [0,1]:
-                                                try:
-                                                    #interpolation of the coordinates to have always the same number of points
-                                                    df = an.necklace_points(dfs[i])
-                                                    #making the dataframe with all the coordinates
-                                                    if i == 0:
-                                                        df["side"] = "dx"
-                                                    else: df["side"] = "sx"
-                                                    df["frame"] = frame
-                                                    df["field"] = field
-                                                    df.to_csv(outdir + "/" + outdir +".txt", header = None , sep = " ", mode= "a")
-                                                except: pass
-                                            #status bar
-                                            print("field "+str(cont)+" ["+"#"*int(frame/frames*20)+"-"*int(20-int(frame/frames*20))+"] "+str(int(frame/frames*100))+"% ", end="\r")
-                                        print("field "+str(cont)+" ["+"#"*20+"] 100%")
-                                        cont = cont + 1
-                                break
-                            except:
-                                pass
-                        print(colors.green|"Saved the fronts in the file " + outdir + ".txt")
-            else:
-                #index for the field of view
-                cont = 0
-                outdir = os.getcwd()
-                ## The files in the same directories have the same images so i take the last one first
-                for value in ["003.nd2","002.nd2","001.nd2"]:
-                    try:
-                        with ND2Reader(value) as images:
-                            #iteration of the images in the nd2 file
-                            images.iter_axes = "vt"
-                            frames = images.sizes["t"]
-                            #making the dataframe which contains the coordinates of the borders for all the experiment
-                            df = pd.DataFrame(columns = ["i","x","y","side","frame","field"])
-                            df.to_csv("coordinates.txt",index = False,header = df.columns, sep = " ")
-                            for field in range(fields):
-                                for frame in range(frames):
-                                    #convert the image in type uint8
-                                    thresh = cv2.convertScaleAbs(images[frame + frames*(field)],alpha=(255.0/65535.0))
-                                    max = np.max(thresh)
-                                    thresh[0:2,] = max
-                                    thresh[len(thresh)-2:len(thresh)-1,:] = max
-                                    #adding two white bands on the left and on the right to make sure opencv recognizes the right borders
-                                    thresh[:,0:400] = max
-                                    thresh[:,-400:] = max
-                                    #modifying the image with adaptive histogram equalization
-                                    new = cl.adaptive_contrast_enhancement(thresh,(100,100))
-                                    #blurring the image with Gaussian filter
-                                    blur = cv2.GaussianBlur(new,(9,9),1)
-                                    #binarize the image with Otsu thresholding
-                                    ret3,thresh = cv2.threshold(new,0,255,cv2.THRESH_OTSU+cv2.THRESH_BINARY)
-                                    #finds the two longest borders inside the image
-                                    dfs,b,c = fr.fast_fronts(thresh,length_struct=7,iterations=2)
-                                    for i in [0,1]:
-                                        try:
-                                            #interpolation of the borders to have always the same number of points
-                                            df = an.necklace_points(dfs[i])
-                                            #making the dataframe which will contain all the coordinates for all the experiments
-                                            if i == 0:
-                                                df["side"] = "dx"
-                                            else: df["side"] = "sx"
-                                            df["frame"] = frame
-                                            df["field"] = field
-                                            df.to_csv("coordinates.txt", header = None , sep = " ", mode= "a")
-                                        except: pass
-                                    #status bar
-                                    print("field "+str(cont)+" ["+"#"*int(frame/frames*20)+"-"*int(20-int(frame/frames*20))+"] "+str(int(frame/frames*100))+"% ", end="\r")
-                                print("field "+str(cont)+" ["+"#"*20+"] 100%")
-                                cont = cont + 1
-                        break
-                    except:
-                        pass
-                print(colors.green|"Saved the fronts in the file " + outdir + ".txt")
+    def main(self, value : str, fields : int = 1):
+        if(value == "."):
+            #index for the field of view
+            cont = 0
+            #searching only the directories in the current directory
+            dirs = [x[0] for x in os.walk(".")]
+            #try to read the nd2 file given; if doesn't find it, passes
+            for direct in dirs:
+                with ND2Reader(direct + "/" + value) as images:
+                    print("directory " + direct)
+                    #iterations of the images in the nd2 file
+                    images.iter_axes = "vt"
+                    fields = images.sizes["v"]
+                    frames = images.sizes["t"]
+                    for field in fields:
+                        Fast.to_dataframe(direct, frames, field)
+                        print(direct + " ["+"#"*20+"] 100%")
         else:
-            if(value not in list(os.listdir("."))):
-                print(colors.red|"this image does not exists")
-            else:
-                print("image taken")
-                fr.fast_fronts(value)
-                print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
-
+            try:
+                Fast.to_dataframe(direct, frames,0)
+                print(direct + " ["+"#"*20+"] 100%")
+            except:
+                print(colors.red|"File does not exists")
 
 
 @AnomalousDiffusion.subcommand("areas")
