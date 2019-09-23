@@ -240,6 +240,7 @@ class Fast(cli.Application):
 @AnomalousDiffusion.subcommand("faster")
 class Faster(cli.Application):
     "Tracks the longest borders in the images and may save the coordinates in a txt file"
+    all = cli.Flag(["all", "every directoies"], help = "If given, I will read the nd2 file in all the direcories and save all the coordinates in the file 'coordinates.txt'")
 
     def faster(im):
         try:
@@ -262,14 +263,12 @@ class Faster(cli.Application):
         df["frame"] = frame
         df["field"] = field
         df["experiment"] = directory
-        df.to_csv(directory + "/" + "coordinates.txt",index = True,header = None, sep = " ", mode = "a")
+        df.to_csv("coordinates.txt",index = True,header = None, sep = " ", mode = "a")
 
     def read(direct, value):
 
-        df = pd.DataFrame(columns = ["i","x","y","side","frame","field","experiment"])
-        df.to_csv(direct + "/coordinates.txt",index = False,header = df.columns, sep = " ")
         with ND2Reader(direct + "/" + value) as images:
-            print("directory " + direct)
+            print(colors.yellow|"directory " + direct)
             #iterations of the images in the nd2 file
             images.iter_axes = "vt"
             fields = images.sizes["v"]
@@ -284,19 +283,25 @@ class Faster(cli.Application):
 
     def main(self, value : str):
 
-        if(value == "."):
+        if(self.all):
+            df = pd.DataFrame(columns = ["i","x","y","side","frame","field","experiment"])
+            df.to_csv("coordinates.txt",index = False,header = df.columns, sep = " ")
             #index for the field of view
             cont = 0
             #searching only the directories in the current directory
-            dirs = [x[0] for x in os.walk(".")]
-            #try to read the nd2 file given; if doesn't find it, passes
+            dirs = os.listdir(".")
             for direct in dirs:
-                Faster.read(direct, value)
+                try:
+                    Faster.read(direct, value)
+                except: pass
+
         else:
-            if value.endswith(".nd2"):
+            try:
+                df = pd.DataFrame(columns = ["i","x","y","side","frame","field","experiment"])
+                df.to_csv("coordinates.txt",index = False,header = df.columns, sep = " ")
                 direct = "."
                 Faster.read(direct, value)
-            else:
+            except:
                 print(colors.red|"File does not exists")
 
 
@@ -309,35 +314,30 @@ class Area(cli.Application):
         j = 0
         d = []
         for direct in os.listdir("."):
-            #Rough way to detect only the directories of the experiments
-            if str(direct).endswith("9") or str(direct).endswith("8"):
-                if not os.path.exists(direct + "/images"):
-                    print(colors.yellow|"images/ doesn't exist in directory " +str(direct))
-                    pass
-                else:
-                    print("reading images in directory: "+ str(direct))
-                    d.append(direct)
-                    areas = []
+            if not os.path.exists(direct + "/images"):
+                print(colors.yellow|"images/ doesn't exist in directory " +str(direct))
+                pass
+            else:
+                print("reading images in directory: "+ str(direct))
+                d.append(direct)
+                areas = []
+                for i in range(0,100):
+                    #reading the coordinates from the txt files
+                    filesx = direct+ "/images/fronts/"+ str(i)+".png_sx.txt"
+                    filedx = direct+ "/images/fronts/"+ str(i)+".png_dx.txt"
+                    #make it dataframes
+                    sx = pd.read_csv(filesx, sep = " ")
+                    dx = pd.read_csv(filedx, sep = " ")
+                    #computes the area between the two fronts
+                    pol, area = an.area(sx,dx)
+                    areas.append(area)
 
-                    for i in range(0,300):
-                        try:
-                            #reading the coordinates from the txt files
-                            filesx = direct+ "/images/fronts/"+ str(i)+".png_sx.txt"
-                            filedx = direct+ "/images/fronts/"+ str(i)+".png_dx.txt"
-                            #make it dataframes
-                            sx = pd.read_csv(filesx, sep = " ")
-                            dx = pd.read_csv(filedx, sep = " ")
-                            #computes the area between the two fronts
-                            pol, area = an.area(sx,dx)
-                            areas.append(area)
-                        except:pass
-                    #normalize the area with the area of the first frame
-                    areas = np.array(areas)/areas[0]
-                    areas = areas[areas<1.2]
-                    #areas = areas[areas>0.1]
-                    areas = pd.Series(areas)
-                    df[j] = areas
-                    j = j+1
+                #normalize the area with the area of the first frame
+                areas = np.array(areas)/areas[0]
+                #areas = areas[areas>0.1]
+                areas = pd.Series(areas)
+                df[j] = areas
+                j = j+1
 
             df.columns = d
             #making the plot of the areas
@@ -358,14 +358,15 @@ class Area(cli.Application):
 @AnomalousDiffusion.subcommand("error")
 class Error(cli.Application):
     "Computes the error between two areas between the fronts"
-    def main(self, value : str = ""):
+    def main(self,file1 = str, file2 = str):
 
-        if(value == ""):
-                errors = []
-                i = 0
-                areas = pd.DataFrame(pd.read_csv("Areas.txt"))
-                areas_hand = pd.DataFrame(pd.read_csv("Areas_hand.txt"))
-                print(colors.green|"errors saved in file 'error.txt'")
+
+            errors = []
+            i = 0
+            areas = pd.DataFrame(pd.read_csv("Areas.txt"))
+            areas_hand = pd.DataFrame(pd.read_csv("Areas_hand.txt"))
+            error = an.error(areas, areas_hand)
+            print(colors.green|"errors saved in file 'error.txt'")
 
 @AnomalousDiffusion.subcommand("msd")
 class MSD(cli.Application):
