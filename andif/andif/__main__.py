@@ -16,7 +16,7 @@ import fronts as fr
 import analysis as an
 ######################################################
 
-#path = "."
+
 
 class AnomalousDiffusion(cli.Application):
     """Application for Cell migration
@@ -241,7 +241,49 @@ class Fast(cli.Application):
 class Faster(cli.Application):
     "Tracks the longest borders in the images and may save the coordinates in a txt file"
 
-    def main(self, value : str, fields : int = 1):
+    def faster(im):
+        try:
+            dfs, b, c = fr.fast_fronts(im,length_struct=5,iterations=1)
+            #interpolation of the two borders
+            dx = an.necklace_points(dfs[0], N = 100)
+            sx = an.necklace_points(dfs[1], N = 100)
+
+            return sx, dx
+        except:
+            dx = pd.DataFrame(columns = ["x","y"])
+            sx = pd.DataFrame(columns = ["x","y"])
+            return sx, dx
+
+    def to_dataframe(directory,im,frame,field):
+        sx, dx = Faster.faster(im)
+        dx["side"] = "dx"
+        sx["side"] = "sx"
+        df = pd.concat([dx,sx])
+        df["frame"] = frame
+        df["field"] = field
+        df["experiment"] = directory
+        df.to_csv(directory + "/" + "coordinates.txt",index = True,header = None, sep = " ", mode = "a")
+
+    def read(direct, value):
+
+        df = pd.DataFrame(columns = ["i","x","y","side","frame","field","experiment"])
+        df.to_csv(direct + "/coordinates.txt",index = False,header = df.columns, sep = " ")
+        with ND2Reader(direct + "/" + value) as images:
+            print("directory " + direct)
+            #iterations of the images in the nd2 file
+            images.iter_axes = "vt"
+            fields = images.sizes["v"]
+            frames = images.sizes["t"]
+            for field in range(fields):
+                for frame in range(frames):
+                    im = np.asmatrix(images[frame + frame*field]).astype(np.uint8)
+                    Faster.to_dataframe(direct, im,frame, field)
+                    #status bar
+                    print("field " + str(field) +": ["+"#"*int(frame/frames*20)+"-"*int(20-int(frame/frames*20))+"] "+str(int(frame/frames*100))+"% ", end="\r")
+                print("field " + str(field) +": ["+"#"*20+"] 100%")
+
+    def main(self, value : str):
+
         if(value == "."):
             #index for the field of view
             cont = 0
@@ -249,20 +291,12 @@ class Faster(cli.Application):
             dirs = [x[0] for x in os.walk(".")]
             #try to read the nd2 file given; if doesn't find it, passes
             for direct in dirs:
-                with ND2Reader(direct + "/" + value) as images:
-                    print("directory " + direct)
-                    #iterations of the images in the nd2 file
-                    images.iter_axes = "vt"
-                    fields = images.sizes["v"]
-                    frames = images.sizes["t"]
-                    for field in fields:
-                        Fast.to_dataframe(direct, frames, field)
-                        print(direct + " ["+"#"*20+"] 100%")
+                Faster.read(direct, value)
         else:
-            try:
-                Fast.to_dataframe(direct, frames,0)
-                print(direct + " ["+"#"*20+"] 100%")
-            except:
+            if value.endswith(".nd2"):
+                direct = "."
+                Faster.read(direct, value)
+            else:
                 print(colors.red|"File does not exists")
 
 
