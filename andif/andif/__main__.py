@@ -346,8 +346,7 @@ class Area(cli.Application):
                 plt.plot(df[i])
                 plt.legend()
             plt.savefig("aree.png")
-
-            df.to_csv("aree.txt", sep=' ')
+            df.to_csv("aree.txt", header = None, index = False ,sep=' ')
         if j > 0:
             print(colors.green|"areas saved in file 'areas.txt'")
         else:
@@ -360,12 +359,11 @@ class Error(cli.Application):
     "Computes the error between two areas between the fronts"
     def main(self,file1 = str, file2 = str):
 
-
-            errors = []
-            i = 0
-            areas = pd.DataFrame(pd.read_csv("Areas.txt"))
-            areas_hand = pd.DataFrame(pd.read_csv("Areas_hand.txt"))
+            areas = pd.DataFrame(pd.read_csv(file1))
+            areas_hand = pd.DataFrame(pd.read_csv(file2))
             error = an.error(areas, areas_hand)
+            error = pd.DataFrame(error)
+            error.to_csv("error.txt", sep = " ")
             print(colors.green|"errors saved in file 'error.txt'")
 
 @AnomalousDiffusion.subcommand("msd")

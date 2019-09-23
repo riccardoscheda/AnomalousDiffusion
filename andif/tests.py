@@ -21,7 +21,7 @@ import analysis as an
 ##TESTS FOR classification.py
 
 @given(dim = st.integers(min_value=1000,max_value=1600))
-@settings(max_examples = 10)
+@settings(max_examples = 50)
 def test_adaptive_contrast_enhancement(dim):
     """
     Tests:
@@ -40,7 +40,7 @@ def test_adaptive_contrast_enhancement(dim):
     assert a.any() == True
 
 @given(dim = st.integers(min_value=100,max_value=200))
-@settings(max_examples = 10)
+@settings(max_examples = 50)
 def test_LBP(dim):
     """
     Tests:
@@ -63,7 +63,7 @@ def test_LBP(dim):
 
 
 @given(dim = st.integers(min_value=5,max_value=10))
-@settings(max_examples = 10)
+@settings(max_examples = 50,deadline  = 400)
 def test_Principal_components_analysis(dim):
     """
     Tests:
@@ -145,7 +145,7 @@ def test_make_kernel(struct,length):
     assert len(np.where(binary == 0 )[1]) + len(np.where(binary == 1)[1]) == len(binary)*len(binary.T)
 
 @given(dim = st.integers(min_value=1000,max_value=1600))
-@settings(max_examples = 10)
+@settings(max_examples = 50)
 def test_fast_fronts(dim):
     """
     Tests :
@@ -166,7 +166,7 @@ def test_fast_fronts(dim):
 
 
 @given(dim = st.integers(min_value = 2,max_value=100),max = st.integers(min_value = 500,max_value=1000))
-@settings(max_examples = 10)
+@settings(max_examples = 50)
 def test_divide(dim,max):
     """
     Tests:
@@ -243,7 +243,7 @@ def test_area(dim):
 
 
 @given(dim = st.integers(min_value = 10,max_value=100))
-@settings(max_examples = 10)
+@settings(max_examples = 50)
 def test_error(dim):
     """
     Tests:
@@ -260,7 +260,7 @@ def test_error(dim):
     assert isinstance(error1, np.ndarray) == True
 
 @given(dim = st.integers(min_value = 10,max_value=100),N = st.integers(min_value = 10,max_value=100),l = st.integers(min_value = 1000,max_value=1200))
-@settings(max_examples = 10)
+@settings(max_examples = 50)
 def test_grid(dim,N,l):
     """
     Tests:
@@ -282,7 +282,7 @@ def test_grid(dim,N,l):
     assert max(grid[0]) < l
 
 @given(dim = st.integers(min_value = 10,max_value=100),N = st.integers(min_value = 10,max_value=100),l = st.integers(min_value = 1000,max_value=1200))
-@settings(max_examples = 10)
+@settings(max_examples = 50)
 def test_necklace_points(dim,N, l):
     """
     Tests if:
@@ -313,7 +313,7 @@ def test_necklace_points(dim,N, l):
 
 
 @given(dim = st.integers(min_value = 10,max_value=100))
-@settings(max_examples = 10)
+@settings(max_examples = 50)
 def test_velocity(dim):
     """
     Tests:
@@ -353,7 +353,7 @@ def test_velocity(dim):
 
 
 @given(dim = st.integers(min_value = 10,max_value=20),length = st.integers(min_value = 10,max_value=20))
-@settings(max_examples = 10)
+@settings(max_examples = 50)
 def test_VACF(dim,length):
     """
     Tests:
@@ -394,7 +394,7 @@ def test_VACF(dim,length):
     assert np.all(vacf == vacf[0]) == True
 
 @given(dim = st.integers(min_value = 2,max_value=100),length = st.integers(min_value = 10,max_value=20))
-@settings(max_examples = 10)
+@settings(max_examples = 50)
 def test_MSD(dim,length):
     """
     Tests:
@@ -435,7 +435,7 @@ def test_MSD(dim,length):
 
 
 @given(dim = st.integers(min_value = 10,max_value=100))
-@settings(max_examples = 10)
+@settings(max_examples = 50)
 def test_fit(dim):
     """
     Tests
@@ -446,7 +446,7 @@ def test_fit(dim):
     assert isinstance(fit, np.ndarray) == True
 
 @given(dim = st.integers(min_value = 2,max_value=100))
-@settings(max_examples = 10)
+@settings(max_examples = 50)
 def test_cdf(dim):
     """
     Tests
@@ -460,7 +460,7 @@ def test_cdf(dim):
     assert np.isclose(c[-1],1) == True
 
 @given(dim = st.integers(min_value = 2,max_value=100))
-@settings(max_examples = 10)
+@settings(max_examples = 50)
 def test_hist_matching(dim):
     """
     Tests
