@@ -29,7 +29,7 @@ Returns:
 
 #### Example:
 
-```
+```python
 import fronts as fr
 import cv2
 
@@ -69,7 +69,7 @@ border.
 
 #### Example:
 
-```
+```python
 import fronts as fr
 import cv2
 
@@ -102,7 +102,7 @@ Returns a binary numpy matrix
 
 #### Example:
 
-```
+```python
 import fronts as fr
 
 struct = [0,1,1,1,0,0]
@@ -145,7 +145,7 @@ Returns a numpy array with the cumulative distribution function
 #### Example:
 
 
-```
+```python
 import fronts as fr
 
 lena = cv2.imread("docs/images/lena.png")
@@ -203,7 +203,7 @@ Fig.3:  coin (left), lena (center) and the new coin with histogram similar to th
 
 #### Example:
 
-```
+```python
 import fronts as fr
 import cv2
 

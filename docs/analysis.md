@@ -20,7 +20,7 @@ Returns:
 
 #### Example
 
-```
+```python
 import cv2
 
 import fronts as fr
@@ -69,7 +69,7 @@ Returns:
 -a pandas Dataframe with the interpolated coordinates (integers)
 
 #### Example
-```
+```python
 import cv2
 
 import fronts as fr
@@ -86,13 +86,15 @@ dx = dfs[0]
 interpolated_dx = an.necklace_points(dx, N = 1000)
 ```
 we obtain a dataframe with the interpolated coordinates:
-```
+```python
 print(dx.tail())
 print(interpolated_dx)
 ```
+
 Old Dataframe:
 
- |x|y
+
+ i|x|y
 ---|---|---
 558|...|...
 559|...|...
@@ -102,9 +104,12 @@ Old Dataframe:
 563|436|839
 564|436|840
 
+
+
 New dataframe:
 
-|x|y
+
+i|x|y
 ---|---|---
 993|...|...
 994|...|...
@@ -113,6 +118,8 @@ New dataframe:
 997|437|839
 998|436|838
 999|436|840
+
+
 
 ## `VACF(df,conversion = "x")`
 Computes the Velocity Autocorrelation Fuction (VACF)
@@ -128,7 +135,7 @@ the x and y axes
 Returns a numpy array with the VACF
 
 #### Example
-```
+```python
 import numpy as np
 x = np.linspace(0,10,num=100)
 df = pd.DataFrame()
@@ -156,7 +163,7 @@ Returns:
 -a dataframe with the MSD
 
 #### Example
-```
+```python
 import numpy as np
 x = np.linspace(0,10,num=100)
 df = pd.DataFrame()
@@ -179,7 +186,7 @@ tell us if the process is subdiffusive or superdiffusive
   -ydata : array of floats
 
 #### Example
-```
+```python
 import numpy as np
 import pandas as pd
 
@@ -196,7 +203,7 @@ fit = an.fit(vacf.flatten())
 
 fit
 ```
-```
+```python
 >>> array([6.72369147e-08, 6.26297029e+00])
 ```
 

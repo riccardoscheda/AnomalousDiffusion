@@ -20,7 +20,7 @@ but the equalization is divided for different windows, where you can decide the 
 
 #### Example:
 
-```
+```python
 import classification as cl
 import cv2
 
@@ -49,7 +49,7 @@ In this function we used the method 'uniform' to have always 10 bins for the his
 
 
 #### Example:
-```
+```python
 import classification as cl
 import cv2
 
@@ -79,7 +79,7 @@ This function computes the PCA algorithm for the locally binary pattern subimage
 
 
 #### Example:
-```
+```python
 import classification as cl
 import cv2
 
@@ -117,7 +117,7 @@ window_sizeY : the size of the height of the subimages
 
 #### Example:
 
-```
+```python
 import classification as cl
 import cv2
 
@@ -143,3 +143,5 @@ Histogram Equalization](https://opencv-python-tutroals.readthedocs.io/en/latest/
 )
 
 [2] [Locally Binary Pattern](https://scikit-image.org/docs/dev/auto_examples/features_detection/plot_local_binary_pattern.html)
+
+[3] [Principal Components Analysis PCA](https://en.wikipedia.org/wiki/Principal_component_analysis)
