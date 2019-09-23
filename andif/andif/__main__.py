@@ -282,25 +282,22 @@ class Faster(cli.Application):
                 print("field " + str(field) +": ["+"#"*20+"] 100%")
 
     def main(self, value : str):
-
+        df = pd.DataFrame(columns = ["i","x","y","side","frame","field","experiment"])
+        df.to_csv("coordinates.txt",index = False,header = df.columns, sep = " ")
         if(self.all):
-            df = pd.DataFrame(columns = ["i","x","y","side","frame","field","experiment"])
-            df.to_csv("coordinates.txt",index = False,header = df.columns, sep = " ")
-            #index for the field of view
-            cont = 0
+
             #searching only the directories in the current directory
             dirs = os.listdir(".")
             for direct in dirs:
                 try:
                     Faster.read(direct, value)
                 except: pass
-
+            print(colors.green|"Saved coordinates in file 'coordinates.txt'")
         else:
             try:
-                df = pd.DataFrame(columns = ["i","x","y","side","frame","field","experiment"])
-                df.to_csv("coordinates.txt",index = False,header = df.columns, sep = " ")
                 direct = "."
                 Faster.read(direct, value)
+                print(colors.green|"Saved coordinates in file 'coordinates.txt'")
             except:
                 print(colors.red|"File does not exists")
 
@@ -308,6 +305,42 @@ class Faster(cli.Application):
 @AnomalousDiffusion.subcommand("areas")
 class Area(cli.Application):
     "Computes the areas for all the directories with the images!"
+
+    def findarea(direct, i):
+        #reading the coordinates from the txt files
+        filesx = direct+ "/images/fronts/"+ str(i)+".png_sx.txt"
+        filedx = direct+ "/images/fronts/"+ str(i)+".png_dx.txt"
+        #make it dataframes
+        sx = pd.read_csv(filesx, sep = " ")
+        dx = pd.read_csv(filedx, sep = " ")
+        #computes the area between the two fronts
+        pol, area = an.area(sx,dx)
+        return area
+
+    def make_dataframe(direct, df,j, d):
+
+        print("reading images in directory: "+ str(direct))
+        d.append(direct)
+        areas = []
+        for i in range(0,100):
+            area = Area.findarea(direct, i)
+            areas.append(area)
+        #normalize the area with the area of the first frame
+        areas = np.array(areas)/areas[0]
+        #areas = areas[areas>0.1]
+        areas = pd.Series(areas)
+        df[j] = areas
+        j = j+1
+        return df, j , d
+
+    def plot(df):
+        #making the plot of the areas
+        plt.figure(dpi = 200)
+        for i in list(df.columns):
+            plt.plot(df[i])
+            plt.legend()
+        plt.savefig("aree.png")
+
 
     def main(self):
         df = pd.DataFrame()
@@ -318,42 +351,18 @@ class Area(cli.Application):
                 print(colors.yellow|"images/ doesn't exist in directory " +str(direct))
                 pass
             else:
-                print("reading images in directory: "+ str(direct))
-                d.append(direct)
-                areas = []
-                for i in range(0,100):
-                    #reading the coordinates from the txt files
-                    filesx = direct+ "/images/fronts/"+ str(i)+".png_sx.txt"
-                    filedx = direct+ "/images/fronts/"+ str(i)+".png_dx.txt"
-                    #make it dataframes
-                    sx = pd.read_csv(filesx, sep = " ")
-                    dx = pd.read_csv(filedx, sep = " ")
-                    #computes the area between the two fronts
-                    pol, area = an.area(sx,dx)
-                    areas.append(area)
+                df , j , d = Area.make_dataframe(direct, df,j, d)
+                df.columns = d
+                Area.plot(df)
+                df.to_csv("aree.txt", header = None, index = False ,sep=' ')
 
-                #normalize the area with the area of the first frame
-                areas = np.array(areas)/areas[0]
-                #areas = areas[areas>0.1]
-                areas = pd.Series(areas)
-                df[j] = areas
-                j = j+1
-
-            df.columns = d
-            #making the plot of the areas
-            plt.figure(dpi = 200)
-            for i in list(df.columns):
-                plt.plot(df[i])
-                plt.legend()
-            plt.savefig("aree.png")
-            df.to_csv("aree.txt", header = None, index = False ,sep=' ')
         if j > 0:
             print(colors.green|"areas saved in file 'areas.txt'")
         else:
             print(colors.red|"areas don't saved. There was a problem, maybe wrong directory")
 
 
-
+#now this command is useless
 @AnomalousDiffusion.subcommand("error")
 class Error(cli.Application):
     "Computes the error between two areas between the fronts"
@@ -365,6 +374,7 @@ class Error(cli.Application):
             error = pd.DataFrame(error)
             error.to_csv("error.txt", sep = " ")
             print(colors.green|"errors saved in file 'error.txt'")
+
 
 @AnomalousDiffusion.subcommand("msd")
 class MSD(cli.Application):
