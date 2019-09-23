@@ -327,7 +327,6 @@ class Area(cli.Application):
             areas.append(area)
         #normalize the area with the area of the first frame
         areas = np.array(areas)/areas[0]
-        #areas = areas[areas>0.1]
         areas = pd.Series(areas)
         df[j] = areas
         j = j+1
@@ -385,31 +384,29 @@ class MSD(cli.Application):
         mean = []
         for direct in os.listdir("."):
             d = []
-            #Rough way to detect only the directories of the experiments
-            if str(direct).endswith("9") or str(direct).endswith("8"):
-                if not os.path.exists(direct + "/images/fronts"):
-                    print(colors.yellow|"fronts/ doesn't exist in directory " +str(direct))
-                    pass
-                else:
-                    print("reading files in directory: "+ str(direct))
-                    x = pd.DataFrame()
-                    d.append(direct)
-                    for i in range(len(os.listdir(direct))//2):
-                        #reading the x coordinates from the txt files
-                        s = pd.read_csv(direct + "/images/fronts/"+str(i)+".png_sx.txt", sep = " ")
-                        s.columns = [0,1]
-                        x[i] = s[0]
-                    #computes the MSD of the dataframe with the x coordinates
-                    msd = an.MSD(x)
-                    msd = pd.DataFrame(msd)
-                    #saving it
-                    msd.to_csv(direct + "/msd.txt", sep=' ')
-                    print(colors.green|"msd saved in files 'msd.txt'")
-                    MSD.append(np.mean(msd))
-                    plt.plot(np.mean(msd),label = direct)
-                    #plt.plot(np.mean(msdy),label = direct)
-                    plt.legend()
-                    mean.append(np.mean(msd))
+            if not os.path.exists(direct + "/images/fronts"):
+                print(colors.yellow|"fronts/ doesn't exist in directory " +str(direct))
+                pass
+            else:
+                print("reading files in directory: "+ str(direct))
+                x = pd.DataFrame()
+                d.append(direct)
+                for i in range(len(os.listdir(direct))//2):
+                    #reading the x coordinates from the txt files
+                    s = pd.read_csv(direct + "/images/fronts/"+str(i)+".png_sx.txt", sep = " ")
+                    s.columns = [0,1]
+                    x[i] = s[0]
+                #computes the MSD of the dataframe with the x coordinates
+                msd = an.MSD(x)
+                msd = pd.DataFrame(msd)
+                #saving it
+                msd.to_csv(direct + "/msd.txt", sep=' ')
+                print(colors.green|"msd saved in files 'msd.txt'")
+                MSD.append(np.mean(msd))
+                plt.plot(np.mean(msd),label = direct)
+                #plt.plot(np.mean(msdy),label = direct)
+                plt.legend()
+                mean.append(np.mean(msd))
 
         #making the plot with the MSD for all the experiments
         plt.savefig("MSD.png")

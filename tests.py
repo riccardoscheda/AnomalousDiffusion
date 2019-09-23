@@ -1,3 +1,4 @@
+
 import os
 import numpy as np
 import matplotlib as plt
@@ -13,9 +14,9 @@ from hypothesis.extra import numpy as enp
 from hypothesis.extra import pandas as epd
 
 
-import classification as cl
-import fronts as fr
-import analysis as an
+from andif import classification as cl
+from andif import fronts as fr
+from andif import analysis as an
 
 #######################################################
 ##TESTS FOR classification.py
@@ -290,7 +291,6 @@ def test_necklace_points(dim,N, l):
     if the values are int32
     if the length of the DataFrame is equal to the parameter N
     if the output is different from the output of the function grid but have the same length
-
     """
     #we want only two columns that refer to x and y coordinates
     x =  np.random.randint(600,800,dtype="uint16",size =(dim))
@@ -452,7 +452,6 @@ def test_cdf(dim):
     Tests
     if return a numpy array
     if the last element of the output array is 1.0
-
     """
     im_gray = np.random.randint(0,255,dtype="uint8",size =(dim,dim))
     c = fr.cdf(im_gray)
@@ -465,7 +464,6 @@ def test_hist_matching(dim):
     """
     Tests
     if return an image of the same shape
-
     """
 
     im_gray = np.random.randint(0,255,dtype="uint8",size =(dim,dim))
