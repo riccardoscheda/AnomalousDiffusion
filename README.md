@@ -53,7 +53,9 @@ pip install --editable andif
 When installed you can use it from command line using `andif  <subcommand>`. The main commands are:
 
 ###### Read the images from nd2 file
-if you want to read the images from a nd2 file and save them you can use the command ```
+if you want to read the images from a nd2 file and save them you can use the command
+
+```
 andif read <file.nd2> <frames> <field>
 ```
 
