@@ -35,9 +35,19 @@ class Read(cli.Application):
     all = cli.Flag(["all", "every image"], help = "If given, I will read the first nd2 file in the direcories and save all the images in the directory 'images/'")
 
     def read(n_images, value, direct, field ):
-            #saves the images taken from the nd2 file
-            cl.create_set(n_images, field ,path = direct + "/" + value)
-            print(colors.green|"Saved the images in dir '"+ direct+"/images/")
+        """
+        Reads the images from nd2 file
+
+        Parameters:
+        ----------------
+        n_images : integer for the number of images to read from nd2
+        value : string with the nd2 file name
+        direct : string for the name of the directory
+        field : integer for the number of fields of view
+        """
+        #saves the images taken from the nd2 file
+        cl.create_set(n_images, field ,path = direct + "/" + value)
+        print(colors.green|"Saved the images in dir '"+ direct+"/images/")
 
     def main( self, value : str, n_images : int = 100   , field : int = 1):
 
@@ -88,6 +98,13 @@ class Label(cli.Application):
     "Saves the binary image using pca and Gaussian-mixture algorithms"
 
     def label(value):
+        """
+        Reads the image from the given value and label it
+
+        Parameters:
+        -----------------------
+        value : string for the file name of the image
+        """
         #reading the image
         test_image =  cv2.imread(value)
         #make it gray
@@ -125,15 +142,25 @@ class Fronts(cli.Application):
     s = cli.Flag(["s", "save"], help = "If given, I will save the image with the borders in the current directory")
 
     def fronts(self, value, cont ):
-            #reading the image
-            test_image =  cv2.imread(value)
-            #make it gray
-            im_gray = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
-            #finds the coordinates of the longest border in the image
-            coord, im = fr.fronts(im_gray)
-            np.savetxt("fronts/"+ str(cont) + ".txt", coord,fmt = '%d', delimiter=' ')
-            if (self.s):
-                plt.imsave(value, im)
+        """
+        Reads the image from the given string and finds the fronts and save it
+        in a txt file
+
+        Parameters:
+        -----------------------------
+        self : for the flag --s
+        value : string for the image file name
+        cont : integers for indexing the images
+        """
+        #reading the image
+        test_image =  cv2.imread(value)
+        #make it gray
+        im_gray = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
+        #finds the coordinates of the longest border in the image
+        coord, im = fr.fronts(im_gray)
+        np.savetxt("fronts/"+ str(cont) + ".txt", coord,fmt = '%d', delimiter=' ')
+        if (self.s):
+            plt.imsave(value, im)
 
     def main(self, value : str):
         #index for the frames
@@ -167,6 +194,14 @@ class Divide(cli.Application):
     "Divides the front in two piecies, one left and one right and save them in two txt files"
 
     def divide(value):
+        """
+        Reads the coordinates from the given file txt
+        and divide it into two files sx and dx for the left and right borders
+
+        Parameters:
+        -------------------------
+        value : string for the txt file name
+        """
         #reading the file with the coordinates of the longest border
         df = pd.DataFrame(pd.read_csv(value , delimiter=' '))
         df.columns = ["x","y"]
@@ -200,6 +235,16 @@ class Fast(cli.Application):
     "Tracks the longest borders in the images and saves the coordinates in a txt file"
 
     def fast(path, frame):
+        """
+        Reads the image from the given path and finds the borders sx and dx
+
+        Parameters:
+        --------------------------------
+        path : string for the directory
+        frame : integer for indexing the frame
+
+        Returns two pandas dataframe with the coordinates of the borders
+        """
         #reading the image from the directory
         image =  cv2.imread( path +str(frame)+".png")
         #make it grays
@@ -213,6 +258,16 @@ class Fast(cli.Application):
         return sx, dx
 
     def to_dataframe(directory,frames,field):
+        """
+        Saves the coordinates for all the frames in a single
+        dataframe in tidy format
+
+        Paramaters:
+        -----------------------
+        directory : string for the directory name
+        frames : integers for the number of the frames
+        field : integer for the number of fields of view
+        """
         path = directory + "images/"
         for frame in range(frames):
             #making the dataframe in tidy format
@@ -259,6 +314,15 @@ class Faster(cli.Application):
     all = cli.Flag(["all", "every directoies"], help = "If given, I will read the nd2 file in all the direcories and save all the coordinates in the file 'coordinates.txt'")
 
     def faster(im):
+        """
+        Finds the borders from the image and returns two pandas dataframes with the left
+        and right borders
+
+        Parameters:
+        im : the image in matrix format
+
+        Returns the two dataframes sx and dx with the left and right coordinates
+        """
         try:
             dfs, b, c = fr.fast_fronts(im,length_struct=5,iterations=1)
             #interpolation of the two borders
@@ -274,6 +338,17 @@ class Faster(cli.Application):
             return sx, dx
 
     def to_dataframe(directory,im,frame,field):
+        """
+        Saves the coordinates for all the frames in a single
+        dataframe in tidy format
+
+        Paramaters:
+        -----------------------
+        directory : string for the directory name
+        im : image in matrix format
+        frames : integers for the number of the frames
+        field : integer for the number of fields of view
+        """
         #making the dataframe in tidy format
         sx, dx = Faster.faster(im)
         dx["side"] = "dx"
@@ -285,7 +360,14 @@ class Faster(cli.Application):
         df.to_csv("coordinates.txt",index = True,header = None, sep = " ", mode = "a")
 
     def read(direct, value):
+        """
+        Reads the images from nd2 file and saves the dataframe
 
+        Parameters:
+        --------------------------
+        direct : string for the directory name
+        value : string for the nd2 file name
+        """
         with ND2Reader(direct + "/" + value) as images:
             print(colors.yellow|"directory " + direct)
             #iterations of the images in the nd2 file
@@ -306,7 +388,6 @@ class Faster(cli.Application):
         df = pd.DataFrame(columns = ["i","x","y","side","frame","field","experiment"])
         df.to_csv("coordinates.txt",index = False,header = df.columns, sep = " ")
         if(self.all):
-
             #searching only the directories in the current directory
             dirs = os.listdir(".")
             for direct in dirs:
@@ -328,6 +409,16 @@ class Area(cli.Application):
     "Computes the areas for all the directories with the images!"
 
     def findarea(direct, i):
+        """
+        Finds the area between the two borders from the two txt files
+
+        Parameters:
+        ------------------------
+        direct : string for the directory name
+        i : integer for indexing the txt files
+
+        Returns the area between the two borders
+        """
         #reading the coordinates from the txt files
         filesx = direct+ "/images/fronts/"+ str(i)+".png_sx.txt"
         filedx = direct+ "/images/fronts/"+ str(i)+".png_dx.txt"
@@ -342,7 +433,19 @@ class Area(cli.Application):
         return area
 
     def make_dataframe(direct, frames,df,j):
+        """
+        Computes the area between the two borders and make a single dataframe
+        with all the areas for all the frames
 
+        Parameters:
+        --------------------------
+        direct : string for the directory name
+        frames : integer for the number of frames
+        df : pandas dataframe with the coordinates
+        j : integer for indexing the different directories
+
+        Return the dataframe with all the areas for all the directories
+        """
         print("reading images in directory: "+ str(direct))
 
         areas = []
@@ -356,6 +459,13 @@ class Area(cli.Application):
         return df
 
     def plot(df):
+        """
+        Plot the areas and saves the plot
+
+        Paramaters:
+        --------------
+        df : pandas dataframe with the areas
+        """
         #making the plot of the areas
         plt.figure(dpi = 200)
         for i in list(df.columns):
@@ -382,7 +492,7 @@ class Area(cli.Application):
                     Area.plot(df)
                     df.to_csv("aree.txt", header = None, index = False ,sep=' ')
                 except: pass
-                
+
         if j > 0:
             print(colors.green|"areas saved in file 'areas.txt'")
         else:
@@ -408,6 +518,16 @@ class MSD(cli.Application):
     "Computes the Mean Squared Displacement (MSD) for all the directories with the images!"
 
     def find_msd(direct, frames):
+        """
+        Finds the msd for all the frames
+
+        Paramaters:
+        -----------------------
+        direct : string for the directory name
+        frames: integers for the number of frames
+
+        Returns the dataframe with the msd
+        """
         x = pd.DataFrame()
         for i in range(frames):
             #reading the x coordinates from the txt files
@@ -423,6 +543,13 @@ class MSD(cli.Application):
         return msd
 
     def plot(msd):
+        """
+        Plots the msd and save it
+
+        Paramaters:
+        -------------------------
+        msd : pandas dataframe with the msd
+        """
         #makes the plot for the msd and the mean of the msd
         try:
             for i in range(len(msd.T)):
@@ -462,11 +589,19 @@ class Fit(cli.Application):
     """Computes the fit parameters (D,a) for the Mean Squared Displacement for all the directories and saves
     in a txt file
     """
-    def fit(direct, cont):
+    def fit(direct):
+        """
+        Find the fit for the msd from the txt file
+
+        Paramaters:
+        --------------------
+        direct : string for the directory name
+
+        Return two float for the parameters of the fit
+        """
         path = direct+ "/msd.txt"
         #making the dataframe with the msd from the txt file
         df = pd.DataFrame(pd.read_csv(path,sep = " "))
-        #del df[0]
         msd = np.mean(df)
         #fit the msd
         popt = an.fit(msd)
@@ -476,6 +611,13 @@ class Fit(cli.Application):
         return D, alpha
 
     def to_file(D,alpha):
+        """
+        Saves to file the parameters of the fit
+
+        Paramaters:
+        D : float, parameter of the fit
+        alpha : float, parameter of the fit
+        """
         D = pd.Series(D)
         alpha = pd.Series(alpha)
         #making the dataframe with the parameters found with the fit
@@ -485,23 +627,22 @@ class Fit(cli.Application):
         fit.to_csv("fit.txt",sep = " ")
 
     def main(self):
-        cont = 0
         D = []
         alpha = []
+        cont = 0
         for direct in os.listdir("."):
             #if there is no the file, it passes to the next directory
             if not os.path.exists(direct + "/msd.txt"):
                 print(colors.yellow|"file 'msd.txt' doesn't exist in directory " +str(direct))
                 pass
             else:
-                D.append(Fit.fit(direct, cont)[0])
-                alpha.append(Fit.fit(direct, cont)[1])
+                print("reading file 'msd.txt' in directory " +str(direct))
+                D.append(Fit.fit(direct)[0])
+                alpha.append(Fit.fit(direct)[1])
                 cont += 1
 
         Fit.to_file(D,alpha)
-        if cont > 0 :
-            print(colors.green | "fit parameters saved in file fit.txt")
-        else : print(colors.red| "probably the file fit.txt is empty")
+        print(colors.green | "fit parameters saved in file fit.txt")
 
 
 if __name__ == "__main__":
