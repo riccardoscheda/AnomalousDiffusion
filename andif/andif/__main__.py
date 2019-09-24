@@ -106,7 +106,7 @@ class Label(cli.Application):
             #idex for the images name
             cont = 0
             for image in list(os.listdir(value)):
-                if str(image).endswith(".png"):
+                if str(image).endswith(".png") or str(image).endswith(".jpg") :
                     print("analyzing image " +str(cont+1)+"/"+str(len(os.listdir(value))-1))
                     Label.label(image)
                     cont = cont + 1
@@ -123,29 +123,36 @@ class Fronts(cli.Application):
     "Tracks the longest borders in the images and saves the coordinates in a txt file"
     s = cli.Flag(["s", "save"], help = "If given, I will save the image with the borders in the current directory")
 
-    def fronts(self, value):
+    def fronts(self, value, cont ):
             #reading the image
             test_image =  cv2.imread(value)
             #make it gray
             im_gray = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
             #finds the coordinates of the longest border in the image
             coord, im = fr.fronts(im_gray)
-            np.savetxt("fronts/fronts_"+ value +".txt", coord,fmt = '%d', delimiter=' ')
+            np.savetxt("fronts/"+ str(cont) + ".txt", coord,fmt = '%d', delimiter=' ')
             if (self.s):
-                plt.imsave("front_"+ value, im)
+                plt.imsave(value, im)
 
     def main(self, value : str):
+        #index for the frames
+        frame = 0
         if not os.path.exists("fronts"):
             os.makedirs("fronts")
 
         if(value == "."):
-            for value in list(os.listdir(".")):
-                if str(value).endswith(".png"):
-                    Fronts.fronts(value)
+            frames = len(os.listdir(".")) - 1
+            for im in list(os.listdir(".")):
+                if str(im).endswith(".png"):
+                    Fronts.fronts(self, im, frame)
+                    frame = frame + 1
+                #status bar
+                print("image " + str(frame) +": ["+"#"*int(frame/frames*20)+"-"*int(20-int(frame/frames*20))+"] "+str(int(frame/frames*100))+"% ", end="\r")
+            print("image " + str(frame) +": ["+"#"*20+"] 100%")
             print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
         else:
             try:
-                Fronts.fronts(value)
+                Fronts.fronts(self, value, frame)
                 print(colors.green|"Saved the fronts of the image in dir 'fronts/'")
             except:
                 print(colors.red|"this image does not exists")
@@ -313,6 +320,8 @@ class Area(cli.Application):
         #make it dataframes
         sx = pd.read_csv(filesx, sep = " ")
         dx = pd.read_csv(filedx, sep = " ")
+        sx = an.necklace_points(sx, N = 100)
+        dx = an.necklace_points(dx, N = 100)
         #computes the area between the two fronts
         pol, area = an.area(sx,dx)
         return area
@@ -379,8 +388,17 @@ class Error(cli.Application):
 class MSD(cli.Application):
     "Computes the Mean Squared Displacement (MSD) for all the directories with the images!"
 
+    def plot(msd):
+        for i in range(len(msd.T)):
+            plt.plot(msd.T[i])
+            plt.savefig("msd.png")
+
+        plt.figure(dpi = 200)
+        plt.plot(np.mean(msd))
+        plt.savefig("MSD.png")
+
+
     def main(self):
-        MSD = []
         mean = []
         for direct in os.listdir("."):
             d = []
@@ -391,70 +409,65 @@ class MSD(cli.Application):
                 print("reading files in directory: "+ str(direct))
                 x = pd.DataFrame()
                 d.append(direct)
-                for i in range(len(os.listdir(direct))//2):
+                for i in range(100):
                     #reading the x coordinates from the txt files
                     s = pd.read_csv(direct + "/images/fronts/"+str(i)+".png_sx.txt", sep = " ")
                     s.columns = [0,1]
                     x[i] = s[0]
                 #computes the MSD of the dataframe with the x coordinates
                 msd = an.MSD(x)
-                msd = pd.DataFrame(msd)
                 #saving it
-                msd.to_csv(direct + "/msd.txt", sep=' ')
+                msd.to_csv(direct + "/msd.txt", header = None, index = False,sep=' ')
                 print(colors.green|"msd saved in files 'msd.txt'")
-                MSD.append(np.mean(msd))
-                plt.plot(np.mean(msd),label = direct)
-                #plt.plot(np.mean(msdy),label = direct)
-                plt.legend()
                 mean.append(np.mean(msd))
-
-        #making the plot with the MSD for all the experiments
-        plt.savefig("MSD.png")
-        plt.figure()
-        plt.plot(np.mean(pd.DataFrame(mean)))
-        plt.savefig("mean.png")
-        MSD = pd.DataFrame(MSD)
-        MSD.to_csv("MSD.txt", sep=' ')
+        mean = pd.DataFrame(mean)
+        msd.to_csv("meanMSD.txt", header = None, index = False,sep=' ')
+        MSD.plot(msd)
 
 
 
 
 @AnomalousDiffusion.subcommand("fit")
-class FIT(cli.Application):
+class Fit(cli.Application):
     """Computes the fit parameters (D,a) for the Mean Squared Displacement for all the directories and saves
     in a txt file
     """
+    def fit(direct, cont):
+        path = direct+ "/msd.txt"
+        #making the dataframe with the msd from the txt file
+        df = pd.DataFrame(pd.read_csv(path,sep = " "))
+        #del df[0]
+        msd = np.mean(df)
+        #fit the msd
+        popt = an.fit(msd)
+        D = popt[0]
+        alpha = popt[1]
 
-    def main(self):
-        D = []
-        alpha = []
-        cont = 0
-        for direct in os.listdir("."):
-            #Rough way to detect only the directories of the experiments
-            if str(direct).endswith("9") or str(direct).endswith("8"):
-                if not os.path.exists(direct + "/msd.txt"):
-                    print(colors.yellow|"file 'msd.txt' doesn't exist in directory " +str(direct))
-                    pass
-                else:
-                    path = direct+ "/msd.txt"
-                    #making the dataframe with the msd from the txt file
-                    df = pd.DataFrame(pd.read_csv(path,sep = " "))
-                    #del df[0]
-                    msd = np.mean(df)
-                    #fit the msd
-                    popt, popcv = an.fit(msd)
-                    D.append(popt[0])
-                    alpha.append(popt[1])
-                    cont += 1
+        return D, alpha
 
+    def to_file(D,alpha):
         D = pd.Series(D)
         alpha = pd.Series(alpha)
         #making the dataframe with the parameters found with the fit
         fit = pd.DataFrame(columns = ["D","alpha"])
         fit["D"] = D
         fit["alpha"] = alpha
-
         fit.to_csv("fit.txt",sep = " ")
+
+    def main(self):
+        cont = 0
+        D = []
+        alpha = []
+        for direct in os.listdir("."):
+            if not os.path.exists(direct + "/msd.txt"):
+                print(colors.yellow|"file 'msd.txt' doesn't exist in directory " +str(direct))
+                pass
+            else:
+                D.append(Fit.fit(direct, cont)[0])
+                alpha.append(Fit.fit(direct, cont)[1])
+                cont += 1
+
+        Fit.to_file(D,alpha)
         if cont > 0 :
             print(colors.green | "fit parameters saved in file fit.txt")
         else : print(colors.red| "probably the file fit.txt is empty")
