@@ -78,6 +78,7 @@ class Modify(cli.Application):
                     print(colors.green|"Saved the modified images in dir 'modified_images/'")
                 else:
                     try:
+                        #modifies every png image in the directory and saves them in png format
                         cl.create_modified_images(path = value)
                         print(colors.green|"Saved the image in dir 'modified_images/")
                     except:
@@ -99,9 +100,10 @@ class Label(cli.Application):
         plt.imsave("labelled_images/labelled_" + value, labelled_image)
 
     def main(self, value : str ):
+        #if there is no the directory, it creates it
         if not os.path.exists("labelled_images"):
             os.makedirs("labelled_images")
-
+        #if given ".", it does it for all the directories in the current directory
         if (value == "."):
             #idex for the images name
             cont = 0
@@ -137,6 +139,7 @@ class Fronts(cli.Application):
     def main(self, value : str):
         #index for the frames
         frame = 0
+        #if there is no the directory, it creates it
         if not os.path.exists("fronts"):
             os.makedirs("fronts")
 
@@ -144,6 +147,7 @@ class Fronts(cli.Application):
             frames = len(os.listdir(".")) - 1
             for im in list(os.listdir(".")):
                 if str(im).endswith(".png"):
+                    #finds the fronts of the image and saves it in text file
                     Fronts.fronts(self, im, frame)
                     frame = frame + 1
                 #status bar
@@ -152,6 +156,7 @@ class Fronts(cli.Application):
             print(colors.green|"Saved the fronts of the images in dir 'fronts/'")
         else:
             try:
+                #finds the fronts of the image and saves it in text file
                 Fronts.fronts(self, value, frame)
                 print(colors.green|"Saved the fronts of the image in dir 'fronts/'")
             except:
@@ -168,13 +173,15 @@ class Divide(cli.Application):
         df.columns = ["x","y"]
         #divide the longest border in two, the left one and the right one
         sx, dx = fr.divide(df)
+        #save it
         np.savetxt("divided_fronts/"+ value+"dx.txt" , dx.values, fmt='%d')
         np.savetxt("divided_fronts/"+ value+"sx.txt" , sx.values, fmt='%d')
 
     def main(self, value : str ):
+        #if there is no the directory, it creates it
         if not os.path.exists("divided_fronts"):
             os.makedirs("divided_fronts")
-
+        #if given ".", it does it for all the directories in the current directory
         if(value == "."):
             for value in list(os.listdir(".")):
                 if str(value).endswith(".txt"):
@@ -211,6 +218,7 @@ class Fast(cli.Application):
     def to_dataframe(directory,frames,field):
         path = directory + "images/"
         for frame in range(frames):
+            #making the dataframe in tidy format
             sx, dx = Fast.fast(path, frame)
             dx["side"] = "dx"
             sx["side"] = "sx"
@@ -223,18 +231,22 @@ class Fast(cli.Application):
             print("directory " + directory +": ["+"#"*int(frame/frames*20)+"-"*int(20-int(frame/frames*20))+"] "+str(int(frame/frames*100))+"% ", end="\r")
 
 
-    def main(self, directory : str ):
-
-        #number of frames to analyze
-        frames = 100
+    def main(self, directory : str ,frames : int = 100):
+        #saving an empty dataframe to append later the coordinates
         df = pd.DataFrame(columns = ["i","x","y","side","frame","field","experiment"])
         df.to_csv(directory + "coordinates.txt",index = False,header = df.columns, sep = " ")
         if (directory == "."):
+            #if given ".", it does it for all the directories in the current directory
             for value in os.listdir(directory):
-                Fast.to_dataframe(value +"/",frames,0)
-                print(value + " ["+"#"*20+"] 100%")
+                try:
+                    #find the fronts ans save it into a dataframe
+                    Fast.to_dataframe(value +"/",frames,0)
+                    print(value + " ["+"#"*20+"] 100%")
+                except:
+                    print(colors.yellow|"images/ doesn't exist in directory " +str(value))
         else:
             try:
+                #find the fronts ans save it into a dataframe
                 Fast.to_dataframe(directory, frames,0)
                 print(directory + " ["+"#"*20+"] 100%")
             except:
@@ -258,11 +270,14 @@ class Faster(cli.Application):
 
             return sx, dx
         except:
+            #sometimes doesn't recognizes the borders (in the last frames there are not borders)
+            #so it saves empty dataframes
             dx = pd.DataFrame(columns = ["x","y"])
             sx = pd.DataFrame(columns = ["x","y"])
             return sx, dx
 
     def to_dataframe(directory,im,frame,field):
+        #making the dataframe in tidy format
         sx, dx = Faster.faster(im)
         dx["side"] = "dx"
         sx["side"] = "sx"
@@ -282,6 +297,7 @@ class Faster(cli.Application):
             frames = images.sizes["t"]
             for field in range(fields):
                 for frame in range(frames):
+                    #making the image of type uint8
                     im = np.asmatrix(images[frame + frame*field]).astype(np.uint8)
                     Faster.to_dataframe(direct, im,frame, field)
                     #status bar
@@ -289,6 +305,7 @@ class Faster(cli.Application):
                 print("field " + str(field) +": ["+"#"*20+"] 100%")
 
     def main(self, value : str):
+        #saving an empty dataframe to append later the coordinates
         df = pd.DataFrame(columns = ["i","x","y","side","frame","field","experiment"])
         df.to_csv("coordinates.txt",index = False,header = df.columns, sep = " ")
         if(self.all):
@@ -326,12 +343,12 @@ class Area(cli.Application):
         pol, area = an.area(sx,dx)
         return area
 
-    def make_dataframe(direct, df,j, d):
+    def make_dataframe(direct, frames,df,j, d):
 
         print("reading images in directory: "+ str(direct))
         d.append(direct)
         areas = []
-        for i in range(0,100):
+        for i in range(0,frames):
             area = Area.findarea(direct, i)
             areas.append(area)
         #normalize the area with the area of the first frame
@@ -350,16 +367,17 @@ class Area(cli.Application):
         plt.savefig("aree.png")
 
 
-    def main(self):
+    def main(self, frames : int = 100):
         df = pd.DataFrame()
         j = 0
         d = []
         for direct in os.listdir("."):
+            #if there is no the directory, it passes to the next directory
             if not os.path.exists(direct + "/images"):
                 print(colors.yellow|"images/ doesn't exist in directory " +str(direct))
                 pass
             else:
-                df , j , d = Area.make_dataframe(direct, df,j, d)
+                df , j , d = Area.make_dataframe(direct, frames,df,j, d)
                 df.columns = d
                 Area.plot(df)
                 df.to_csv("aree.txt", header = None, index = False ,sep=' ')
@@ -388,8 +406,25 @@ class Error(cli.Application):
 class MSD(cli.Application):
     "Computes the Mean Squared Displacement (MSD) for all the directories with the images!"
 
+    def find_msd(direct, frames ):
+        x = pd.DataFrame()
+        for i in range(frames):
+            #reading the x coordinates from the txt files
+            s = pd.read_csv(direct + "/images/fronts/"+str(i)+".png_sx.txt", sep = " ")
+            s.columns = [0,1]
+            x[i] = s[0]
+        #computes the MSD of the dataframe with the x coordinates
+        msd = an.MSD(x)
+        #saving it
+        msd.to_csv(direct + "/msd.txt", header = None, index = False,sep=' ')
+        print(colors.green|"msd saved in files 'msd.txt'")
+
+        return msd
+
     def plot(msd):
+        #makes the plot for the msd and the mean of the msd
         for i in range(len(msd.T)):
+
             plt.plot(msd.T[i])
             plt.savefig("msd.png")
 
@@ -398,32 +433,25 @@ class MSD(cli.Application):
         plt.savefig("MSD.png")
 
 
-    def main(self):
+    def main(self, frames : int = 100):
         mean = []
+        msd = []
         for direct in os.listdir("."):
-            d = []
+            #if there is no the directory, it passes to the next directory
             if not os.path.exists(direct + "/images/fronts"):
                 print(colors.yellow|"fronts/ doesn't exist in directory " +str(direct))
                 pass
             else:
                 print("reading files in directory: "+ str(direct))
-                x = pd.DataFrame()
-                d.append(direct)
-                for i in range(100):
-                    #reading the x coordinates from the txt files
-                    s = pd.read_csv(direct + "/images/fronts/"+str(i)+".png_sx.txt", sep = " ")
-                    s.columns = [0,1]
-                    x[i] = s[0]
-                #computes the MSD of the dataframe with the x coordinates
-                msd = an.MSD(x)
-                #saving it
-                msd.to_csv(direct + "/msd.txt", header = None, index = False,sep=' ')
-                print(colors.green|"msd saved in files 'msd.txt'")
-                mean.append(np.mean(msd))
-        mean = pd.DataFrame(mean)
-        msd.to_csv("meanMSD.txt", header = None, index = False,sep=' ')
-        MSD.plot(msd)
+                try:
+                    msdsx = MSD.find_msd(direct, frames)
+                    msd.append(msdsx)
+                    mean.append(np.mean(msdsx))
+                except: pass
 
+        mean = pd.DataFrame(mean)
+        mean.to_csv("meanMSD.txt", header = None, index = False,sep=' ')
+        MSD.plot(mean)
 
 
 
@@ -459,6 +487,7 @@ class Fit(cli.Application):
         D = []
         alpha = []
         for direct in os.listdir("."):
+            #if there is no the file, it passes to the next directory
             if not os.path.exists(direct + "/msd.txt"):
                 print(colors.yellow|"file 'msd.txt' doesn't exist in directory " +str(direct))
                 pass
