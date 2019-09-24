@@ -34,7 +34,7 @@ class Read(cli.Application):
     "Reads the nd2 file and create a new folder with the images in png format"
     all = cli.Flag(["all", "every image"], help = "If given, I will read the first nd2 file in the direcories and save all the images in the directory 'images/'")
 
-    def read(n_images, value, direct, field):
+    def read(n_images, value, direct, field ):
             #saves the images taken from the nd2 file
             cl.create_set(n_images, field ,path = direct + "/" + value)
             print(colors.green|"Saved the images in dir '"+ direct+"/images/")
@@ -70,10 +70,9 @@ class Modify(cli.Application):
     def main( self, value : str ):
                 #if value is . will modify all the images in the current directory
                 if(value == "."):
-
                     for image in list(os.listdir(value)):
                         #modifies every png image in the directory and saves them in png format
-                        if str(image).endswith(".png"):
+                        if str(image).endswith(".png") or str(image).endswith(".jpg"):
                             cl.create_modified_images(path = image)
                     print(colors.green|"Saved the modified images in dir 'modified_images/'")
                 else:
@@ -146,7 +145,7 @@ class Fronts(cli.Application):
         if(value == "."):
             frames = len(os.listdir(".")) - 1
             for im in list(os.listdir(".")):
-                if str(im).endswith(".png"):
+                if str(im).endswith(".png") or str(im).endswith(".jpg"):
                     #finds the fronts of the image and saves it in text file
                     Fronts.fronts(self, im, frame)
                     frame = frame + 1
@@ -199,8 +198,6 @@ class Divide(cli.Application):
 @AnomalousDiffusion.subcommand("fast")
 class Fast(cli.Application):
     "Tracks the longest borders in the images and saves the coordinates in a txt file"
-    #all = cli.Flag(["all", "every image"], help = "If given, I will save the fronts of all the images in the current directory")
-
 
     def fast(path, frame):
         #reading the image from the directory
@@ -341,12 +338,13 @@ class Area(cli.Application):
         dx = an.necklace_points(dx, N = 100)
         #computes the area between the two fronts
         pol, area = an.area(sx,dx)
+
         return area
 
-    def make_dataframe(direct, frames,df,j, d):
+    def make_dataframe(direct, frames,df,j):
 
         print("reading images in directory: "+ str(direct))
-        d.append(direct)
+
         areas = []
         for i in range(0,frames):
             area = Area.findarea(direct, i)
@@ -355,8 +353,7 @@ class Area(cli.Application):
         areas = np.array(areas)/areas[0]
         areas = pd.Series(areas)
         df[j] = areas
-        j = j+1
-        return df, j , d
+        return df
 
     def plot(df):
         #making the plot of the areas
@@ -377,11 +374,15 @@ class Area(cli.Application):
                 print(colors.yellow|"images/ doesn't exist in directory " +str(direct))
                 pass
             else:
-                df , j , d = Area.make_dataframe(direct, frames,df,j, d)
-                df.columns = d
-                Area.plot(df)
-                df.to_csv("aree.txt", header = None, index = False ,sep=' ')
-
+                try:
+                    df = Area.make_dataframe(direct, frames,df,j)
+                    d.append(direct)
+                    j = j+1
+                    df.columns = d
+                    Area.plot(df)
+                    df.to_csv("aree.txt", header = None, index = False ,sep=' ')
+                except: pass
+                
         if j > 0:
             print(colors.green|"areas saved in file 'areas.txt'")
         else:
@@ -406,7 +407,7 @@ class Error(cli.Application):
 class MSD(cli.Application):
     "Computes the Mean Squared Displacement (MSD) for all the directories with the images!"
 
-    def find_msd(direct, frames ):
+    def find_msd(direct, frames):
         x = pd.DataFrame()
         for i in range(frames):
             #reading the x coordinates from the txt files
@@ -423,10 +424,11 @@ class MSD(cli.Application):
 
     def plot(msd):
         #makes the plot for the msd and the mean of the msd
-        for i in range(len(msd.T)):
-
-            plt.plot(msd.T[i])
-            plt.savefig("msd.png")
+        try:
+            for i in range(len(msd.T)):
+                plt.plot(msd.T[i])
+                plt.savefig("msd.png")
+        except: pass
 
         plt.figure(dpi = 200)
         plt.plot(np.mean(msd))

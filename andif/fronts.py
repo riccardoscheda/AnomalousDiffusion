@@ -81,6 +81,8 @@ def divide(coordinates):
     border.
     """
     coordinates.columns = ["x", "y"]
+    #if the coordinates are taken from file txt, they are reversed, don't know why
+    coordinates = coordinates[::-1]
     #takes the left upper corner and keep what there is before
     leftup = np.min(np.where(coordinates["y"] == np.max(coordinates["y"])))
     leftdown = np.max(np.where(coordinates["y"]== np.min(coordinates["y"])))

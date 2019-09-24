@@ -53,7 +53,11 @@ pip install --editable andif
 When installed you can use it from command line using `andif  <subcommand>`. The main commands are:
 
 ###### Read the images from nd2 file
-if you want to read the images from a nd2 file and save them you can use the command `andif read <N>`, where `<N>` is the number of frames you want to save. Since this command is thought to read a lot of images in different directories, you have to run this command in a parent folder with inside the directories with nd2 different files.
+if you want to read the images from a nd2 file and save them you can use the command `andif read <file.nd2> <frames> <field>`, where:
+ - `<file.nd2>` is the nd2 file you want to read;
+ - `<frames>` is the number of frames you want to save
+- `<field>` is the number of fields of view you want to save.
+Since this command is thought to read a lot of images in different directories, you can use this command in the parent directory using the flag `--all`, and it will save the images for all the directories with the nd2 file in the directory `images/`.
 
 
 ###### Modify the images with histogram equalization
@@ -62,31 +66,45 @@ If you want to modify an image with adaptive histogram equalization you can use 
 If you want to modify all the images in a directory, use
 ```
 cd <directory>
-andif modify --all
+andif modify .
 ```
 
 
 ###### Binarize the images
 This command binarize the images classifying two main labels, using PCA and Gaussian-mixture algorithm.
-Use the command `andif label <image>` or `andif label --all` to binarize all the images in the current directory. It will save the labelled image in the directory `labelled_images/`
+Use the command `andif label <image>` or `andif label .` to binarize all the images in the current directory. It will save the labelled image in the directory `labelled_images/`
 
 
 
 ###### Track the borders
 In this project i had to track the borders from a layer of cells, so the command `andif fronts <image>` will track the longest border in the image which should correspond to the center of the image, i.e. the background, and save the x and y coordinates in a txt file.
-To do this for all the images use `andif fronts --all` This command will save the txt files in the directory `fronts/`
+To do this for all the images use `andif fronts .` .This command will save the txt files in the directory `fronts/`
 
 
 ###### Divide the front
 To divide the front found with the command `fronts`, you can use the command `andif divide`, which takes the txt file with the coordinates of the front and divide it in left and right borders, and save them in two different txt files in the directory `divided_fronts/`.
-To do this for all the fronts use `andif divide --all`.
+To do this for all the fronts use `andif divide .`.
 
 ###### All in one
-If you don't need intermediate steps and you want immediately the fronts you can use `andif fast` which uses the second method to binarize the images.
-if you want to use the command for all the directories you have to use `andif fast --all` in the parent directory
+If you don't need intermediate steps and you want immediately the fronts you can use `andif fast <directory>` which uses the second method to binarize the images.
+`<directory>` has to be a directory with inside the subdirectory `images/`:
+```
+<directory/>
+            images/
+```
+if you want to use the command for all the directories you have to use `andif fast .` in the parent directory with the directories with the subdirectories `images/`. It will search the directory `images/` in all the directories.
+```
+<parent folder>
+                <dir1/>
+                        images/
+                <dir2/>     
+                        images/
+                <dir3/>     
+                        images/
+```
 
-Since in some nd2 files there are more than one field of view, saving all the images in png format is slow and inefficient. So there is the command `andif faster "" <N>` which takes the data directly from the nd2 files and will track the borders for the first fields of view you choose (<N>).
-To do this for all the directories use `andif faster --all` in the parent directory with all the directories with the nd2 files and it will save the coordinates of the different frames in 4 excel files, which correspond to the x and y coordinates for the two borders, left and right.
+Since in some nd2 files there are more than one field of view, saving all the images in png format is slow and inefficient. So there is the command `andif faster <file.nd2>` which takes the data directly from the nd2 files and will track the borders for all the fields of view.
+To do this for all the directories use `andif faster <file.nd2> --all` in the parent directory with all the directories with the nd2 files and it will save the coordinates of the different frames in the file `coordinates.txt`, which correspond to the x and y coordinates for the two borders, left and right.
 
 ###### Areas
 The command `andif areas` will compute the areas between the left and right borders and normalize it with respect to the area found in the first frame. You have to use this command in the parent directory with the directories with the different images.
