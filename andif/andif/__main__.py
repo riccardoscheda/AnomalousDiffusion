@@ -380,9 +380,14 @@ class Faster(cli.Application):
         with ND2Reader(direct + "/" + value) as images:
             print(colors.yellow|"directory " + direct)
             #iterations of the images in the nd2 file
+
+
+            # ERRORE QUI#############################################################
             images.iter_axes = "vt"
             fields = images.sizes["v"]
             frames = images.sizes["t"]
+
+            print(fields)
             for field in range(fields):
                 for frame in range(frames):
                     #making the image of type uint8
