@@ -106,9 +106,10 @@ def LBP(image):
     radius = 1
     # Number of points to be considered as neighbours
     no_points = 8 * radius
-    ret, thresh = cv2.threshold(image,127,255,cv2.THRESH_BINARY)
+    #ret, thresh = cv2.threshold(image,127,255,cv2.THRESH_BINARY)
+    newim = adaptive_contrast_enhancement(image)
     # Uniform LBP is used
-    lbp = local_binary_pattern(thresh,no_points,radius,method="uniform")
+    lbp = local_binary_pattern(newim,no_points,radius,method="uniform")
     #make the histogram of pixel intensities
     (hist, _) = np.histogram(lbp.ravel(),bins=np.arange(0, no_points + 3),range=(0, no_points + 2))
     hist = hist.astype("float")

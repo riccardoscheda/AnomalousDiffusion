@@ -135,7 +135,6 @@ class Label(cli.Application):
             print(colors.green|"Saved the binary images in dir 'labelled_images/'")
         else:
             try:
-                
                 value, labelled_image = Label.label(value)
                 Label.save(value, labelled_image)
                 print(colors.green|"Saved the labelled image in dir 'labelled_images/'")
@@ -331,12 +330,14 @@ class Faster(cli.Application):
         """
         try:
 
+            _ , im = Label.label(im)
             dfs, b, c = fr.fast_fronts(im,length_struct=5,iterations=1)
             #interpolation of the two borders
             dx = an.necklace_points(dfs[0], N = 100)
             sx = an.necklace_points(dfs[1], N = 100)
 
             return sx, dx
+
         except:
             #sometimes doesn't recognizes the borders (in the last frames there are not borders)
             #so it saves empty dataframes
@@ -357,6 +358,7 @@ class Faster(cli.Application):
         field : integer for the number of fields of view
         """
         #making the dataframe in tidy format
+
         sx, dx = Faster.faster(im)
         dx["side"] = "dx"
         sx["side"] = "sx"
