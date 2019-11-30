@@ -112,6 +112,9 @@ class Label(cli.Application):
         #labels the images using PCA and GaussianMixture algorithms
         pca = cl.Principal_components_analysis(im_gray,window_sizeX=10,window_sizeY=10)
         labelled_image = cl.classification(im_gray, pca,window_sizeX=10,window_sizeY=10)
+        return value, labelled_image
+
+    def save(value , labelled_image):
         #saves them
         plt.imsave("labelled_images/labelled_" + value, labelled_image)
 
@@ -126,12 +129,15 @@ class Label(cli.Application):
             for image in list(os.listdir(value)):
                 if str(image).endswith(".png") or str(image).endswith(".jpg") :
                     print("analyzing image " +str(cont+1)+"/"+str(len(os.listdir(value))-1))
-                    Label.label(image)
+                    value, labelled_image = Label.label(image)
+                    Label.save(value, labelled_image)
                     cont = cont + 1
             print(colors.green|"Saved the binary images in dir 'labelled_images/'")
         else:
             try:
-                Label.label(value)
+                
+                value, labelled_image = Label.label(value)
+                Label.save(value, labelled_image)
                 print(colors.green|"Saved the labelled image in dir 'labelled_images/'")
             except:
                 print(colors.red|"this image does not exists")
@@ -324,6 +330,7 @@ class Faster(cli.Application):
         Returns the two dataframes sx and dx with the left and right coordinates
         """
         try:
+
             dfs, b, c = fr.fast_fronts(im,length_struct=5,iterations=1)
             #interpolation of the two borders
             dx = an.necklace_points(dfs[0], N = 100)
