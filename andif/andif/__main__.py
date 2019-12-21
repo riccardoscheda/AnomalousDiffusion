@@ -111,9 +111,9 @@ class Label(cli.Application):
         #im_gray = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
         im_gray = value
         #labels the images using PCA and GaussianMixture algorithms
-    
-        pca = cl.Principal_components_analysis(im_gray,window_sizeX=20,window_sizeY=20)
         
+        pca = cl.Principal_components_analysis(im_gray,window_sizeX=20,window_sizeY=20)
+    
         labelled_image = cl.classification(im_gray, pca,window_sizeX=20,window_sizeY=20)
         
         return value, labelled_image
@@ -346,15 +346,18 @@ class Faster(cli.Application):
         Returns the two dataframes sx and dx with the left and right coordinates
         """
     
-        _ , im = Label.label(im)
 
-        dfs, b, c = fr.fast_fronts(im,length_struct=5,iterations=1)
+        _ , im = Label.label(im)
+    
+        im = 255 - im
+        dfs, b, c = fr.fast_fronts(im,length_struct=5,iterations=1,bands = True)
+        plt.imsave("op.png",c)
         #interpolation of the two borders
         
-    
+        
         dx = an.necklace_points(dfs[0], N = 100)
         sx = an.necklace_points(dfs[1], N = 100)
-    
+        
         return sx, dx
 
         # except:
@@ -410,8 +413,15 @@ class Faster(cli.Application):
             for field in range(fields):
                 for frame in range(frames):
                     #making the image of type uint8
-                    im = np.asarray(images[frame + frame*field]).astype(np.uint8)
-                    Faster.to_dataframe(direct, im,frame, field)
+                    
+                    im = images[frame + frame*field]
+                    plt.imsave("im.png",im)
+                    im_gray = cv2.imread("im.png")
+                    im_gray = cv2.cvtColor(im_gray, cv2.COLOR_BGR2GRAY)
+                    im_gray = cl.adaptive_contrast_enhancement(im_gray)
+                    
+                    Faster.to_dataframe(direct, im_gray,frame, field)
+                
                     #status bar
                     print("field " + str(field) +": ["+"#"*int(frame/frames*20)+"-"*int(20-int(frame/frames*20))+"] "+str(int(frame/frames*100))+"% ", end="\r")
                 print("field " + str(field) +": ["+"#"*20+"] 100%")
