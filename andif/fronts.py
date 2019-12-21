@@ -258,6 +258,7 @@ def fast_fronts(im, outdir = "fronts/", size = 50, length_struct = 10,iterations
     sx = coordinates.iloc[rightup: ,:]
     dfs.append(sx)
 
+
     #saves the right and left borders i need
     if save:
         np.savetxt(outdir + fname + "_dx.txt", dx,fmt = '%d', delimiter=' ')
