@@ -161,7 +161,7 @@ def hist_matching(c, c_t, im):
  im = (np.reshape(new_pixels[im.ravel()], im.shape)).astype(np.uint8)
  return im
 
-def fast_fronts(im, outdir = "fronts/", size = 50, length_struct = 10,iterations = 2, bands = True, save = False, fname = ""):
+def fast_fronts(im, outdir = "fronts/", size = 50, length_struct = 10,iterations = 2, bands = False, save = False, fname = ""):
     """
     Takes the two longest borders inside an image and it may save in a text file
     the (x,y) coordinates.

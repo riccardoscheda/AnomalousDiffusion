@@ -108,11 +108,14 @@ class Label(cli.Application):
         #reading the image
         #test_image =  cv2.imread(value)
         #make it gray
-        #im_gray = cv2.cvtColor(np.asarray(value), cv2.COLOR_BGR2GRAY)
+        #im_gray = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
         im_gray = value
         #labels the images using PCA and GaussianMixture algorithms
+    
         pca = cl.Principal_components_analysis(im_gray,window_sizeX=20,window_sizeY=20)
+        
         labelled_image = cl.classification(im_gray, pca,window_sizeX=20,window_sizeY=20)
+        
         return value, labelled_image
 
     def save(value , labelled_image):
@@ -252,16 +255,25 @@ class Fast(cli.Application):
         Returns two pandas dataframe with the coordinates of the borders
         """
         #reading the image from the directory
+        
         image =  cv2.imread( path +str(frame)+".png")
+        
         #make it grays
         imgray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        
         #finds the two longest borders inside the image
-        dfs, b, c = fr.fast_fronts(imgray,length_struct=5,iterations=1)
+        _ , im = Label.label(imgray)
+        
+    
+        dfs, b, c = fr.fast_fronts(im,length_struct=5,iterations=1)
         #interpolation of the two borders
-        dx = an.necklace_points(dfs[0], N = 1000)
-        sx = an.necklace_points(dfs[1], N = 1000)
-
-        return sx, dx
+        if(len(dfs[0])>0):
+            dx = an.necklace_points(dfs[0], N = 1000)
+            sx = an.necklace_points(dfs[1], N = 1000)
+            
+            return sx, dx
+        else:
+            return dfs[0], dfs[1]
 
     def to_dataframe(directory,frames,field):
         """
@@ -275,6 +287,7 @@ class Fast(cli.Application):
         field : integer for the number of fields of view
         """
         path = directory + "images/"
+        
         for frame in range(frames):
             #making the dataframe in tidy format
             sx, dx = Fast.fast(path, frame)
@@ -297,6 +310,9 @@ class Fast(cli.Application):
             #if given ".", it does it for all the directories in the current directory
             for value in os.listdir(directory):
                 try:
+                    
+                    df = pd.DataFrame(columns = ["i","x","y","side","frame","field","experiment"])
+                    df.to_csv(value +"/" + "coordinates.txt",index = False,header = df.columns, sep = " ")
                     #find the fronts ans save it into a dataframe
                     Fast.to_dataframe(value +"/",frames,0)
                     print(value + " ["+"#"*20+"] 100%")
