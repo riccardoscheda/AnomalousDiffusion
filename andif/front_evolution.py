@@ -66,7 +66,7 @@ def to_dataframe(df, frames,side,fields,directory = "."):
     """
     #making the dataframe in tidy format
     newdf = pd.DataFrame()
-    for field in range(fields):
+    for field in range(fields,fields+1):
         for frame in range(frames):
             newdf[frame] = df.T[frame]
             
@@ -85,55 +85,51 @@ xcoords,ycoords={},{}
 confined={}
 
 
-fields = 1
+fields = 5
 frames = 100
-df = pd.DataFrame(columns = ["i","frame","x","field","experiment"])
-df.to_csv("noise.txt",index = False,header = df.columns, sep = " ")
+d = pd.DataFrame(columns = ["i","frame","x","field","experiment"])
+d.to_csv("noise.txt",index = False,header = d.columns, sep = " ")
 
 for side in ['dx','sx']:
     ############# corrisponde alla parte automatica di Riccardo
     #fnames= glob.glob('./fronti_manuali/Sham_8-2-18_Field 5_*_'+side+'.txt')
     #fnames=glob.glob('./fronti_manuali/EF 35V_21-2-18_Field 1_*_'+side+'.txt')
     fnames = "coordinates-20-11-18.txt"
-    fronts={}
-    df=pd.read_csv(fnames, sep=' ')
-    #k=f.split('_')[-2]
     
-    ###PARAMETRI DA MODIFICARE ######################
-    points = 100
-    field = 6
-    ##########################################
-    
-    
-    curve={}
+    #df=pd.read_csv(fnames, sep=' ')
+    #k=f.split('_')[-2] 
     method_name='quadratic'
-    for i in range(frames):
-        df = df[df["side"]== side]
-        df = df[df["field"]== field]
-        fronts[i]=df[["x","y"]][i*100:(i+1)*100]
-        #if fronts[i].T[1][0]>fronts[i].T[1][-1]:
-         #   fronts[i]=fronts[i][::-1]
-        curve[i] = np.array(fronts[i])
-    
-    
-    xcoords[side] = pd.DataFrame.from_dict(dict((k, v.T[0]) for k, v in curve.items())).T.sort_index()
-    ycoords[side] = pd.DataFrame.from_dict(dict((k, v.T[1]) for k, v in curve.items())).T.sort_index()
-    ##################################fine
-    #collasso le curve allo stesso punto di partenza
-    xcoords[side]=xcoords[side]-xcoords[side][:1].values
-    ycoords[side]=ycoords[side]-ycoords[side][:1].values
-    #faccio riflessione per rendere sovrapponibili i fronti e semplificare analisi successive
-    if side == 'dx':
-        xcoords[side],ycoords[side]=-xcoords[side],-ycoords[side]
+    for field in range(fields,fields + 1):
+        df=pd.read_csv(fnames, sep=' ')
+        curve={}
+        fronts={}
+        for i in range(frames):
+            df = df[df["side"]== side]
+            df = df[df["field"]== field]
+            fronts[i]=df[["x","y"]][i*100:(i+1)*100]
+            #if fronts[i].T[1][0]>fronts[i].T[1][-1]:
+             #   fronts[i]=fronts[i][::-1]
+            curve[i] = np.array(fronts[i])
         
-    #sottraggo alle traettorie il fit dell'andamento medio (drift)
-    coords=xcoords[side]
-    fit_coords=fit_my_model(coords.T.mean().values,constant_acceleration_model)
-    noise=(coords.T-fit_coords).T
-    confined[side]=noise
-    #scrivo il noise su file
-    to_dataframe(noise.T, frames,side, fields)
-    
+        
+        xcoords[side] = pd.DataFrame.from_dict(dict((k, v.T[0]) for k, v in curve.items())).T.sort_index()
+        ycoords[side] = pd.DataFrame.from_dict(dict((k, v.T[1]) for k, v in curve.items())).T.sort_index()
+        ##################################fine
+        #collasso le curve allo stesso punto di partenza
+        xcoords[side]=xcoords[side]-xcoords[side][:1].values
+        ycoords[side]=ycoords[side]-ycoords[side][:1].values
+        #faccio riflessione per rendere sovrapponibili i fronti e semplificare analisi successive
+        if side == 'dx':
+            xcoords[side],ycoords[side]=-xcoords[side],-ycoords[side]
+            
+        #sottraggo alle traettorie il fit dell'andamento medio (drift)
+        coords=xcoords[side]
+        fit_coords=fit_my_model(coords.T.mean().values,constant_acceleration_model)
+        noise=(coords.T-fit_coords).T
+        confined[side]=noise
+        #scrivo il noise su file
+    to_dataframe(noise, frames,side, fields)
+        
 # for field in range(fields):
 #     for frame in range(frames):
 #         for side in ["dx","sx"]:
