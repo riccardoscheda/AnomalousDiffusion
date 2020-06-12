@@ -1,7 +1,7 @@
 import pandas as pd
 import pylab as plt
 import numpy as np
-df = pd.read_csv("coordinates-20-11-18.txt",sep = " ")
+df = pd.read_csv("/home/riccardo/Desktop/coordinates-11-02-19.txt",sep = " ")
 
 #aggiungo la colonna booleana "valid" per determinare se il frame è valido o no, settando tutti i frame validi di default
 df["valid"] = True
