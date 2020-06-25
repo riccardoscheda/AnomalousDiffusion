@@ -407,14 +407,14 @@ class Faster(cli.Application):
             # ERRORE QUI#############################################################
             images.iter_axes = "vt"
             fields = images.sizes["v"]
-            frames = images.sizes["t"]
+            rframes = images.sizes["t"]
 
             print(fields)
             for field in range(fields):
-                for frame in range(frames):
+                for frame in range(100):
                     #making the image of type uint8
 
-                    im = images[frame + frame*field]
+                    im = images[frame + rframes*field]
                     plt.imsave("im.png",im)
                     im_gray = cv2.imread("im.png")
                     im_gray = cv2.cvtColor(im_gray, cv2.COLOR_BGR2GRAY)
@@ -423,7 +423,7 @@ class Faster(cli.Application):
                     Faster.to_dataframe(direct, im_gray,frame, field)
 
                     #status bar
-                    print("field " + str(field) +": ["+"#"*int(frame/frames*20)+"-"*int(20-int(frame/frames*20))+"] "+str(int(frame/frames*100))+"% ", end="\r")
+                    print("field " + str(field) +": ["+"#"*int(frame/100*20)+"-"*int(20-int(frame/100*20))+"] "+str(int(frame/100*100))+"% ", end="\r")
                 print("field " + str(field) +": ["+"#"*20+"] 100%")
 
     def main(self, value : str):
