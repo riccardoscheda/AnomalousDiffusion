@@ -265,3 +265,5 @@ def fast_fronts(im, outdir = "fronts/", size = 50, length_struct = 10,iterations
         np.savetxt(outdir + fname + "_sx.txt", sx,fmt = '%d', delimiter=' ')
 
     return  dfs , coordinates  , closing
+
+######
